@@ -1,6 +1,6 @@
 import { useAuth, DIVISION_LABELS } from '../lib/AuthContext';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ship } from 'lucide-react';
+import { LayoutDashboard, Ship, Settings } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function MobileLayout({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,7 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     const tabs = [
         { label: 'Tổng quan', path: `${prefix}/overview`, icon: LayoutDashboard },
         { label: 'Tàu', path: `${prefix}/ships`, icon: Ship },
+        { label: 'Cài đặt', path: `${prefix}/settings`, icon: Settings },
     ];
 
     const currentTab = tabs.find(t => location.pathname.startsWith(t.path));

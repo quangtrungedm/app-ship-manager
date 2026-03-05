@@ -6,6 +6,7 @@ import { StaffOverview } from './pages/StaffOverview';
 import { StaffShips } from './pages/StaffShips';
 import { BossOverview } from './pages/BossOverview';
 import { BossShips } from './pages/BossShips';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
     return (
@@ -30,6 +31,11 @@ function App() {
                             <StaffShips />
                         </ProtectedRoute>
                     } />
+                    <Route path="/staff/settings" element={
+                        <ProtectedRoute allowedRole="STAFF">
+                            <SettingsPage />
+                        </ProtectedRoute>
+                    } />
 
                     {/* Boss Routes */}
                     <Route path="/boss" element={
@@ -45,6 +51,11 @@ function App() {
                     <Route path="/boss/ships" element={
                         <ProtectedRoute allowedRole="BOSS">
                             <BossShips />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/boss/settings" element={
+                        <ProtectedRoute allowedRole="BOSS">
+                            <SettingsPage />
                         </ProtectedRoute>
                     } />
 
