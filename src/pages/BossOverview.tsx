@@ -137,7 +137,7 @@ export function BossOverview() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Target size={16} color="var(--c-primary)" />
-                        <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>KPI {MONTH_NAMES[selMonth]}</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>KPI {MONTH_NAMES[selMonth]} {selYear}</p>
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: kpiReached ? 'var(--c-success)' : 'var(--c-warning)' }}>{kpiPercent}%</span>
                 </div>
