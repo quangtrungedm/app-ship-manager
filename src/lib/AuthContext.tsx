@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export type Role = 'STAFF' | 'BOSS' | null;
 export type Division = 'VIN_CAN_GIO' | 'SAT_THEP' | null;
@@ -18,19 +18,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [role, setRole] = useState<Role>(null);
-    const [division, setDivision] = useState<Division>(null);
+    const [role, setRole] = useState<Role>(() => {
+        const saved = localStorage.getItem('app_role');
+        return (saved === 'STAFF' || saved === 'BOSS') ? saved : null;
+    });
 
-    useEffect(() => {
-        const savedRole = localStorage.getItem('app_role') as Role;
-        const savedDiv = localStorage.getItem('app_division') as Division;
-        if (savedRole === 'STAFF' || savedRole === 'BOSS') {
-            setRole(savedRole);
-        }
-        if (savedDiv === 'VIN_CAN_GIO' || savedDiv === 'SAT_THEP') {
-            setDivision(savedDiv);
-        }
-    }, []);
+    const [division, setDivision] = useState<Division>(() => {
+        const saved = localStorage.getItem('app_division');
+        return (saved === 'VIN_CAN_GIO' || saved === 'SAT_THEP') ? saved : null;
+    });
 
     const login = (newRole: Role, newDiv: Division) => {
         setRole(newRole);
