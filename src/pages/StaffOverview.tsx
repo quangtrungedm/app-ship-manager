@@ -102,7 +102,7 @@ export function StaffOverview() {
             </div>
 
             {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            <div key={`cards-${selMonth}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div className="fade-up fade-up-d1" style={{
                     padding: 16, borderRadius: 16, position: 'relative', overflow: 'hidden',
                     background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
@@ -137,7 +137,7 @@ export function StaffOverview() {
             </div>
 
             {/* KPI Progress */}
-            <div className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 16, overflow: 'hidden' }}>
+            <div key={`kpi-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 16, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Target size={16} color="var(--c-primary)" />
