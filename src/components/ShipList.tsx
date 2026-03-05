@@ -44,8 +44,8 @@ export function ShipList({ ships, onShipClick }: ShipListProps) {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-1">
                                 <h3 className="text-lg font-bold text-slate-800 truncate">{ship.name}</h3>
-                                <Badge variant={statusMap[ship.status].variant}>
-                                    {statusMap[ship.status].label}
+                                <Badge variant={statusMap[ship.status || 'waiting'].variant}>
+                                    {statusMap[ship.status || 'waiting'].label}
                                 </Badge>
                             </div>
 

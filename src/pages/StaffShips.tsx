@@ -35,7 +35,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
 }
 
 export function StaffShips() {
-    const { ships, loading, addShip, updateShip: updateShipApi } = useShips();
+    const { ships, loading: _loading, addShip, updateShip: updateShipApi } = useShips();
     const { division } = useAuth();
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Ship | null>(null);
