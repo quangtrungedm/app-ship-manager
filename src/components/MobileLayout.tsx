@@ -1,11 +1,12 @@
 import { useAuth, DIVISION_LABELS } from '../lib/AuthContext';
-import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ship, Settings } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Ship, LogOut } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function MobileLayout({ children }: { children: React.ReactNode }) {
-    const { role, division } = useAuth();
+    const { role, division, logout } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const prefix = role === 'STAFF' ? '/staff' : '/boss';
     const mainRef = useRef<HTMLElement>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -13,7 +14,6 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     const tabs = [
         { label: 'Tổng quan', path: `${prefix}/overview`, icon: LayoutDashboard },
         { label: 'Tàu', path: `${prefix}/ships`, icon: Ship },
-        { label: 'Cài đặt', path: `${prefix}/settings`, icon: Settings },
     ];
 
     const currentTab = tabs.find(t => location.pathname.startsWith(t.path));
@@ -71,15 +71,19 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                     </p>
                     <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, lineHeight: 1.3 }}>{pageTitle}</h1>
                 </div>
-                <img
-                    src="/logo.jpg"
-                    alt="Logo"
-                    style={{
-                        width: 40, height: 40, borderRadius: 12, objectFit: 'cover',
-                        border: '2px solid var(--c-border)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,.1)',
+                <button
+                    onClick={() => {
+                        logout();
+                        navigate('/login');
                     }}
-                />
+                    style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40,
+                        borderRadius: 12, border: 'none', background: '#fee2e2', color: '#dc2626',
+                        cursor: 'pointer', flexShrink: 0, transition: 'all .2s ease',
+                    }}
+                >
+                    <LogOut size={18} strokeWidth={2.5} style={{ marginLeft: -2 }} />
+                </button>
             </header>
 
             <main ref={mainRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 90 }}>
