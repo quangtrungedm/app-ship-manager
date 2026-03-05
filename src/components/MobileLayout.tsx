@@ -12,8 +12,8 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
     const tabs = [
-        { label: 'Tổng quan', path: `${prefix}/overview`, icon: LayoutDashboard },
-        { label: 'Tàu', path: `${prefix}/ships`, icon: Ship },
+        { label: 'Tổng quan', path: `${prefix}/overview`, icon: LayoutDashboard, color: '#3b82f6', bg: 'linear-gradient(135deg, rgba(59,130,246,.25), rgba(37,99,235,.15))' },
+        { label: 'Tàu', path: `${prefix}/ships`, icon: Ship, color: '#10b981', bg: 'linear-gradient(135deg, rgba(16,185,129,.25), rgba(5,150,105,.15))' },
     ];
 
     const currentTab = tabs.find(t => location.pathname.startsWith(t.path));
@@ -151,15 +151,25 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                                 {active && (
                                     <div style={{
                                         position: 'absolute', inset: 5, borderRadius: 20,
-                                        background: 'linear-gradient(135deg, rgba(99,134,255,.25), rgba(59,130,246,.15))',
-                                        boxShadow: '0 0 12px rgba(99,134,255,.2)',
+                                        background: tab.bg,
+                                        boxShadow: `0 0 12px ${tab.color}33`,
+                                        opacity: 1,
+                                        transform: 'scale(1)',
+                                        transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     }} />
                                 )}
-                                <Icon size={17} strokeWidth={active ? 2.2 : 1.5} style={{ position: 'relative', zIndex: 1 }} />
+                                <Icon size={18} strokeWidth={active ? 2.5 : 1.5} color={active ? tab.color : 'inherit'} style={{
+                                    position: 'relative', zIndex: 1,
+                                    transform: active ? 'translateY(-1px)' : 'translateY(0)',
+                                    transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                }} />
                                 <span style={{
-                                    fontSize: 12, fontWeight: active ? 700 : 500,
+                                    fontSize: 12, fontWeight: active ? 800 : 500,
+                                    color: active ? tab.color : 'inherit',
                                     position: 'relative', zIndex: 1, letterSpacing: '.2px',
                                     whiteSpace: 'nowrap',
+                                    transform: active ? 'translateY(1px)' : 'translateY(0)',
+                                    transition: 'all .3s ease',
                                 }}>{tab.label}</span>
                             </NavLink>
                         );
