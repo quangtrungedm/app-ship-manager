@@ -73,8 +73,10 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                     onClick={() => {
-                        logout();
-                        navigate('/login');
+                        if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                            logout();
+                            navigate('/login');
+                        }
                     }}
                     style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40,
