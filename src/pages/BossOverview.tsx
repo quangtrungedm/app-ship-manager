@@ -143,7 +143,7 @@ export function BossOverview() {
                 </div>
                 <div style={{ padding: '0 16px' }}>
                     <div style={{ height: 8, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 99, width: `${kpiPercent}%`, background: kpiReached ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#ea580c)', transition: 'width .6s ease' }} />
+                        <div style={{ height: '100%', borderRadius: 99, width: `${kpiPercent}%`, background: kpiReached ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#ea580c)', transition: 'width .3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--c-text-secondary)', marginTop: 4, paddingBottom: 12 }}>
                         <span>0</span>
