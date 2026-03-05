@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { Ship } from '../types';
-import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -77,7 +77,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
 }
 
 export function BossShips() {
-    const { ships } = useShips();
+    const { ships, loading } = useShips();
     const [selectedMonth, setSelectedMonth] = useState('all');
     const [pickerOpen, setPickerOpen] = useState(false);
     const now = new Date();
@@ -93,7 +93,10 @@ export function BossShips() {
 
     return (
         <MobileLayout>
-            <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', marginBottom: 12 }}>{filteredShips.length} chuyến tàu · Chỉ xem</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <p style={{ fontSize: 13, color: 'var(--c-text-secondary)' }}>{filteredShips.length} chuyến tàu · Chỉ xem</p>
+                {loading && <Loader2 size={12} className="spin" color="var(--c-primary)" />}
+            </div>
 
             {/* Month Picker */}
             <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>

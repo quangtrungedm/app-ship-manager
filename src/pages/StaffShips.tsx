@@ -130,7 +130,10 @@ export function StaffShips() {
         <>
             <MobileLayout>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <p style={{ fontSize: 13, color: 'var(--c-text-secondary)' }}>{filteredShips.length} chuyến tàu</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <p style={{ fontSize: 13, color: 'var(--c-text-secondary)' }}>{filteredShips.length} chuyến tàu</p>
+                        {_loading && <Loader2 size={12} className="spin" color="var(--c-primary)" />}
+                    </div>
                     <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /> Thêm mới</button>
                 </div>
 

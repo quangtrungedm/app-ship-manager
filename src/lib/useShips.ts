@@ -15,28 +15,39 @@ interface UseShipsReturn {
 }
 
 export function useShips(): UseShipsReturn {
-    const [ships, setShips] = useState<Ship[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [ships, setShips] = useState<Ship[]>(() => {
+        // Init from cache if available
+        const cached = localStorage.getItem('ship_manager_cache');
+        if (cached) {
+            try { return JSON.parse(cached); } catch (e) { return []; }
+        }
+        return [];
+    });
+    // If we have cached ships, don't show full loading state initially
+    const [loading, setLoading] = useState(!localStorage.getItem('ship_manager_cache'));
     const [error, setError] = useState<string | null>(null);
 
     const loadShips = useCallback(async () => {
-        setLoading(true);
+        if (!isConfigured()) {
+            setShips(MOCK_SHIPS);
+            setLoading(false);
+            return;
+        }
+
         setError(null);
         try {
-            if (isConfigured()) {
-                const data = await api.fetchShips();
-                setShips(data);
-            } else {
-                // Fallback to mock data
-                setShips(MOCK_SHIPS);
-            }
+            // Background fetch
+            const data = await api.fetchShips();
+            setShips(data);
+            localStorage.setItem('ship_manager_cache', JSON.stringify(data));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
-            setShips(MOCK_SHIPS); // fallback on error
+            // Keep existing ships/cache on error, don't fallback to mock
+            if (ships.length === 0) setShips(MOCK_SHIPS);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [ships.length]);
 
     useEffect(() => { loadShips(); }, [loadShips]);
 
