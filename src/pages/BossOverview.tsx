@@ -204,19 +204,28 @@ export function BossOverview() {
                 </div>
 
                 <div style={{ padding: '0 16px 16px' }}>
-                    {allMonthlyData.map((d, i) => {
+                    {allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).map((d, i, arr) => {
                         const pct = (d.weight / maxWeight) * 100;
                         const reached = d.weight >= MONTHLY_KPI_TARGET;
                         const diff = d.weight - MONTHLY_KPI_TARGET;
+                        const isSelectedMonth = d.key === `${selYear}-${String(selMonth + 1).padStart(2, '0')}`;
+
                         return (
-                            <div key={d.key} style={{ marginBottom: i < allMonthlyData.length - 1 ? 12 : 0 }}>
+                            <div key={d.key} style={{
+                                marginBottom: i < arr.length - 1 ? 12 : 0,
+                                padding: isSelectedMonth ? '8px 12px' : '0',
+                                background: isSelectedMonth ? 'rgba(79, 70, 229, 0.05)' : 'transparent',
+                                borderRadius: isSelectedMonth ? 12 : 0,
+                                border: isSelectedMonth ? '1px solid rgba(79, 70, 229, 0.2)' : '1px solid transparent',
+                                transition: 'all 0.3s ease'
+                            }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text)', minWidth: 28 }}>{d.month}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: isSelectedMonth ? 'var(--c-primary)' : 'var(--c-text)', minWidth: 28 }}>{d.month}</span>
                                         <span style={{ fontSize: 10, color: 'var(--c-text-secondary)', background: 'var(--c-bg)', padding: '1px 6px', borderRadius: 4 }}>{d.shipCount} tàu</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <span style={{ fontSize: 12, fontWeight: 700 }}>{d.weight.toLocaleString()}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: isSelectedMonth ? 'var(--c-primary)' : 'inherit' }}>{d.weight.toLocaleString()}</span>
                                         <span style={{ fontSize: 10, color: 'var(--c-text-secondary)' }}>tấn</span>
                                         <span style={{
                                             fontSize: 10, fontWeight: 700, marginLeft: 2,
@@ -226,18 +235,20 @@ export function BossOverview() {
                                         }}>{reached ? '+' : ''}{diff.toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <div style={{ height: 22, background: '#f1f5f9', borderRadius: 11, overflow: 'hidden' }}>
+                                <div style={{ height: 22, background: isSelectedMonth ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: 11, overflow: 'hidden' }}>
                                     <div style={{
                                         height: '100%', borderRadius: 11,
                                         width: `${pct}%`,
-                                        background: reached
-                                            ? 'linear-gradient(90deg, #4ade80, #16a34a)'
-                                            : 'linear-gradient(90deg, #fde68a, #f59e0b)',
+                                        background: isSelectedMonth
+                                            ? 'linear-gradient(90deg, #4f46e5, #4338ca)'
+                                            : (reached
+                                                ? 'linear-gradient(90deg, #4ade80, #16a34a)'
+                                                : 'linear-gradient(90deg, #fde68a, #f59e0b)'),
                                         transition: 'width 1s cubic-bezier(.16,1,.3,1)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8,
-                                        boxShadow: reached ? '0 2px 8px rgba(22,163,74,.3)' : '0 2px 8px rgba(245,158,11,.3)',
+                                        boxShadow: isSelectedMonth ? '0 2px 8px rgba(79,70,229,.4)' : (reached ? '0 2px 8px rgba(22,163,74,.3)' : '0 2px 8px rgba(245,158,11,.3)'),
                                     }}>
-                                        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.2)' }}>
+                                        <span style={{ fontSize: 10, fontWeight: 700, color: (isSelectedMonth || reached) ? '#fff' : '#92400e', textShadow: (isSelectedMonth || reached) ? '0 1px 2px rgba(0,0,0,.2)' : 'none' }}>
                                             {Math.round((d.weight / MONTHLY_KPI_TARGET) * 100)}%
                                         </span>
                                     </div>
@@ -250,15 +261,15 @@ export function BossOverview() {
                 <div style={{ display: 'flex', borderTop: '1px solid var(--c-border)' }}>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center', borderRight: '1px solid var(--c-border)' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>Đạt KPI</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2, color: '#16a34a' }}>{allMonthlyData.filter(d => d.weight >= MONTHLY_KPI_TARGET).length}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--c-text-secondary)' }}> /{allMonthlyData.length}</span></p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2, color: '#16a34a' }}>{allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`) && d.weight >= MONTHLY_KPI_TARGET).length}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--c-text-secondary)' }}> /{allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).length || 1}</span></p>
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center', borderRight: '1px solid var(--c-border)' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>Cao nhất</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...allMonthlyData.map(d => d.weight)).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).map(d => d.weight), 0).toLocaleString()}</p>
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>TB/tháng</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(allMonthlyData.reduce((a, d) => a + d.weight, 0) / allMonthlyData.length).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).reduce((a, d) => a + d.weight, 0) / (allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).length || 1)).toLocaleString()}</p>
                     </div>
                 </div>
             </div>
