@@ -2,28 +2,11 @@ import { useState, useMemo } from 'react';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { Ship } from '../types';
 import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar } from 'lucide-react';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 const GRID_MONTHS = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
-
-function getMonthlyStats(ships: Ship[]) {
-    const map = new Map<string, { shipCount: number; weight: number }>();
-    ships.forEach(s => {
-        const d = new Date(s.arrivalDate);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const cur = map.get(key) || { shipCount: 0, weight: 0 };
-        cur.shipCount++; cur.weight += s.weight;
-        map.set(key, cur);
-    });
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => {
-        const [, m] = k.split('-');
-        return { month: SHORT_MONTHS[parseInt(m) - 1], key: k, ...v };
-    });
-}
-
 export function StaffOverview() {
     const { ships } = useShips();
     const now = new Date();
@@ -40,8 +23,27 @@ export function StaffOverview() {
     const selectedWeight = selectedShips.reduce((a, s) => a + s.weight, 0);
     const kpiPercent = Math.min(100, Math.round((selectedWeight / MONTHLY_KPI_TARGET) * 100));
     const kpiReached = selectedWeight >= MONTHLY_KPI_TARGET;
-    const allMonthlyData = useMemo(() => getMonthlyStats(ships), [ships]);
-    const maxWeight = Math.max(...allMonthlyData.map(d => d.weight), MONTHLY_KPI_TARGET * 1.1);
+
+    const yearMonthlyData = useMemo(() => {
+        const data = Array.from({ length: 12 }, (_, i) => ({
+            key: `${selYear}-${String(i + 1).padStart(2, '0')}`,
+            month: SHORT_MONTHS[i],
+            shipCount: 0,
+            weight: 0
+        }));
+
+        ships.forEach(s => {
+            const d = new Date(s.arrivalDate);
+            if (d.getFullYear() === selYear) {
+                const m = d.getMonth();
+                data[m].shipCount++;
+                data[m].weight += s.weight;
+            }
+        });
+        return data;
+    }, [ships, selYear]);
+
+    const maxWeight = Math.max(...yearMonthlyData.map(d => d.weight), MONTHLY_KPI_TARGET * 1.1);
 
     const handlePickMonth = (m: number) => {
         setSelMonth(m);
@@ -206,7 +208,7 @@ export function StaffOverview() {
                 </div>
 
                 <div style={{ padding: '0 16px 16px' }}>
-                    {allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).map((d, i, arr) => {
+                    {yearMonthlyData.map((d, i, arr) => {
                         const pct = (d.weight / maxWeight) * 100;
                         const reached = d.weight >= MONTHLY_KPI_TARGET;
                         const diff = d.weight - MONTHLY_KPI_TARGET;
@@ -229,12 +231,14 @@ export function StaffOverview() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <span style={{ fontSize: 12, fontWeight: 700, color: isSelectedMonth ? 'var(--c-primary)' : 'inherit' }}>{d.weight.toLocaleString()}</span>
                                         <span style={{ fontSize: 10, color: 'var(--c-text-secondary)' }}>tấn</span>
-                                        <span style={{
-                                            fontSize: 10, fontWeight: 700, marginLeft: 2,
-                                            color: reached ? '#16a34a' : '#ef4444',
-                                            background: reached ? '#dcfce7' : '#fef2f2',
-                                            padding: '1px 6px', borderRadius: 4,
-                                        }}>{reached ? '+' : ''}{diff.toLocaleString()}</span>
+                                        {d.weight > 0 && (
+                                            <span style={{
+                                                fontSize: 10, fontWeight: 700, marginLeft: 2,
+                                                color: reached ? '#16a34a' : '#ef4444',
+                                                background: reached ? '#dcfce7' : '#fef2f2',
+                                                padding: '1px 6px', borderRadius: 4,
+                                            }}>{reached ? '+' : ''}{diff.toLocaleString()}</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div style={{ height: 22, background: isSelectedMonth ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: 11, overflow: 'hidden' }}>
@@ -250,9 +254,11 @@ export function StaffOverview() {
                                         display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8,
                                         boxShadow: isSelectedMonth ? '0 2px 8px rgba(79,70,229,.4)' : (reached ? '0 2px 8px rgba(22,163,74,.3)' : '0 2px 8px rgba(245,158,11,.3)'),
                                     }}>
-                                        <span style={{ fontSize: 10, fontWeight: 700, color: (isSelectedMonth || reached) ? '#fff' : '#92400e', textShadow: (isSelectedMonth || reached) ? '0 1px 2px rgba(0,0,0,.2)' : 'none' }}>
-                                            {Math.round((d.weight / MONTHLY_KPI_TARGET) * 100)}%
-                                        </span>
+                                        {d.weight > 0 && (
+                                            <span style={{ fontSize: 10, fontWeight: 700, color: (isSelectedMonth || reached) ? '#fff' : '#92400e', textShadow: (isSelectedMonth || reached) ? '0 1px 2px rgba(0,0,0,.2)' : 'none' }}>
+                                                {Math.round((d.weight / MONTHLY_KPI_TARGET) * 100)}%
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -263,15 +269,15 @@ export function StaffOverview() {
                 <div style={{ display: 'flex', borderTop: '1px solid var(--c-border)' }}>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center', borderRight: '1px solid var(--c-border)' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>Đạt KPI</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2, color: '#16a34a' }}>{allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`) && d.weight >= MONTHLY_KPI_TARGET).length}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--c-text-secondary)' }}> /{allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).length || 1}</span></p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2, color: '#16a34a' }}>{yearMonthlyData.filter(d => d.weight >= MONTHLY_KPI_TARGET).length}<span style={{ fontSize: 11, fontWeight: 500, color: 'var(--c-text-secondary)' }}> / 12</span></p>
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center', borderRight: '1px solid var(--c-border)' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>Cao nhất</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).map(d => d.weight), 0).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...yearMonthlyData.map(d => d.weight), 0).toLocaleString()}</p>
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>TB/tháng</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).reduce((a, d) => a + d.weight, 0) / (allMonthlyData.filter(d => d.key.startsWith(`${selYear}-`)).length || 1)).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(yearMonthlyData.reduce((a, d) => a + d.weight, 0) / 12).toLocaleString()}</p>
                     </div>
                 </div>
             </div>
