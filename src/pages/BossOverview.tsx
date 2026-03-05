@@ -149,7 +149,7 @@ export function BossOverview() {
                 </div>
                 <div style={{ padding: '0 16px' }}>
                     <div style={{ height: 8, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 99, width: `${kpiPercent}%`, background: kpiReached ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#ea580c)', transition: 'width .3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                        <div className="animate-fill" style={{ height: '100%', borderRadius: 99, width: `${kpiPercent}%`, background: kpiReached ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#ea580c)', transition: 'width .3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--c-text-secondary)', marginTop: 4, paddingBottom: 12 }}>
                         <span>0</span>
@@ -217,13 +217,16 @@ export function BossOverview() {
                         const isSelectedMonth = d.key === `${selYear}-${String(selMonth + 1).padStart(2, '0')}`;
 
                         return (
-                            <div key={d.key} style={{
+                            <div key={d.key} className="animate-slide-right" style={{
                                 marginBottom: i < arr.length - 1 ? 12 : 0,
                                 padding: isSelectedMonth ? '8px 12px' : '0',
                                 background: isSelectedMonth ? 'rgba(79, 70, 229, 0.05)' : 'transparent',
                                 borderRadius: isSelectedMonth ? 12 : 0,
                                 border: isSelectedMonth ? '1px solid rgba(79, 70, 229, 0.2)' : '1px solid transparent',
-                                transition: 'all 0.3s ease'
+                                transition: 'all 0.3s ease',
+                                animationDelay: `${i * 0.06}s`,
+                                opacity: 0,
+                                animationFillMode: 'forwards'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -244,7 +247,7 @@ export function BossOverview() {
                                     </div>
                                 </div>
                                 <div style={{ height: 22, background: isSelectedMonth ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: 11, overflow: 'hidden' }}>
-                                    <div style={{
+                                    <div className="animate-fill" style={{
                                         height: '100%', borderRadius: 11,
                                         width: `${pct}%`,
                                         background: isSelectedMonth

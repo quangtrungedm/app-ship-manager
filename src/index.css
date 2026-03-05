@@ -82,6 +82,33 @@ body {
   animation-delay: .15s;
 }
 
+/* ── Custom Animations ── */
+@keyframes fill-width {
+  from {
+    width: 0;
+  }
+}
+
+.animate-fill {
+  animation: fill-width 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-right {
+  animation: slide-in-right 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
 /* ── Buttons ── */
 .btn {
   display: inline-flex;
