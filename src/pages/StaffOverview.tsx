@@ -20,7 +20,11 @@ export function StaffOverview() {
         return d.getFullYear() === selYear && d.getMonth() === selMonth;
     }), [ships, selYear, selMonth]);
 
-    const selectedWeight = selectedShips.reduce((a, s) => a + s.weight, 0);
+    const completedSelectedShips = useMemo(() =>
+        selectedShips.filter(s => s.status === 'completed' || s.completionDate)
+        , [selectedShips]);
+
+    const selectedWeight = completedSelectedShips.reduce((a, s) => a + s.weight, 0);
     const kpiPercent = Math.min(100, Math.round((selectedWeight / MONTHLY_KPI_TARGET) * 100));
     const kpiReached = selectedWeight >= MONTHLY_KPI_TARGET;
 
@@ -36,8 +40,11 @@ export function StaffOverview() {
             const d = new Date(s.arrivalDate);
             if (d.getFullYear() === selYear) {
                 const m = d.getMonth();
-                data[m].shipCount++;
-                data[m].weight += s.weight;
+                // Only count shipped data if completed
+                if (s.status === 'completed' || s.completionDate) {
+                    data[m].shipCount++;
+                    data[m].weight += s.weight;
+                }
             }
         });
         return data;

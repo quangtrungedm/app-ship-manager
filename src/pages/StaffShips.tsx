@@ -4,13 +4,36 @@ import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
-import { Ship, Document as ShipDoc } from '../types';
-import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp } from 'lucide-react';
+import { Ship, Document as ShipDoc, ShipStatus } from '../types';
+import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
     const names = ['', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
     return `${names[parseInt(m)]} ${y}`;
+}
+
+const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
+    waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
+    entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
+    completed: { label: 'Đã hoàn thành', color: '#15803d', bg: '#dcfce7', icon: CheckCircle },
+};
+
+function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStatus, completionDate?: string }) {
+    // Legacy support: if completionDate exists but no status, treat as completed
+    const actualStatus = completionDate && status === 'waiting' ? 'completed' : status;
+    const config = STATUS_CONFIG[actualStatus] || STATUS_CONFIG.waiting;
+    const Icon = config.icon;
+
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '4px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+            color: config.color, background: config.bg, flexShrink: 0
+        }}>
+            <Icon size={12} strokeWidth={2.5} /> {config.label}
+        </span>
+    );
 }
 
 function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
@@ -19,9 +42,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
         <div className="card" onClick={onClick} style={{ padding: 16, marginBottom: 12, cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 8 }}>{ship.name}</p>
-                <span className="badge badge-completed" style={{ flexShrink: 0 }}>
-                    <CheckCircle size={11} /> Đã hoàn thành
-                </span>
+                <StatusBadge status={ship.status} completionDate={ship.completionDate} />
             </div>
             <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--c-text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={13} /> {date}</span>
@@ -35,7 +56,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
 }
 
 export function StaffShips() {
-    const { ships, loading: _loading, addShip, updateShip: updateShipApi } = useShips();
+    const { ships, loading: _loading, addShip, updateShip: updateShipApi, deleteShip } = useShips();
     const { division } = useAuth();
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Ship | null>(null);
@@ -82,6 +103,7 @@ export function StaffShips() {
 
     // Form state
     const [name, setName] = useState('');
+    const [status, setStatus] = useState<ShipStatus>('waiting');
     const [arrival, setArrival] = useState('');
     const [completion, setCompletion] = useState('');
     const [weight, setWeight] = useState('');
@@ -89,11 +111,11 @@ export function StaffShips() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openNew = () => {
-        setEditing(null); setName(''); setArrival(''); setCompletion(''); setWeight(''); setDocs([]);
+        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setDocs([]);
         setShowForm(true);
     };
     const openEdit = (s: Ship) => {
-        setEditing(s); setName(s.name); setArrival(s.arrivalDate.split('T')[0]);
+        setEditing(s); setName(s.name); setStatus(s.status || 'waiting'); setArrival(s.arrivalDate.split('T')[0]);
         setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(String(s.weight));
         setDocs([...s.documents]);
         setShowForm(true);
@@ -138,6 +160,7 @@ export function StaffShips() {
                 name, arrivalDate: new Date(arrival).toISOString(),
                 completionDate: completion ? new Date(completion).toISOString() : undefined,
                 weight: Number(weight), documents: uploadedDocs,
+                status: status,
                 division: division || undefined,
             };
             if (editing) { await updateShipApi(shipData); }
@@ -148,6 +171,18 @@ export function StaffShips() {
             alert('Lỗi: ' + (err instanceof Error ? err.message : 'Unknown'));
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!editing) return;
+        if (window.confirm('Bạn có chắc chắn muốn xóa chuyến tàu này?')) {
+            try {
+                await deleteShip(editing.id);
+                setShowForm(false);
+            } catch (err) {
+                alert('Lỗi khi xóa tàu: ' + (err instanceof Error ? err.message : 'Unknown'));
+            }
         }
     };
 
@@ -280,14 +315,46 @@ export function StaffShips() {
                                     </div>
                                     <p style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>{editing ? 'Cập nhật tàu' : 'Thêm tàu mới'}</p>
                                 </div>
-                                <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)} style={{ padding: 6 }}><X size={20} /></button>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    {editing && (
+                                        <button className="btn btn-ghost btn-sm" onClick={handleDelete} style={{ padding: 6, color: 'var(--c-danger)' }}>
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
+                                    <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)} style={{ padding: 6 }}><X size={20} /></button>
+                                </div>
                             </div>
 
                             <form onSubmit={handleSubmit}>
-                                {/* Ship Name */}
-                                <div className="field">
-                                    <label>Tên tàu</label>
-                                    <input value={name} onChange={e => setName(e.target.value)} placeholder="VD: Ever Given" required />
+                                {/* Ship Name & Status */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+                                    <div className="field">
+                                        <label>Tên tàu</label>
+                                        <input value={name} onChange={e => setName(e.target.value)} placeholder="VD: Ever Given" required />
+                                    </div>
+                                    <div className="field">
+                                        <label>Trạng thái</label>
+                                        <select 
+                                            value={status} 
+                                            onChange={e => {
+                                                const newStatus = e.target.value as ShipStatus;
+                                                setStatus(newStatus);
+                                                // Auto-fill completion date if marking as completed and date is empty
+                                                if (newStatus === 'completed' && !completion) {
+                                                    setCompletion(new Date().toISOString().split('T')[0]);
+                                                }
+                                            }}
+                                            required
+                                            style={{
+                                                width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--c-border)',
+                                                background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
+                                            }}
+                                        >
+                                            <option value="waiting">Chờ slot</option>
+                                            <option value="entering">Đã cập</option>
+                                            <option value="completed">Hoàn thành</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {/* Dates */}

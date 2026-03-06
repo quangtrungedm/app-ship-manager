@@ -1,13 +1,36 @@
 import { useState, useMemo } from 'react';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
-import { Ship } from '../types';
-import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp } from 'lucide-react';
+import { Ship, ShipStatus } from '../types';
+import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
     const names = ['', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
     return `${names[parseInt(m)]} ${y}`;
+}
+
+const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
+    waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
+    entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
+    completed: { label: 'Đã hoàn thành', color: '#15803d', bg: '#dcfce7', icon: CheckCircle },
+};
+
+function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStatus, completionDate?: string }) {
+    // Legacy support: if completionDate exists but no status, treat as completed
+    const actualStatus = completionDate && status === 'waiting' ? 'completed' : status;
+    const config = STATUS_CONFIG[actualStatus] || STATUS_CONFIG.waiting;
+    const Icon = config.icon;
+
+    return (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '4px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+            color: config.color, background: config.bg, flexShrink: 0
+        }}>
+            <Icon size={12} strokeWidth={2.5} /> {config.label}
+        </span>
+    );
 }
 
 function BossShipCard({ ship }: { ship: Ship }) {
@@ -18,9 +41,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
         <div className="card" style={{ padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 8 }}>{ship.name}</p>
-                <span className="badge badge-completed" style={{ flexShrink: 0 }}>
-                    <CheckCircle size={11} /> Đã hoàn thành
-                </span>
+                <StatusBadge status={ship.status} completionDate={ship.completionDate} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginBottom: ship.documents.length > 0 ? 12 : 0 }}>

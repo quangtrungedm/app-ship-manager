@@ -1,4 +1,4 @@
-export type ShipStatus = 'waiting' | 'entering' | 'loading' | 'completed';
+export type ShipStatus = 'waiting' | 'entering' | 'completed';
 
 export interface Ship {
     id: string;

@@ -15,7 +15,6 @@ interface ShipListProps {
 const statusMap: Record<ShipStatus, { label: string; variant: any }> = {
     waiting: { label: 'Chờ xếp slot', variant: 'waiting' },
     entering: { label: 'Đang vào', variant: 'entering' },
-    loading: { label: 'Đang bốc dỡ', variant: 'loading' },
     completed: { label: 'Đã hoàn thành', variant: 'completed' }
 };
 
