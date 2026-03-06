@@ -75,6 +75,8 @@ function parseShip(raw: Record<string, unknown>): Ship {
         completionDate: raw.completionDate ? String(raw.completionDate) : undefined,
         weight: Number(raw.weight),
         division: raw.division ? String(raw.division) : undefined,
+        status: raw.status ? (raw.status as import('../types').ShipStatus) : undefined,
+        isPaid: raw.isPaid === true || raw.isPaid === 'true',
         documents: Array.isArray(raw.documents) ? raw.documents : [],
     };
 }

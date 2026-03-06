@@ -75,7 +75,9 @@ function addShip(ship) {
     ship.weight,
     ship.division || '',
     JSON.stringify(ship.documents || []),
-    now
+    now,
+    ship.status || 'waiting',
+    ship.isPaid === true ? 'true' : 'false'
   ]);
 
   return createResponse({ success: true, id, createdAt: now });
@@ -95,6 +97,8 @@ function updateShip(ship) {
       sheet.getRange(i + 1, 5).setValue(ship.weight);
       sheet.getRange(i + 1, 6).setValue(ship.division || '');
       sheet.getRange(i + 1, 7).setValue(JSON.stringify(ship.documents || []));
+      sheet.getRange(i + 1, 9).setValue(ship.status || 'waiting');
+      sheet.getRange(i + 1, 10).setValue(ship.isPaid === true ? 'true' : 'false');
       return createResponse({ success: true });
     }
   }
