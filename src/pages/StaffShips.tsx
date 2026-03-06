@@ -323,7 +323,7 @@ export function StaffShips() {
                                 transition: 'all 0.2s ease',
                             }}
                         >
-                            Công Nợ Tồn Đọng
+                            Lương Chưa Trả
                         </button>
                     </div>
                 )}

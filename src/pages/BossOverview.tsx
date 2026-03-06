@@ -169,7 +169,7 @@ export function BossOverview() {
                                     <Wallet size={18} color="#dc2626" />
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Công nợ</p>
+                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Tiền Lương</p>
                                     <p style={{ fontSize: 12, color: '#b91c1c', margin: '2px 0 0 0', fontWeight: 500 }}>Từ tất cả các tháng</p>
                                 </div>
                             </div>

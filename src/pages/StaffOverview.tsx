@@ -170,7 +170,7 @@ export function StaffOverview() {
                                     <Wallet size={18} color="#dc2626" />
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Công nợ</p>
+                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Tiền Lương</p>
                                     <p style={{ fontSize: 12, color: '#b91c1c', margin: '2px 0 0 0', fontWeight: 500 }}>Từ tất cả các tháng</p>
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ export function StaffOverview() {
                             <div style={{ padding: 16, background: '#fef2f2' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                                     <Clock size={14} color="#dc2626" />
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>Công nợ</span>
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>Chưa trả</span>
                                 </div>
                                 <p style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>
                                     {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
