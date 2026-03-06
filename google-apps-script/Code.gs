@@ -27,13 +27,24 @@ function doGet(e) {
     const headers = data[0];
     const ships = data.slice(1).map(row => {
       const obj = {};
-      headers.forEach((h, i) => {
-        if (h === 'documents') {
-          try { obj[h] = JSON.parse(row[i] || '[]'); } catch { obj[h] = []; }
-        } else {
-          obj[h] = row[i];
-        }
-      });
+      // Rigid column mapping:
+      // 0: id, 1: name, 2: arrivalDate, 3: completionDate, 4: weight, 
+      // 5: division, 6: documents, 7: createdAt, 8: status, 9: isPaid, 10: port, 11: client
+      obj.id = row[0];
+      obj.name = row[1];
+      obj.arrivalDate = row[2];
+      obj.completionDate = row[3];
+      obj.weight = row[4];
+      obj.division = row[5];
+      
+      try { obj.documents = JSON.parse(row[6] || '[]'); } catch { obj.documents = []; }
+      
+      obj.createdAt = row[7];
+      obj.status = row[8];
+      obj.isPaid = row[9];
+      obj.port = row[10];
+      obj.client = row[11];
+      
       return obj;
     }).filter(s => s.id); // skip empty rows
 
