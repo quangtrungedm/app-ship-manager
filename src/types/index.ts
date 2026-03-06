@@ -8,6 +8,7 @@ export interface Ship {
     weight: number; // in tons
     division?: string;
     status?: ShipStatus;
+    isPaid?: boolean;
     documents: Document[];
     bossNotes?: string;
 }

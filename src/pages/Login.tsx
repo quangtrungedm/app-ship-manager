@@ -12,7 +12,7 @@ export function Login() {
 
     const divisions: { key: Division; label: string; desc: string; icon: typeof Building2; color: string; bg: string; disabled?: boolean }[] = [
         { key: 'VIN_CAN_GIO', label: 'Vin Cần Giờ', desc: 'Dự án cảng Vin', icon: Building2, color: '#4f46e5', bg: '#eef2ff' },
-        { key: 'SAT_THEP', label: 'Sắt Thép', desc: 'Mảng sắt thép', icon: Hammer, color: '#d97706', bg: '#fef3c7', disabled: true },
+        { key: 'SAT_THEP', label: 'Sắt Thép', desc: 'Mảng sắt thép', icon: Hammer, color: '#d97706', bg: '#fef3c7' },
     ];
 
     const enter = (role: 'STAFF' | 'BOSS') => {

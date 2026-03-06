@@ -40,15 +40,28 @@ function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStat
 function BossShipCard({ ship }: { ship: Ship }) {
     const [filesOpen, setFilesOpen] = useState(false);
     const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const isSatThep = ship.division === 'SAT_THEP';
+    const salary = ship.weight * 500;
 
     return (
         <div className="card" style={{ padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 8 }}>{ship.name}</p>
-                <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                    <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                    {isSatThep && (
+                        <span style={{ 
+                            padding: '2px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                            color: ship.isPaid ? '#15803d' : '#b91c1c', 
+                            background: ship.isPaid ? '#dcfce7' : '#fee2e2'
+                        }}>
+                            {ship.isPaid ? 'Đã TT' : 'Chưa TT'}
+                        </span>
+                    )}
+                </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginBottom: ship.documents.length > 0 ? 12 : 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginBottom: ship.documents.length > 0 || isSatThep ? 12 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Calendar size={14} color="var(--c-primary)" />
                     <span style={{ color: 'var(--c-text-secondary)', width: 75 }}>Ngày vào:</span>
@@ -67,6 +80,13 @@ function BossShipCard({ ship }: { ship: Ship }) {
                     <span style={{ fontWeight: 600 }}>{ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                 </div>
             </div>
+
+            {isSatThep && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--c-text-secondary)' }}>Tiền công:</span>
+                    <span style={{ fontWeight: 700, color: 'var(--c-primary)' }}>{salary.toLocaleString('vi-VN')} đ</span>
+                </div>
+            )}
 
             {ship.documents.length > 0 && (
                 <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: 10 }}>

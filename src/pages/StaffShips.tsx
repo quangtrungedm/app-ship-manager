@@ -59,11 +59,25 @@ function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStat
 
 function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
     const date = new Date(ship.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const isSatThep = ship.division === 'SAT_THEP';
+    const salary = ship.weight * 500;
+
     return (
-        <div className="card" onClick={onClick} style={{ padding: 16, marginBottom: 12, cursor: 'pointer' }}>
+        <div className="card" onClick={onClick} style={{ cursor: 'pointer', padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 8 }}>{ship.name}</p>
-                <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                    <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                    {isSatThep && (
+                        <span style={{
+                            padding: '2px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                            color: ship.isPaid ? '#15803d' : '#b91c1c',
+                            background: ship.isPaid ? '#dcfce7' : '#fee2e2'
+                        }}>
+                            {ship.isPaid ? 'Đã TT' : 'Chưa TT'}
+                        </span>
+                    )}
+                </div>
             </div>
             <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--c-text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={13} /> {date}</span>
@@ -72,6 +86,12 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={13} /> {ship.documents.length} file</span>
                 )}
             </div>
+            {isSatThep && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--c-text-secondary)' }}>Tiền công:</span>
+                    <span style={{ fontWeight: 700, color: 'var(--c-primary)' }}>{salary.toLocaleString('vi-VN')} đ</span>
+                </div>
+            )}
         </div>
     );
 }
@@ -128,16 +148,18 @@ export function StaffShips() {
     const [arrival, setArrival] = useState('');
     const [completion, setCompletion] = useState('');
     const [weight, setWeight] = useState('');
+    const [isPaid, setIsPaid] = useState(false);
     const [docs, setDocs] = useState<ShipDoc[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openNew = () => {
-        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setDocs([]);
+        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false); setDocs([]);
         setShowForm(true);
     };
     const openEdit = (s: Ship) => {
         setEditing(s); setName(s.name); setStatus(s.status || 'waiting'); setArrival(s.arrivalDate.split('T')[0]);
         setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
+        setIsPaid(s.isPaid || false);
         setDocs([...s.documents]);
         setShowForm(true);
     };
@@ -185,6 +207,7 @@ export function StaffShips() {
                 weight: parsedWeight, documents: uploadedDocs,
                 status: status,
                 division: division || undefined,
+                isPaid: division === 'SAT_THEP' ? isPaid : undefined,
             };
             if (editing) { await updateShipApi(shipData); }
             else { await addShip(shipData); }
@@ -401,6 +424,29 @@ export function StaffShips() {
                                         setWeight(formatVNWeight(e.target.value));
                                     }} placeholder="VD: 3.005,68" required />
                                 </div>
+
+                                {/* Paid Status (Sắt Thép Div Only) */}
+                                {division === 'SAT_THEP' && (
+                                    <div className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--c-surface)', borderRadius: 12, border: '1px solid var(--c-border)' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: 13, fontWeight: 600 }}>Thanh toán</span>
+                                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)' }}>Đã nhận đủ tiền công</span>
+                                        </div>
+                                        <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
+                                            <input type="checkbox" checked={isPaid} onChange={e => setIsPaid(e.target.checked)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 10 }} />
+                                            <span style={{
+                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                backgroundColor: isPaid ? '#10b981' : '#ccc', transition: '.4s', borderRadius: 34, pointerEvents: 'none'
+                                            }}>
+                                                <span style={{
+                                                    position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                                    backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                                    transform: isPaid ? 'translateX(20px)' : 'translateX(0)'
+                                                }} />
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
 
                                 {/* Divider */}
                                 <div style={{ height: 1, background: 'var(--c-border)', margin: '8px 0 16px' }} />
