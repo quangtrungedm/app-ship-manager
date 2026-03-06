@@ -111,18 +111,18 @@ export function BossShips() {
     const filteredShips = useMemo(() => {
         let result = ships;
 
-        // 1. Filter by Month
-        if (selectedMonth !== 'all') {
-            result = result.filter(s => {
-                const d = new Date(s.arrivalDate);
-                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
-            });
-        }
-
-        // 2. Filter by Search Query
+        // 1. Filter by Search Query (Global Search)
         if (searchQuery.trim() !== '') {
             const q = searchQuery.toLowerCase();
             result = result.filter(s => s.name.toLowerCase().includes(q));
+        } else {
+            // 2. Filter by Month (Only if no search query)
+            if (selectedMonth !== 'all') {
+                result = result.filter(s => {
+                    const d = new Date(s.arrivalDate);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+                });
+            }
         }
 
         // 3. Sort
