@@ -146,6 +146,7 @@ export function StaffShips() {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Ship | null>(null);
     const [selectedMonth, setSelectedMonth] = useState('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'unpaid'>('all');
     const [pickerOpen, setPickerOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const now = new Date();
@@ -165,8 +166,8 @@ export function StaffShips() {
             const q = removeAccents(searchQuery.toLowerCase());
             result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
         } else {
-            // 2. Filter by Month (Only if no search query)
-            if (selectedMonth === 'unpaid') {
+            // 2. Filter by Tab & Month (Only if no search query)
+            if (activeTab === 'unpaid') {
                 result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false);
             } else if (selectedMonth !== 'all') {
                 result = result.filter(s => {
@@ -295,6 +296,38 @@ export function StaffShips() {
                     <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /> Thêm mới</button>
                 </div>
 
+                {/* Segmented Control for SAT_THEP */}
+                {division === 'SAT_THEP' && (
+                    <div style={{ display: 'flex', background: 'var(--c-bg)', padding: 4, borderRadius: 12, marginBottom: 16 }}>
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            style={{
+                                flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer',
+                                fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === 'all' ? 700 : 500,
+                                background: activeTab === 'all' ? '#fff' : 'transparent',
+                                color: activeTab === 'all' ? 'var(--c-primary)' : 'var(--c-text-secondary)',
+                                boxShadow: activeTab === 'all' ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                                transition: 'all 0.2s ease',
+                            }}
+                        >
+                            Tất cả tàu
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('unpaid')}
+                            style={{
+                                flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer',
+                                fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === 'unpaid' ? 700 : 500,
+                                background: activeTab === 'unpaid' ? '#ef4444' : 'transparent',
+                                color: activeTab === 'unpaid' ? '#fff' : '#b91c1c',
+                                boxShadow: activeTab === 'unpaid' ? '0 2px 8px rgba(239, 68, 68, 0.3)' : 'none',
+                                transition: 'all 0.2s ease',
+                            }}
+                        >
+                            Công Nợ Tồn Đọng
+                        </button>
+                    </div>
+                )}
+
                 {/* Search & Sort Panel */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                     <div style={{ flex: 1, position: 'relative' }}>
@@ -336,70 +369,64 @@ export function StaffShips() {
                     </div>
                 </div>
 
-                {/* Month Picker */}
-                <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
-                    <button
-                        onClick={() => { setPickerOpen(!pickerOpen); }}
-                        style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                            width: '100%', padding: '10px 16px', border: 'none', background: 'transparent',
-                            cursor: 'pointer', fontFamily: 'inherit',
-                        }}
-                    >
-                        <Calendar size={15} color="var(--c-primary)" />
-                        <span style={{ fontSize: 14, fontWeight: 600 }}>
-                            {selectedMonth === 'all' ? 'Tất cả tháng' : selectedMonth === 'unpaid' ? 'Chưa TT (Tất cả)' : formatMonthLabel(selectedMonth)}
-                        </span>
-                        <ChevronDown size={15} color="var(--c-text-secondary)" style={{ transition: 'transform .2s', transform: pickerOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
-                    </button>
+                {/* Month Picker (Hidden when looking at unpaid debts) */}
+                {activeTab === 'all' && (
+                    <div className="card" style={{ marginBottom: 16, overflow: 'hidden' }}>
+                        <button
+                            onClick={() => { setPickerOpen(!pickerOpen); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                width: '100%', padding: '10px 16px', border: 'none', background: 'transparent',
+                                cursor: 'pointer', fontFamily: 'inherit',
+                            }}
+                        >
+                            <Calendar size={15} color="var(--c-primary)" />
+                            <span style={{ fontSize: 14, fontWeight: 600 }}>
+                                {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}
+                            </span>
+                            <ChevronDown size={15} color="var(--c-text-secondary)" style={{ transition: 'transform .2s', transform: pickerOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
+                        </button>
 
-                    {pickerOpen && (
-                        <div style={{ padding: '0 16px 14px' }}>
-                            <div style={{ height: 1, background: 'var(--c-border)', marginBottom: 12 }} />
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
-                                    <ChevronLeft size={15} />
-                                </button>
-                                <span style={{ fontSize: 14, fontWeight: 800 }}>{pickerYear}</span>
-                                <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
-                                    <ChevronRight size={15} />
-                                </button>
+                        {pickerOpen && (
+                            <div style={{ padding: '0 16px 14px' }}>
+                                <div style={{ height: 1, background: 'var(--c-border)', marginBottom: 12 }} />
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                    <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                                        <ChevronLeft size={15} />
+                                    </button>
+                                    <span style={{ fontSize: 14, fontWeight: 800 }}>{pickerYear}</span>
+                                    <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                                        <ChevronRight size={15} />
+                                    </button>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                                    {['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'].map((label, i) => {
+                                        const key = `${pickerYear}-${String(i + 1).padStart(2, '0')}`;
+                                        const isActive = selectedMonth === key;
+                                        const isCurrent = now.getMonth() === i && now.getFullYear() === pickerYear;
+                                        return (
+                                            <button key={i} onClick={() => { setSelectedMonth(key); setPickerOpen(false); }} style={{
+                                                padding: '9px 0', borderRadius: 10, border: isCurrent && !isActive ? '2px solid var(--c-primary)' : '2px solid transparent',
+                                                cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500,
+                                                background: isActive ? 'var(--c-primary)' : 'var(--c-bg)',
+                                                color: isActive ? '#fff' : 'var(--c-text)',
+                                                transition: 'all .15s',
+                                            }}>{label}</button>
+                                        );
+                                    })}
+                                </div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button onClick={() => { setSelectedMonth('all'); setPickerOpen(false); }} style={{
+                                        flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                        fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'all' ? 700 : 500,
+                                        background: selectedMonth === 'all' ? 'var(--c-primary)' : 'var(--c-bg)',
+                                        color: selectedMonth === 'all' ? '#fff' : 'var(--c-text-secondary)',
+                                    }}>Tất cả</button>
+                                </div>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
-                                {['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'].map((label, i) => {
-                                    const key = `${pickerYear}-${String(i + 1).padStart(2, '0')}`;
-                                    const isActive = selectedMonth === key;
-                                    const isCurrent = now.getMonth() === i && now.getFullYear() === pickerYear;
-                                    return (
-                                        <button key={i} onClick={() => { setSelectedMonth(key); setPickerOpen(false); }} style={{
-                                            padding: '9px 0', borderRadius: 10, border: isCurrent && !isActive ? '2px solid var(--c-primary)' : '2px solid transparent',
-                                            cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500,
-                                            background: isActive ? 'var(--c-primary)' : 'var(--c-bg)',
-                                            color: isActive ? '#fff' : 'var(--c-text)',
-                                            transition: 'all .15s',
-                                        }}>{label}</button>
-                                    );
-                                })}
-                            </div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => { setSelectedMonth('all'); setPickerOpen(false); }} style={{
-                                    flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                    fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'all' ? 700 : 500,
-                                    background: selectedMonth === 'all' ? 'var(--c-primary)' : 'var(--c-bg)',
-                                    color: selectedMonth === 'all' ? '#fff' : 'var(--c-text-secondary)',
-                                }}>Tất cả</button>
-                                {division === 'SAT_THEP' && (
-                                    <button onClick={() => { setSelectedMonth('unpaid'); setPickerOpen(false); }} style={{
-                                        flex: 2, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                        fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'unpaid' ? 700 : 500,
-                                        background: selectedMonth === 'unpaid' ? '#ef4444' : '#fee2e2',
-                                        color: selectedMonth === 'unpaid' ? '#fff' : '#b91c1c',
-                                    }}>Công Nợ (Tất cả tháng)</button>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
 
                 {filteredShips.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>
@@ -408,7 +435,7 @@ export function StaffShips() {
                 ) : (
                     filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
                 )}
-            </MobileLayout>
+            </MobileLayout >
 
             {/* ── Bottom Sheet Form ── */}
             {
