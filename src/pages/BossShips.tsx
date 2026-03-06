@@ -44,19 +44,29 @@ function BossShipCard({ ship }: { ship: Ship }) {
     const salary = ship.weight * 500;
 
     return (
-        <div className="card" style={{ padding: 16, marginBottom: 12 }}>
+        <div className="card" style={{
+            padding: 16, marginBottom: 14,
+            borderRadius: 16, border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+            transition: 'transform 0.2s ease, box-shadow 0.2s',
+            background: '#ffffff'
+        }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                <p style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 8 }}>{ship.name}</p>
+                <p style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12 }}>{ship.name}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                     <StatusBadge status={ship.status} completionDate={ship.completionDate} />
                     {isSatThep && (
-                        <span style={{
-                            padding: '2px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
-                            color: ship.isPaid ? '#15803d' : '#b91c1c',
-                            background: ship.isPaid ? '#dcfce7' : '#fee2e2'
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 4,
+                            padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                            color: ship.isPaid ? '#047857' : '#b91c1c',
+                            background: ship.isPaid ? '#ecfdf5' : '#fef2f2',
+                            border: `1px solid ${ship.isPaid ? '#a7f3d0' : '#fecaca'}`,
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
                         }}>
-                            {ship.isPaid ? 'Đã TT' : 'Chưa TT'}
-                        </span>
+                            {ship.isPaid && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
+                            {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA TT'}
+                        </div>
                     )}
                 </div>
             </div>
@@ -82,22 +92,43 @@ function BossShipCard({ ship }: { ship: Ship }) {
             </div>
 
             {isSatThep && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginBottom: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--c-text-secondary)' }}>Cảng dỡ:</span>
-                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.port || '—'}</span>
+                <div style={{
+                    display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13,
+                    marginBottom: 14, padding: '12px 14px',
+                    background: 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%)',
+                    borderRadius: 12, border: '1px solid #e2e8f0',
+                    boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-secondary)' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line>
+                            </svg>
+                            Cảng dỡ:
+                        </div>
+                        <span style={{ fontWeight: 700, color: '#334155' }}>{ship.port || '—'}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--c-text-secondary)' }}>Khách hàng:</span>
-                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.client || '—'}</span>
+                    <div style={{ height: 1, background: 'rgba(226, 232, 240, 0.6)' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-secondary)' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Khách hàng:
+                        </div>
+                        <span style={{ fontWeight: 700, color: '#334155' }}>{ship.client || '—'}</span>
                     </div>
                 </div>
             )}
 
             {isSatThep && (
-                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--c-text-secondary)' }}>Tiền công:</span>
-                    <span style={{ fontWeight: 700, color: 'var(--c-primary)' }}>{salary.toLocaleString('vi-VN')} đ</span>
+                <div style={{
+                    marginTop: 4, paddingTop: 12, borderTop: '1px dashed #cbd5e1',
+                    fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginBottom: 12
+                }}>
+                    <span style={{ color: 'var(--c-text-secondary)', fontWeight: 500 }}>Tổng tiền công:</span>
+                    <span style={{ fontWeight: 800, color: 'var(--c-primary)', fontSize: 16 }}>{salary.toLocaleString('vi-VN')} đ</span>
                 </div>
             )}
 
