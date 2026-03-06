@@ -134,6 +134,40 @@ export const MOCK_SHIPS: Ship[] = [
             { id: 'doc-7', name: 'Giay_phep_cang.pdf', url: '#' },
             { id: 'doc-8', name: 'Chung_nhan_bao_hiem.pdf', url: '#' },
         ]
+    },
+
+    // ── Mảng Sắt Thép (SAT_THEP) ──
+    {
+        id: 'shp-sat-01',
+        name: 'Thép Hoà Phát 01',
+        arrivalDate: '2026-03-01T06:00:00Z',
+        completionDate: '2026-03-03T10:00:00Z',
+        status: 'completed',
+        weight: 12500,
+        isPaid: true,
+        division: 'SAT_THEP',
+        documents: [],
+    },
+    {
+        id: 'shp-sat-02',
+        name: 'Vina Kyoei Star',
+        arrivalDate: '2026-03-04T08:00:00Z',
+        status: 'entering',
+        weight: 9800.5,
+        isPaid: false,
+        division: 'SAT_THEP',
+        documents: [],
+    },
+    {
+        id: 'shp-sat-03',
+        name: 'Pomina Express',
+        arrivalDate: '2026-02-15T09:00:00Z',
+        completionDate: '2026-02-18T16:00:00Z',
+        status: 'completed',
+        weight: 15200,
+        isPaid: false,
+        division: 'SAT_THEP',
+        documents: [],
     }
 ];
 

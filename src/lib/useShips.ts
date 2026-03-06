@@ -3,6 +3,7 @@ import { Ship } from '../types';
 import { isConfigured } from './config';
 import * as api from './api';
 import { MOCK_SHIPS } from '../data/mockShips';
+import { useAuth } from './AuthContext';
 
 interface UseShipsReturn {
     ships: Ship[];
@@ -15,21 +16,26 @@ interface UseShipsReturn {
 }
 
 export function useShips(): UseShipsReturn {
+    const { division } = useAuth();
+
     const [ships, setShips] = useState<Ship[]>(() => {
         // Init from cache if available
-        const cached = localStorage.getItem('ship_manager_cache');
+        const cached = localStorage.getItem(`ship_manager_cache_${division}`);
         if (cached) {
             try { return JSON.parse(cached); } catch (e) { return []; }
         }
         return [];
     });
     // If we have cached ships, don't show full loading state initially
-    const [loading, setLoading] = useState(!localStorage.getItem('ship_manager_cache'));
+    const [loading, setLoading] = useState(!localStorage.getItem(`ship_manager_cache_${division}`));
     const [error, setError] = useState<string | null>(null);
 
     const loadShips = useCallback(async () => {
+        // Ensure ships belong to the right division. Legacy ships without a division default to 'VIN_CAN_GIO'
+        const filterByDiv = (s: Ship) => s.division === division || (division === 'VIN_CAN_GIO' && !s.division);
+
         if (!isConfigured()) {
-            setShips(MOCK_SHIPS);
+            setShips(MOCK_SHIPS.filter(filterByDiv));
             setLoading(false);
             return;
         }
@@ -38,16 +44,17 @@ export function useShips(): UseShipsReturn {
         try {
             // Background fetch
             const data = await api.fetchShips();
-            setShips(data);
-            localStorage.setItem('ship_manager_cache', JSON.stringify(data));
+            const myShips = data.filter(filterByDiv);
+            setShips(myShips);
+            localStorage.setItem(`ship_manager_cache_${division}`, JSON.stringify(myShips));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
             // Keep existing ships/cache on error, don't fallback to mock
-            if (ships.length === 0) setShips(MOCK_SHIPS);
+            if (ships.length === 0) setShips(MOCK_SHIPS.filter(filterByDiv));
         } finally {
             setLoading(false);
         }
-    }, [ships.length]);
+    }, [ships.length, division]);
 
     useEffect(() => { loadShips(); }, [loadShips]);
 
@@ -59,12 +66,15 @@ export function useShips(): UseShipsReturn {
     }, [loadShips]);
 
     const handleAdd = async (ship: Omit<Ship, 'id'>) => {
+        // Auto-inject the current user's division
+        const shipPayload = { ...ship, division: division || undefined };
+
         if (isConfigured()) {
-            const { id } = await api.addShip(ship);
-            setShips(prev => [{ ...ship, id } as Ship, ...prev]);
+            const { id } = await api.addShip(shipPayload);
+            setShips(prev => [{ ...shipPayload, id } as Ship, ...prev]);
         } else {
             const id = crypto.randomUUID();
-            setShips(prev => [{ ...ship, id } as Ship, ...prev]);
+            setShips(prev => [{ ...shipPayload, id } as Ship, ...prev]);
         }
     };
 
