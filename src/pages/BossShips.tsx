@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
+import { useAuth } from '../lib/AuthContext';
 import { Ship, ShipStatus } from '../types';
 import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
 
@@ -167,6 +168,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
 
 export function BossShips() {
     const { ships, loading } = useShips();
+    const { division } = useAuth();
     const [selectedMonth, setSelectedMonth] = useState('all');
     const [pickerOpen, setPickerOpen] = useState(false);
     const now = new Date();
@@ -185,7 +187,9 @@ export function BossShips() {
             result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
         } else {
             // 2. Filter by Month (Only if no search query)
-            if (selectedMonth !== 'all') {
+            if (selectedMonth === 'unpaid') {
+                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false);
+            } else if (selectedMonth !== 'all') {
                 result = result.filter(s => {
                     const d = new Date(s.arrivalDate);
                     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
@@ -310,7 +314,7 @@ export function BossShips() {
                 >
                     <Calendar size={15} color="var(--c-primary)" />
                     <span style={{ fontSize: 14, fontWeight: 600 }}>
-                        {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}
+                        {selectedMonth === 'all' ? 'Tất cả tháng' : selectedMonth === 'unpaid' ? 'Chưa TT (Tất cả)' : formatMonthLabel(selectedMonth)}
                     </span>
                     <ChevronDown size={15} color="var(--c-text-secondary)" style={{ transition: 'transform .2s', transform: pickerOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
                 </button>
@@ -343,12 +347,22 @@ export function BossShips() {
                                 );
                             })}
                         </div>
-                        <button onClick={() => { setSelectedMonth('all'); setPickerOpen(false); }} style={{
-                            width: '100%', padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
-                            fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'all' ? 700 : 500,
-                            background: selectedMonth === 'all' ? 'var(--c-primary)' : 'var(--c-bg)',
-                            color: selectedMonth === 'all' ? '#fff' : 'var(--c-text-secondary)',
-                        }}>Tất cả</button>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => { setSelectedMonth('all'); setPickerOpen(false); }} style={{
+                                flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'all' ? 700 : 500,
+                                background: selectedMonth === 'all' ? 'var(--c-primary)' : 'var(--c-bg)',
+                                color: selectedMonth === 'all' ? '#fff' : 'var(--c-text-secondary)',
+                            }}>Tất cả</button>
+                            {division === 'SAT_THEP' && (
+                                <button onClick={() => { setSelectedMonth('unpaid'); setPickerOpen(false); }} style={{
+                                    flex: 2, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                    fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'unpaid' ? 700 : 500,
+                                    background: selectedMonth === 'unpaid' ? '#ef4444' : '#fee2e2',
+                                    color: selectedMonth === 'unpaid' ? '#fff' : '#b91c1c',
+                                }}>Công Nợ (Tất cả tháng)</button>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

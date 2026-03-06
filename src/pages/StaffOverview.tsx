@@ -1,14 +1,16 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock } from 'lucide-react';
+import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 const GRID_MONTHS = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
 export function StaffOverview() {
+    const navigate = useNavigate();
     const { ships } = useShips();
     const { division } = useAuth();
     const now = new Date();
@@ -34,6 +36,10 @@ export function StaffOverview() {
     const totalSalary = selectedWeight * 500;
     const paidSalary = selectedPaidWeight * 500;
     const unpaidSalary = totalSalary - paidSalary;
+
+    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false), [ships]);
+    const globalUnpaidCount = globalUnpaidShips.length;
+    const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + s.weight * 500, 0);
 
     const kpiPercent = Math.min(100, Math.round((selectedWeight / MONTHLY_KPI_TARGET) * 100));
     const kpiReached = selectedWeight >= MONTHLY_KPI_TARGET;
@@ -155,40 +161,73 @@ export function StaffOverview() {
 
             {/* ── Conditional Dashboard Content ── */}
             {isSatThep ? (
-                // --- IRON & STEEL: Cashflow Analytics ---
-                <div key={`salary-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 16, overflow: 'hidden' }}>
-                    <div style={{ padding: '16px', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderBottom: '1px solid var(--c-border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <Wallet size={16} color="var(--c-primary)" />
-                            <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Quản lý Thu nhập {MONTH_NAMES[selMonth]}</p>
+                <>
+                    {/* GLOBAL UNPAID WARNING WIDGET */}
+                    {globalUnpaidCount > 0 && (
+                        <div className="card fade-up fade-up-d1" style={{ marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', padding: '14px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Wallet size={18} color="#dc2626" />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Công nợ</p>
+                                    <p style={{ fontSize: 12, color: '#b91c1c', margin: '2px 0 0 0', fontWeight: 500 }}>Từ tất cả các tháng</p>
+                                </div>
+                            </div>
+                            <div style={{ background: '#fff', borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.05)' }}>
+                                <div>
+                                    <p style={{ fontSize: 12, color: '#7f1d1d', margin: '0 0 4px 0', fontWeight: 600 }}>Tồn đọng {globalUnpaidCount} chuyến</p>
+                                    <p style={{ fontSize: 18, color: '#dc2626', fontWeight: 800, margin: 0 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/staff/ships')}
+                                    style={{
+                                        background: '#dc2626', color: '#fff', border: 'none', borderRadius: 10,
+                                        padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)'
+                                    }}
+                                >
+                                    Xem <ArrowRight size={14} />
+                                </button>
+                            </div>
                         </div>
-                        <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', marginBottom: 4 }}>Tổng thu nhập dự toán (500đ/tấn):</p>
-                        <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--c-primary)', margin: 0 }}>
-                            {totalSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 14, color: 'var(--c-text)', fontWeight: 600 }}>VNĐ</span>
-                        </p>
-                    </div>
+                    )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                        <div style={{ padding: 16, borderRight: '1px solid var(--c-border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                <CheckCircle size={14} color="#16a34a" />
-                                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-text-secondary)' }}>Đã thanh toán</span>
+                    {/* --- IRON & STEEL: Cashflow Analytics --- */}
+                    <div key={`salary-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 16, overflow: 'hidden' }}>
+                        <div style={{ padding: '16px', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderBottom: '1px solid var(--c-border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <Wallet size={16} color="var(--c-primary)" />
+                                <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Quản lý Thu nhập {MONTH_NAMES[selMonth]}</p>
                             </div>
-                            <p style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: 0 }}>
-                                {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
+                            <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', marginBottom: 4 }}>Tổng thu nhập dự toán (500đ/tấn):</p>
+                            <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--c-primary)', margin: 0 }}>
+                                {totalSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 14, color: 'var(--c-text)', fontWeight: 600 }}>VNĐ</span>
                             </p>
                         </div>
-                        <div style={{ padding: 16, background: '#fef2f2' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                <Clock size={14} color="#dc2626" />
-                                <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>Công nợ</span>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                            <div style={{ padding: 16, borderRight: '1px solid var(--c-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                    <CheckCircle size={14} color="#16a34a" />
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-text-secondary)' }}>Đã thanh toán</span>
+                                </div>
+                                <p style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: 0 }}>
+                                    {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
+                                </p>
                             </div>
-                            <p style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>
-                                {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
-                            </p>
+                            <div style={{ padding: 16, background: '#fef2f2' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                    <Clock size={14} color="#dc2626" />
+                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>Công nợ</span>
+                                </div>
+                                <p style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>
+                                    {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </>
             ) : (
                 // --- VIN CAN GIO: KPI Analytics ---
                 <>
