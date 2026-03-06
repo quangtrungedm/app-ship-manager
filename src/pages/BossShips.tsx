@@ -50,9 +50,9 @@ function BossShipCard({ ship }: { ship: Ship }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                     <StatusBadge status={ship.status} completionDate={ship.completionDate} />
                     {isSatThep && (
-                        <span style={{ 
+                        <span style={{
                             padding: '2px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
-                            color: ship.isPaid ? '#15803d' : '#b91c1c', 
+                            color: ship.isPaid ? '#15803d' : '#b91c1c',
                             background: ship.isPaid ? '#dcfce7' : '#fee2e2'
                         }}>
                             {ship.isPaid ? 'Đã TT' : 'Chưa TT'}
@@ -80,6 +80,19 @@ function BossShipCard({ ship }: { ship: Ship }) {
                     <span style={{ fontWeight: 600 }}>{ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                 </div>
             </div>
+
+            {isSatThep && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginBottom: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--c-text-secondary)' }}>Cảng dỡ:</span>
+                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.port || '—'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--c-text-secondary)' }}>Khách hàng:</span>
+                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.client || '—'}</span>
+                    </div>
+                </div>
+            )}
 
             {isSatThep && (
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>

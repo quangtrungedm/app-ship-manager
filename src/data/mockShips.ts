@@ -146,6 +146,8 @@ export const MOCK_SHIPS: Ship[] = [
         weight: 12500,
         isPaid: true,
         division: 'SAT_THEP',
+        port: 'Sowatco Long Bình',
+        client: 'Hoà Phát',
         documents: [],
     },
     {
@@ -156,6 +158,8 @@ export const MOCK_SHIPS: Ship[] = [
         weight: 9800.5,
         isPaid: false,
         division: 'SAT_THEP',
+        port: 'Bourbon',
+        client: 'VAS Thép',
         documents: [],
     },
     {
@@ -167,6 +171,8 @@ export const MOCK_SHIPS: Ship[] = [
         weight: 15200,
         isPaid: false,
         division: 'SAT_THEP',
+        port: 'Vĩnh Tân',
+        client: 'VAS Phôi',
         documents: [],
     }
 ];

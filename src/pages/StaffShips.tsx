@@ -86,6 +86,20 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={13} /> {ship.documents.length} file</span>
                 )}
             </div>
+
+            {isSatThep && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--c-text-secondary)' }}>Cảng dỡ:</span>
+                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.port || '—'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--c-text-secondary)' }}>Khách hàng:</span>
+                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.client || '—'}</span>
+                    </div>
+                </div>
+            )}
+
             {isSatThep && (
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--c-border)', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--c-text-secondary)' }}>Tiền công:</span>
@@ -149,17 +163,21 @@ export function StaffShips() {
     const [completion, setCompletion] = useState('');
     const [weight, setWeight] = useState('');
     const [isPaid, setIsPaid] = useState(false);
+    const [port, setPort] = useState('');
+    const [client, setClient] = useState('');
     const [docs, setDocs] = useState<ShipDoc[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openNew = () => {
-        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false); setDocs([]);
+        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false); setPort(''); setClient(''); setDocs([]);
         setShowForm(true);
     };
     const openEdit = (s: Ship) => {
         setEditing(s); setName(s.name); setStatus(s.status || 'waiting'); setArrival(s.arrivalDate.split('T')[0]);
         setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
         setIsPaid(s.isPaid || false);
+        setPort(s.port || '');
+        setClient(s.client || '');
         setDocs([...s.documents]);
         setShowForm(true);
     };
@@ -208,6 +226,8 @@ export function StaffShips() {
                 status: status,
                 division: division || undefined,
                 isPaid: division === 'SAT_THEP' ? isPaid : undefined,
+                port: division === 'SAT_THEP' ? port : undefined,
+                client: division === 'SAT_THEP' ? client : undefined,
             };
             if (editing) { await updateShipApi(shipData); }
             else { await addShip(shipData); }
@@ -425,27 +445,58 @@ export function StaffShips() {
                                     }} placeholder="VD: 3.005,68" required />
                                 </div>
 
-                                {/* Paid Status (Sắt Thép Div Only) */}
+                                {/* Sắt Thép Div Only Fields */}
                                 {division === 'SAT_THEP' && (
-                                    <div className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--c-surface)', borderRadius: 12, border: '1px solid var(--c-border)' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: 13, fontWeight: 600 }}>Thanh toán</span>
-                                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)' }}>Đã nhận đủ tiền công</span>
+                                    <>
+                                        {/* Port & Client */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                            <div className="field">
+                                                <label>Cảng dỡ</label>
+                                                <select value={port} onChange={e => setPort(e.target.value)} required style={{
+                                                    width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--c-border)',
+                                                    background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
+                                                }}>
+                                                    <option value="" disabled>Chọn cảng dỡ</option>
+                                                    <option value="Sowatco Long Bình">Sowatco Long Bình</option>
+                                                    <option value="Vĩnh Tân">Vĩnh Tân</option>
+                                                    <option value="Cẩm Nguyên">Cẩm Nguyên</option>
+                                                    <option value="Bourbon">Bourbon</option>
+                                                </select>
+                                            </div>
+                                            <div className="field">
+                                                <label>Khách hàng (Hàng)</label>
+                                                <select value={client} onChange={e => setClient(e.target.value)} required style={{
+                                                    width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--c-border)',
+                                                    background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
+                                                }}>
+                                                    <option value="" disabled>Chọn đơn vị</option>
+                                                    <option value="Hoà Phát">Hoà Phát</option>
+                                                    <option value="VAS Thép">VAS Thép</option>
+                                                    <option value="VAS Phôi">VAS Phôi</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
-                                            <input type="checkbox" checked={isPaid} onChange={e => setIsPaid(e.target.checked)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 10 }} />
-                                            <span style={{
-                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                                backgroundColor: isPaid ? '#10b981' : '#ccc', transition: '.4s', borderRadius: 34, pointerEvents: 'none'
-                                            }}>
+
+                                        <div className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--c-surface)', borderRadius: 12, border: '1px solid var(--c-border)' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: 13, fontWeight: 600 }}>Thanh toán</span>
+                                                <span style={{ fontSize: 11, color: 'var(--c-text-secondary)' }}>Đã nhận đủ tiền công</span>
+                                            </div>
+                                            <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={isPaid} onChange={e => setIsPaid(e.target.checked)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 10 }} />
                                                 <span style={{
-                                                    position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
-                                                    backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
-                                                    transform: isPaid ? 'translateX(20px)' : 'translateX(0)'
-                                                }} />
-                                            </span>
-                                        </label>
-                                    </div>
+                                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                    backgroundColor: isPaid ? '#10b981' : '#ccc', transition: '.4s', borderRadius: 34, pointerEvents: 'none'
+                                                }}>
+                                                    <span style={{
+                                                        position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                                        backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                                                        transform: isPaid ? 'translateX(20px)' : 'translateX(0)'
+                                                    }} />
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </>
                                 )}
 
                                 {/* Divider */}

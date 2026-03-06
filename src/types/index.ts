@@ -9,6 +9,8 @@ export interface Ship {
     division?: string;
     status?: ShipStatus;
     isPaid?: boolean;
+    port?: string;
+    client?: string;
     documents: Document[];
     bossNotes?: string;
 }
