@@ -13,6 +13,23 @@ function formatMonthLabel(ym: string) {
     return `${names[parseInt(m)]} ${y}`;
 }
 
+const formatVNWeight = (value: string) => {
+    let cleaned = value.replace(/[^0-9.,]/g, '');
+    if (cleaned.endsWith('.') && !cleaned.slice(0, -1).includes(',')) {
+        cleaned = cleaned.slice(0, -1) + ',';
+    }
+    let normalized = cleaned.replace(/\./g, '');
+    const parts = normalized.split(',');
+    let intPart = parts[0];
+    let decPart = parts.length > 1 ? ',' + parts.slice(1).join('') : '';
+    if (intPart.length > 1 && intPart.startsWith('0')) {
+        intPart = intPart.replace(/^0+/, '');
+        if (intPart === '') intPart = '0';
+    }
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return intPart + decPart;
+};
+
 const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
     waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
     entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
@@ -375,9 +392,7 @@ export function StaffShips() {
                                 <div className="field">
                                     <label>Sản lượng (tấn)</label>
                                     <input type="text" inputMode="decimal" value={weight} onChange={e => {
-                                        // Allow only digits, dots, and commas
-                                        const val = e.target.value.replace(/[^0-9.,]/g, '');
-                                        setWeight(val);
+                                        setWeight(formatVNWeight(e.target.value));
                                     }} placeholder="VD: 3.005,68" required />
                                 </div>
 
