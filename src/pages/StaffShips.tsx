@@ -13,6 +13,10 @@ function formatMonthLabel(ym: string) {
     return `${names[parseInt(m)]} ${y}`;
 }
 
+const removeAccents = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+};
+
 const formatVNWeight = (value: string) => {
     let cleaned = value.replace(/[^0-9.,]/g, '');
     if (cleaned.endsWith('.') && !cleaned.slice(0, -1).includes(',')) {
@@ -94,8 +98,8 @@ export function StaffShips() {
 
         // 1. Filter by Search Query (Global Search)
         if (searchQuery.trim() !== '') {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(s => s.name.toLowerCase().includes(q));
+            const q = removeAccents(searchQuery.toLowerCase());
+            result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
         } else {
             // 2. Filter by Month (Only if no search query)
             if (selectedMonth !== 'all') {
@@ -313,7 +317,9 @@ export function StaffShips() {
                 </div>
 
                 {filteredShips.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>Không có tàu trong tháng này</div>
+                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>
+                        {searchQuery ? 'Không tìm thấy tàu phù hợp' : 'Không có tàu trong tháng này'}
+                    </div>
                 ) : (
                     filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
                 )}

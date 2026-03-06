@@ -10,6 +10,10 @@ function formatMonthLabel(ym: string) {
     return `${names[parseInt(m)]} ${y}`;
 }
 
+const removeAccents = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+};
+
 const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
     waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
     entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
@@ -113,8 +117,8 @@ export function BossShips() {
 
         // 1. Filter by Search Query (Global Search)
         if (searchQuery.trim() !== '') {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(s => s.name.toLowerCase().includes(q));
+            const q = removeAccents(searchQuery.toLowerCase());
+            result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
         } else {
             // 2. Filter by Month (Only if no search query)
             if (selectedMonth !== 'all') {
@@ -286,7 +290,9 @@ export function BossShips() {
             </div>
 
             {filteredShips.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>Không có tàu trong tháng này</div>
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>
+                    {searchQuery ? 'Không tìm thấy tàu phù hợp' : 'Không có tàu trong tháng này'}
+                </div>
             ) : (
                 filteredShips.map(s => <BossShipCard key={s.id} ship={s} />)
             )}
