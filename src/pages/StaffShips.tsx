@@ -46,7 +46,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
             </div>
             <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--c-text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={13} /> {date}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Weight size={13} /> {ship.weight.toLocaleString()} tấn</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Weight size={13} /> {ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                 {ship.documents.length > 0 && (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={13} /> {ship.documents.length} file</span>
                 )}
@@ -116,7 +116,7 @@ export function StaffShips() {
     };
     const openEdit = (s: Ship) => {
         setEditing(s); setName(s.name); setStatus(s.status || 'waiting'); setArrival(s.arrivalDate.split('T')[0]);
-        setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(String(s.weight));
+        setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
         setDocs([...s.documents]);
         setShowForm(true);
     };
@@ -155,11 +155,13 @@ export function StaffShips() {
                 uploadedDocs = docs;
             }
 
+            const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
+
             const shipData: Ship = {
                 id: editing?.id || `shp-${Date.now()}`,
                 name, arrivalDate: new Date(arrival).toISOString(),
                 completionDate: completion ? new Date(completion).toISOString() : undefined,
-                weight: Number(weight), documents: uploadedDocs,
+                weight: parsedWeight, documents: uploadedDocs,
                 status: status,
                 division: division || undefined,
             };
@@ -334,8 +336,8 @@ export function StaffShips() {
                                     </div>
                                     <div className="field">
                                         <label>Trạng thái</label>
-                                        <select 
-                                            value={status} 
+                                        <select
+                                            value={status}
                                             onChange={e => {
                                                 const newStatus = e.target.value as ShipStatus;
                                                 setStatus(newStatus);
@@ -372,7 +374,11 @@ export function StaffShips() {
                                 {/* Weight */}
                                 <div className="field">
                                     <label>Sản lượng (tấn)</label>
-                                    <input type="number" value={weight} onChange={e => setWeight(e.target.value)} placeholder="VD: 15000" required />
+                                    <input type="text" inputMode="decimal" value={weight} onChange={e => {
+                                        // Allow only digits, dots, and commas
+                                        const val = e.target.value.replace(/[^0-9.,]/g, '');
+                                        setWeight(val);
+                                    }} placeholder="VD: 3.005,68" required />
                                 </div>
 
                                 {/* Divider */}

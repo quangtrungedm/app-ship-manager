@@ -78,7 +78,7 @@ export function StaffDashboard() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-indigo-100 font-medium mb-1">Tổng Sản Lượng (Tấn)</p>
-                                <h3 className="text-4xl font-bold">{totalWeight.toLocaleString()}</h3>
+                                <h3 className="text-4xl font-bold">{totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</h3>
                             </div>
                             <div className="bg-indigo-400/30 p-3 rounded-xl">
                                 <TrendingUp size={24} className="text-white" />

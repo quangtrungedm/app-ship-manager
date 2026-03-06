@@ -61,7 +61,7 @@ export function ShipList({ ships, onShipClick }: ShipListProps) {
                                 )}
                                 <div>
                                     <span className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-0.5">Sản lượng</span>
-                                    <span className="font-medium text-slate-700">{ship.weight.toLocaleString()} tấn</span>
+                                    <span className="font-medium text-slate-700">{ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                                 </div>
                             </div>
                         </div>

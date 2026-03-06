@@ -60,7 +60,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Weight size={14} color="var(--c-warning)" />
                     <span style={{ color: 'var(--c-text-secondary)', width: 75 }}>Sản lượng:</span>
-                    <span style={{ fontWeight: 600 }}>{ship.weight.toLocaleString()} tấn</span>
+                    <span style={{ fontWeight: 600 }}>{ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                 </div>
             </div>
 

@@ -137,7 +137,7 @@ export function StaffOverview() {
                     <p style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 500, marginBottom: 4 }}>Sản lượng</p>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', fontWeight: 500 }}>{MONTH_NAMES[selMonth]} · {selYear}</p>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 6 }}>
-                        <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', margin: 0 }}>{selectedWeight.toLocaleString()}</p>
+                        <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', margin: 0 }}>{selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
                         <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.6)' }}>tấn</span>
                     </div>
                 </div>
@@ -158,7 +158,7 @@ export function StaffOverview() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--c-text-secondary)', marginTop: 4, paddingBottom: 12 }}>
                         <span>0</span>
-                        <span>Huề vốn: {MONTHLY_KPI_TARGET.toLocaleString()} tấn</span>
+                        <span>Huề vốn: {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                     </div>
                 </div>
                 {kpiReached ? (
@@ -169,13 +169,13 @@ export function StaffOverview() {
                             </div>
                             <div>
                                 <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d', margin: 0 }}>Vượt chỉ tiêu!</p>
-                                <p style={{ fontSize: 11, color: '#16a34a', margin: 0, marginTop: 2 }}>Đạt {selectedWeight.toLocaleString()} / {MONTHLY_KPI_TARGET.toLocaleString()} tấn</p>
+                                <p style={{ fontSize: 11, color: '#16a34a', margin: 0, marginTop: 2 }}>Đạt {selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} / {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</p>
                             </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
                                 <ArrowUpRight size={16} color="#16a34a" />
-                                <span style={{ fontSize: 18, fontWeight: 800, color: '#15803d' }}>+{(selectedWeight - MONTHLY_KPI_TARGET).toLocaleString()}</span>
+                                <span style={{ fontSize: 18, fontWeight: 800, color: '#15803d' }}>+{(selectedWeight - MONTHLY_KPI_TARGET).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
                             </div>
                             <p style={{ fontSize: 11, color: '#16a34a', margin: 0 }}>tấn vượt</p>
                         </div>
@@ -188,13 +188,13 @@ export function StaffOverview() {
                             </div>
                             <div>
                                 <p style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: 0 }}>Chưa đạt chỉ tiêu</p>
-                                <p style={{ fontSize: 11, color: '#a16207', margin: 0, marginTop: 2 }}>Đạt {selectedWeight.toLocaleString()} / {MONTHLY_KPI_TARGET.toLocaleString()} tấn</p>
+                                <p style={{ fontSize: 11, color: '#a16207', margin: 0, marginTop: 2 }}>Đạt {selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} / {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</p>
                             </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
                                 <ArrowDownRight size={16} color="#dc2626" />
-                                <span style={{ fontSize: 18, fontWeight: 800, color: '#dc2626' }}>-{(MONTHLY_KPI_TARGET - selectedWeight).toLocaleString()}</span>
+                                <span style={{ fontSize: 18, fontWeight: 800, color: '#dc2626' }}>-{(MONTHLY_KPI_TARGET - selectedWeight).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
                             </div>
                             <p style={{ fontSize: 11, color: '#a16207', margin: 0 }}>tấn thiếu</p>
                         </div>
@@ -210,7 +210,7 @@ export function StaffOverview() {
                         <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Sản Lượng Theo Tháng</p>
                     </div>
                     <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', margin: 0 }}>
-                        Mục tiêu huề vốn: <b style={{ color: 'var(--c-text)' }}>{MONTHLY_KPI_TARGET.toLocaleString()} tấn/tháng</b>
+                        Mục tiêu huề vốn: <b style={{ color: 'var(--c-text)' }}>{MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn/tháng</b>
                     </p>
                 </div>
 
@@ -239,7 +239,7 @@ export function StaffOverview() {
                                         <span style={{ fontSize: 10, color: 'var(--c-text-secondary)', background: 'var(--c-bg)', padding: '1px 6px', borderRadius: 4 }}>{d.shipCount} tàu</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                        <span style={{ fontSize: 12, fontWeight: 700, color: isSelectedMonth ? 'var(--c-primary)' : 'inherit' }}>{d.weight.toLocaleString()}</span>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: isSelectedMonth ? 'var(--c-primary)' : 'inherit' }}>{d.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
                                         <span style={{ fontSize: 10, color: 'var(--c-text-secondary)' }}>tấn</span>
                                         {d.weight > 0 && (
                                             <span style={{
@@ -247,7 +247,7 @@ export function StaffOverview() {
                                                 color: reached ? '#16a34a' : '#ef4444',
                                                 background: reached ? '#dcfce7' : '#fef2f2',
                                                 padding: '1px 6px', borderRadius: 4,
-                                            }}>{reached ? '+' : ''}{diff.toLocaleString()}</span>
+                                            }}>{reached ? '+' : ''}{diff.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
                                         )}
                                     </div>
                                 </div>
@@ -283,11 +283,11 @@ export function StaffOverview() {
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center', borderRight: '1px solid var(--c-border)' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>Cao nhất</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...yearMonthlyData.map(d => d.weight), 0).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.max(...yearMonthlyData.map(d => d.weight), 0).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
                     </div>
                     <div style={{ flex: 1, padding: '12px 16px', textAlign: 'center' }}>
                         <p style={{ fontSize: 10, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 500 }}>TB/tháng</p>
-                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(yearMonthlyData.reduce((a, d) => a + d.weight, 0) / 12).toLocaleString()}</p>
+                        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, marginTop: 2 }}>{Math.round(yearMonthlyData.reduce((a, d) => a + d.weight, 0) / 12).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
                     </div>
                 </div>
             </div>
