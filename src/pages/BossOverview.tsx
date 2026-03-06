@@ -124,7 +124,7 @@ export function BossOverview() {
                     </div>
                     <p style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 500, marginBottom: 4 }}>Tàu hoàn thành</p>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', fontWeight: 500 }}>{MONTH_NAMES[selMonth]} · {selYear}</p>
-                    <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginTop: 6 }}>{selectedShips.length}</p>
+                    <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginTop: 6 }}>{completedSelectedShips.length}</p>
                 </div>
                 <div className="fade-up fade-up-d2" style={{
                     padding: 16, borderRadius: 16, position: 'relative', overflow: 'hidden',
