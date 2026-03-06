@@ -1,6 +1,6 @@
 import { useAuth, DIVISION_LABELS } from '../lib/AuthContext';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Ship, LogOut } from 'lucide-react';
+import { LayoutDashboard, Ship, LogOut, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function MobileLayout({ children }: { children: React.ReactNode }) {
@@ -52,6 +52,49 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     const activeTab = tabs.find(t => location.pathname.startsWith(t.path)) || tabs[0];
     const ActiveIcon = activeTab.icon;
 
+    // --- Pull to Refresh Logic ---
+    const [touchStartY, setTouchStartY] = useState(0);
+    const [pullDistance, setPullDistance] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const maxPull = 120;
+    const threshold = 60;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (mainRef.current?.scrollTop !== 0) return;
+        setTouchStartY(e.touches[0].clientY);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (touchStartY === 0 || isRefreshing) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - touchStartY;
+        if (diff > 0 && mainRef.current?.scrollTop === 0) {
+            // Prevent default scroll behavior when dragging down at top
+            if (e.cancelable) e.preventDefault();
+            setPullDistance(Math.min(diff * 0.5, maxPull)); // Add resistance
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (pullDistance > threshold && !isRefreshing) {
+            setIsRefreshing(true);
+            setPullDistance(threshold); // Snap back to loading state height
+
+            // Dispatch global refresh event
+            const event = new CustomEvent('app:refresh');
+            window.dispatchEvent(event);
+
+            // Artificial delay to show spinner if network is too fast
+            setTimeout(() => {
+                setIsRefreshing(false);
+                setPullDistance(0);
+            }, 1000);
+        } else {
+            setPullDistance(0);
+        }
+        setTouchStartY(0);
+    };
+
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 500,
@@ -88,8 +131,40 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                 </button>
             </header>
 
-            <main ref={mainRef} style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 90 }}>
-                <div style={{ padding: 16 }} className="fade-up">
+            <main
+                ref={mainRef}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                    flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch',
+                    paddingBottom: 90, position: 'relative'
+                }}
+            >
+                {/* PTR Indicator */}
+                <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0,
+                    height: pullDistance,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', opacity: pullDistance / threshold,
+                    transition: isRefreshing || pullDistance === 0 ? 'height 0.3s ease, opacity 0.3s ease' : 'none'
+                }}>
+                    <RefreshCw
+                        size={24}
+                        color="var(--c-primary)"
+                        className={isRefreshing ? "spin" : ""}
+                        style={{
+                            transform: `rotate(${isRefreshing ? 0 : pullDistance * 2}deg)`,
+                            transition: isRefreshing ? 'none' : 'transform 0.1s'
+                        }}
+                    />
+                </div>
+
+                <div style={{
+                    padding: 16,
+                    transform: `translateY(${pullDistance}px)`,
+                    transition: isRefreshing || pullDistance === 0 ? 'transform 0.3s ease' : 'none'
+                }} className="fade-up">
                     {children}
                 </div>
             </main>

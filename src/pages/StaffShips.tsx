@@ -5,7 +5,7 @@ import { useAuth } from '../lib/AuthContext';
 import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
 import { Ship, Document as ShipDoc } from '../types';
-import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp } from 'lucide-react';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -46,14 +46,39 @@ export function StaffShips() {
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
+    // Search & Sort state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'weight-desc' | 'weight-asc'>('newest');
+
 
     const filteredShips = useMemo(() => {
-        if (selectedMonth === 'all') return ships;
-        return ships.filter(s => {
-            const d = new Date(s.arrivalDate);
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+        let result = ships;
+
+        // 1. Filter by Month
+        if (selectedMonth !== 'all') {
+            result = result.filter(s => {
+                const d = new Date(s.arrivalDate);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+            });
+        }
+
+        // 2. Filter by Search Query
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(s => s.name.toLowerCase().includes(q));
+        }
+
+        // 3. Sort
+        result = [...result].sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime();
+            if (sortBy === 'oldest') return new Date(a.arrivalDate).getTime() - new Date(b.arrivalDate).getTime();
+            if (sortBy === 'weight-desc') return b.weight - a.weight;
+            if (sortBy === 'weight-asc') return a.weight - b.weight;
+            return 0;
         });
-    }, [ships, selectedMonth]);
+
+        return result;
+    }, [ships, selectedMonth, searchQuery, sortBy]);
 
     // Form state
     const [name, setName] = useState('');
@@ -135,6 +160,47 @@ export function StaffShips() {
                         {_loading && <Loader2 size={12} className="spin" color="var(--c-primary)" />}
                     </div>
                     <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={16} /> Thêm mới</button>
+                </div>
+
+                {/* Search & Sort Panel */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                        <Search size={16} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                        <input
+                            type="text"
+                            placeholder="Tìm tên tàu..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%', padding: '10px 12px 10px 36px',
+                                border: 'none', borderRadius: 12, background: 'var(--c-surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                fontSize: 13, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none'
+                            }}
+                        />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                                <X size={14} color="var(--c-text-secondary)" />
+                            </button>
+                        )}
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                        <select
+                            value={sortBy}
+                            onChange={e => setSortBy(e.target.value as any)}
+                            style={{
+                                appearance: 'none', padding: '10px 36px 10px 12px',
+                                border: 'none', borderRadius: 12, background: 'var(--c-surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                fontSize: 13, fontWeight: 600, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="newest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                            <option value="weight-desc">Sản lượng (Cao-Thấp)</option>
+                            <option value="weight-asc">Sản lượng (Thấp-Cao)</option>
+                        </select>
+                        <ArrowDownUp size={14} color="var(--c-text-secondary)" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    </div>
                 </div>
 
                 {/* Month Picker */}

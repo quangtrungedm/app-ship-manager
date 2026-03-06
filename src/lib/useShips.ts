@@ -51,6 +51,13 @@ export function useShips(): UseShipsReturn {
 
     useEffect(() => { loadShips(); }, [loadShips]);
 
+    // Listen to global Pull-to-Refresh event
+    useEffect(() => {
+        const handleRefresh = () => { loadShips(); };
+        window.addEventListener('app:refresh', handleRefresh);
+        return () => window.removeEventListener('app:refresh', handleRefresh);
+    }, [loadShips]);
+
     const handleAdd = async (ship: Omit<Ship, 'id'>) => {
         if (isConfigured()) {
             const { id } = await api.addShip(ship);

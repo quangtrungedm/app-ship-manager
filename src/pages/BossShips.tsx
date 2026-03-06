@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { Ship } from '../types';
-import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp } from 'lucide-react';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -83,19 +83,130 @@ export function BossShips() {
     const now = new Date();
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
 
+    // Search & Sort state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'weight-desc' | 'weight-asc'>('newest');
+
     const filteredShips = useMemo(() => {
-        if (selectedMonth === 'all') return ships;
-        return ships.filter(s => {
-            const d = new Date(s.arrivalDate);
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+        let result = ships;
+
+        // 1. Filter by Month
+        if (selectedMonth !== 'all') {
+            result = result.filter(s => {
+                const d = new Date(s.arrivalDate);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+            });
+        }
+
+        // 2. Filter by Search Query
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(s => s.name.toLowerCase().includes(q));
+        }
+
+        // 3. Sort
+        result = [...result].sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime();
+            if (sortBy === 'oldest') return new Date(a.arrivalDate).getTime() - new Date(b.arrivalDate).getTime();
+            if (sortBy === 'weight-desc') return b.weight - a.weight;
+            if (sortBy === 'weight-asc') return a.weight - b.weight;
+            return 0;
         });
-    }, [ships, selectedMonth]);
+
+        return result;
+    }, [ships, selectedMonth, searchQuery, sortBy]);
+
+    const handleExportExcel = () => {
+        // Build CSV data
+        const headers = ['Tên tàu', 'Ngày vào', 'Ngày xong', 'Sản lượng (tấn)', 'Trạng thái', 'Số lượng tài liệu'];
+        const rows = filteredShips.map(s => {
+            const arrDate = new Date(s.arrivalDate).toLocaleDateString('vi-VN');
+            const compDate = s.completionDate ? new Date(s.completionDate).toLocaleDateString('vi-VN') : '';
+            return [
+                `"${s.name.replace(/"/g, '""')}"`, // escape quotes
+                arrDate,
+                compDate,
+                s.weight.toString(),
+                s.completionDate ? 'Đã hoàn thành' : 'Đang xử lý',
+                s.documents.length.toString()
+            ].join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+
+        // Add UTF-8 BOM so Excel reads Vietnamese characters correctly
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        const monthLabel = selectedMonth === 'all' ? 'Tat_Ca' : selectedMonth;
+        link.setAttribute('download', `Bao_Cao_San_Luong_Tau_${monthLabel}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <MobileLayout>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <p style={{ fontSize: 13, color: 'var(--c-text-secondary)' }}>{filteredShips.length} chuyến tàu · Chỉ xem</p>
-                {loading && <Loader2 size={12} className="spin" color="var(--c-primary)" />}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <p style={{ fontSize: 13, color: 'var(--c-text-secondary)' }}>{filteredShips.length} chuyến tàu · Chỉ xem</p>
+                    {loading && <Loader2 size={12} className="spin" color="var(--c-primary)" />}
+                </div>
+                <button
+                    onClick={handleExportExcel}
+                    className="btn"
+                    style={{
+                        background: 'var(--c-success)', color: '#fff',
+                        padding: '6px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+                        boxShadow: '0 2px 8px rgba(34,197,94,.3)'
+                    }}
+                >
+                    <Download size={15} /> Xuất Excel
+                </button>
+            </div>
+
+            {/* Search & Sort Panel */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                    <Search size={16} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                        type="text"
+                        placeholder="Tìm tên tàu..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%', padding: '10px 12px 10px 36px',
+                            border: 'none', borderRadius: 12, background: 'var(--c-surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                            fontSize: 13, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none'
+                        }}
+                    />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--c-text-secondary)' }}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    )}
+                </div>
+                <div style={{ position: 'relative' }}>
+                    <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value as any)}
+                        style={{
+                            appearance: 'none', padding: '10px 36px 10px 12px',
+                            border: 'none', borderRadius: 12, background: 'var(--c-surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                            fontSize: 13, fontWeight: 600, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="newest">Mới nhất</option>
+                        <option value="oldest">Cũ nhất</option>
+                        <option value="weight-desc">Sản lượng (Cao-Thấp)</option>
+                        <option value="weight-asc">Sản lượng (Thấp-Cao)</option>
+                    </select>
+                    <ArrowDownUp size={14} color="var(--c-text-secondary)" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                </div>
             </div>
 
             {/* Month Picker */}
