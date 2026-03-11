@@ -166,43 +166,47 @@ export function StaffOverview() {
 
             {/* ── Conditional Dashboard Content ── */}
             {isSatThep ? (
-                <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
                     {/* GLOBAL UNPAID WARNING WIDGET */}
                     {globalUnpaidCount > 0 && (
                         <div className="card fade-up fade-up-d1" style={{
-                            marginBottom: 20,
-                            background: 'linear-gradient(145deg, #fef2f2 0%, #fff1f2 100%)',
-                            border: '1px solid rgba(239, 68, 68, 0.2)',
-                            boxShadow: 'var(--shadow-glow-danger)',
-                            padding: '16px 18px',
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(225, 29, 72, 0.15)',
+                            boxShadow: '0 8px 24px rgba(225, 29, 72, 0.08)',
+                            padding: 16, borderRadius: 20,
                             position: 'relative', overflow: 'hidden',
                         }}>
-                            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, background: 'radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(255,255,255,0) 70%)', pointerEvents: 'none' }} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--c-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)' }}>
-                                    <Wallet size={20} color="#dc2626" strokeWidth={2.5} />
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: 14, fontWeight: 800, color: '#991b1b', margin: 0 }}>Thông báo Lương Tồn Đọng</p>
-                                    <p style={{ fontSize: 12, color: '#b91c1c', margin: '4px 0 0 0', fontWeight: 600, opacity: 0.8 }}>Tất cả các tháng</p>
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #f43f5e, #fda4af)' }} />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ position: 'relative', width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg, #fff1f2, #ffe4e6)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                                        <Wallet size={22} color="#e11d48" strokeWidth={2.5} />
+                                        <div style={{ position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: '50%', background: '#f43f5e', border: '2px solid #fff', animation: 'pulse 2s infinite' }} />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: 13, color: '#be123c', margin: '0 0 2px 0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tất cả các tháng</p>
+                                        <p style={{ fontSize: 16, fontWeight: 800, color: '#881337', margin: 0, letterSpacing: '-0.3px' }}>Thông báo lương chưa thanh toán</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.5)' }}>
+                            <div style={{ background: '#fff', borderRadius: 16, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(225, 29, 72, 0.1)' }}>
                                 <div>
-                                    <p style={{ fontSize: 12, color: '#7f1d1d', margin: '0 0 6px 0', fontWeight: 700 }}>Tồn đọng {globalUnpaidCount} chuyến</p>
-                                    <p style={{ fontSize: 22, color: '#dc2626', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
+                                    <p style={{ fontSize: 12, color: '#9f1239', margin: '0 0 4px 0', fontWeight: 700 }}>Tồn đọng {globalUnpaidCount} tàu</p>
+                                    <p style={{ fontSize: 24, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
                                 </div>
                                 <button
                                     onClick={() => navigate('/staff/ships')}
                                     style={{
-                                        background: '#dc2626', color: '#fff', border: 'none', borderRadius: 'var(--radius-round)',
-                                        padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
-                                        transition: 'transform 0.2s',
+                                        background: 'linear-gradient(135deg, #e11d48, #be123c)', color: '#fff', border: 'none', borderRadius: 12,
+                                        padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 12px rgba(225, 29, 72, 0.25)',
+                                        transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                                         WebkitTapHighlightColor: 'transparent'
                                     }}
-                                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+                                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
                                     onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                 >
                                     Xem ngay <ArrowRight size={16} strokeWidth={2.5} />
                                 </button>
@@ -210,43 +214,59 @@ export function StaffOverview() {
                         </div>
                     )}
 
-                    {/* --- IRON & STEEL: Cashflow Analytics --- */}
-                    <div key={`salary-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 20, overflow: 'hidden' }}>
-                        <div style={{ padding: '20px 18px', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderBottom: '1px solid var(--c-border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                                <div style={{ padding: 6, background: 'var(--c-primary-light)', borderRadius: 8 }}>
-                                    <Wallet size={18} color="var(--c-primary)" strokeWidth={2.5} />
-                                </div>
-                                <p style={{ fontSize: 15, fontWeight: 800, margin: 0, color: 'var(--c-text)' }}>Quản lý Thu nhập {MONTH_NAMES[selMonth]}</p>
+                    {/* --- IRON & STEEL: Cashflow Analytics (New Grid) --- */}
+                    <div className="card fade-up fade-up-d2" style={{ padding: 20, borderRadius: 24, background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.04)', border: '1px solid var(--c-border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Wallet size={18} color="#334155" strokeWidth={2.5} />
                             </div>
-                            <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', marginBottom: 8, fontWeight: 500 }}>Tổng thu nhập dự toán (500đ/tấn):</p>
-                            <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--c-primary)', margin: 0, letterSpacing: '-1px' }}>
-                                {totalSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 16, color: 'var(--c-text-secondary)', fontWeight: 600 }}>VNĐ</span>
-                            </p>
+                            <div>
+                                <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', fontWeight: 600, margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quản lý Mảng Sắt Thép</p>
+                                <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Quản lý Thu nhập {MONTH_NAMES[selMonth]}</p>
+                            </div>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                            <div style={{ padding: 18, borderRight: '1px solid var(--c-border)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                    <CheckCircle size={16} color="#16a34a" strokeWidth={2.5} />
-                                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text-secondary)' }}>Đã thanh toán</span>
+                        {/* Total Expected Box */}
+                        <div style={{ background: 'linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, border: '1px solid #e2e8f0' }}>
+                            <p style={{ fontSize: 12, color: '#475569', marginBottom: 6, fontWeight: 600 }}>Tổng thu nhập dự toán (500đ/tấn):</p>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                                <p style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px' }}>
+                                    {totalSalary.toLocaleString('vi-VN')}
+                                </p>
+                                <span style={{ fontSize: 16, color: '#64748b', fontWeight: 700 }}>VNĐ</span>
+                            </div>
+                        </div>
+
+                        {/* Grid for Paid / Unpaid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <div style={{ background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)', border: '1px solid #a7f3d0', borderRadius: 16, padding: 16, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                    <div style={{ width: 24, height: 24, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>
+                                        <CheckCircle size={14} color="#fff" strokeWidth={3} />
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#065f46' }}>Đã thanh toán</span>
                                 </div>
-                                <p style={{ fontSize: 20, fontWeight: 800, color: '#15803d', margin: 0, letterSpacing: '-0.5px' }}>
-                                    {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 13, fontWeight: 600 }}>đ</span>
+                                <p style={{ fontSize: 20, fontWeight: 800, color: '#047857', margin: 0, letterSpacing: '-0.5px' }}>
+                                    {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.8 }}>đ</span>
                                 </p>
                             </div>
-                            <div style={{ padding: 18, background: 'var(--c-danger-light)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                    <Clock size={16} color="#dc2626" strokeWidth={2.5} />
-                                    <span style={{ fontSize: 13, fontWeight: 700, color: '#991b1b' }}>Chưa trả</span>
+
+                            <div style={{ background: 'linear-gradient(135deg, #fff1f2, #ffe4e6)', border: '1px solid #fecdd3', borderRadius: 16, padding: 16, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: 'radial-gradient(circle, rgba(225,29,72,0.1) 0%, transparent 70%)' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                    <div style={{ width: 24, height: 24, borderRadius: 8, background: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(225,29,72,0.3)' }}>
+                                        <Clock size={14} color="#fff" strokeWidth={3} />
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#9f1239' }}>Chưa thanh toán</span>
                                 </div>
-                                <p style={{ fontSize: 20, fontWeight: 800, color: '#dc2626', margin: 0, letterSpacing: '-0.5px' }}>
-                                    {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 13, fontWeight: 600 }}>đ</span>
+                                <p style={{ fontSize: 20, fontWeight: 800, color: '#be123c', margin: 0, letterSpacing: '-0.5px' }}>
+                                    {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.8 }}>đ</span>
                                 </p>
                             </div>
                         </div>
                     </div>
-                </>
+                </div>
             ) : (
                 // --- VIN CAN GIO: KPI Analytics ---
                 <>

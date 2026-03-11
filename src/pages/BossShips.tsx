@@ -70,7 +70,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
                             letterSpacing: '0.5px'
                         }}>
                             {ship.isPaid && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
-                            {ship.isPaid ? 'ĐÃ TT LƯƠNG' : 'CHƯA TRẢ'}
+                            {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'}
                         </div>
                     )}
                 </div>
@@ -292,7 +292,7 @@ export function BossShips() {
                             transition: 'all 0.2s ease',
                         }}
                     >
-                        Lương Chưa Trả
+                        Lương Chưa Thanh Toán
                     </button>
                 </div>
             )}
