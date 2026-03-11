@@ -45,103 +45,113 @@ function BossShipCard({ ship }: { ship: Ship }) {
     const isSatThep = ship.division === 'SAT_THEP';
     const salary = ship.weight * 500;
 
+    let statusColor = 'var(--c-text-secondary)';
+    if (ship.status === 'entering') statusColor = 'var(--c-warning)';
+    if (ship.status === 'completed') statusColor = 'var(--c-success)';
+    if (ship.status === 'waiting') statusColor = 'var(--c-danger)';
+
     return (
         <div className="card fade-up" style={{
-            padding: 20, marginBottom: 16,
+            padding: 0, marginBottom: 16,
             background: 'var(--c-surface)',
             border: '1px solid rgba(0,0,0,0.03)',
+            borderRadius: 'var(--radius-md)',
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
             transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
             transformOrigin: 'center center',
             WebkitTapHighlightColor: 'transparent',
+            position: 'relative',
         }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12, letterSpacing: '-0.3px' }}>
-                    {ship.name}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-                    <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: statusColor }} />
+
+            <div style={{ padding: '16px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                    <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--c-text)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12, letterSpacing: '-0.3px' }}>
+                        {ship.name}
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                        <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                        {isSatThep && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                padding: '4px 12px', borderRadius: 99, fontSize: 10.5, fontWeight: 800,
+                                color: ship.isPaid ? '#047857' : '#b91c1c',
+                                background: ship.isPaid ? 'var(--c-success-light)' : 'var(--c-danger-light)',
+                                border: `1px solid ${ship.isPaid ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                                letterSpacing: '0.5px'
+                            }}>
+                                {ship.isPaid && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
+                                {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 4 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày vào</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Calendar size={14} color="var(--c-primary)" /> {fmtDate(ship.arrivalDate)}
+                        </span>
+                    </div>
                     {isSatThep && (
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '4px 12px', borderRadius: 99, fontSize: 10.5, fontWeight: 800,
-                            color: ship.isPaid ? '#047857' : '#b91c1c',
-                            background: ship.isPaid ? 'var(--c-success-light)' : 'var(--c-danger-light)',
-                            border: `1px solid ${ship.isPaid ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                            letterSpacing: '0.5px'
-                        }}>
-                            {ship.isPaid && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
-                            {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cảng dỡ</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line></svg>
+                                {ship.port || '—'}
+                            </span>
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sản lượng</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Weight size={14} color="var(--c-warning)" /> {ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn
+                        </span>
+                    </div>
+                    {isSatThep && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Khách hàng</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                {ship.client || '—'}
+                            </span>
                         </div>
                     )}
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, marginBottom: ship.documents.length > 0 || isSatThep ? 16 : 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Calendar size={14} color="var(--c-primary)" strokeWidth={2.5} />
-                    <span style={{ color: 'var(--c-text-secondary)', width: 85, fontWeight: 500 }}>Ngày vào:</span>
-                    <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{fmtDate(ship.arrivalDate)}</span>
-                </div>
-                {ship.completionDate && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Calendar size={14} color="var(--c-success)" strokeWidth={2.5} />
-                        <span style={{ color: 'var(--c-text-secondary)', width: 85, fontWeight: 500 }}>Ngày xong:</span>
-                        <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{fmtDate(ship.completionDate)}</span>
-                    </div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Weight size={14} color="var(--c-warning)" strokeWidth={2.5} />
-                    <span style={{ color: 'var(--c-text-secondary)', width: 85, fontWeight: 500 }}>Sản lượng:</span>
-                    <span style={{ fontWeight: 600, color: 'var(--c-text)' }}>{ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
-                </div>
-            </div>
-
             {isSatThep && (
                 <div style={{
-                    display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13,
-                    marginBottom: 16, padding: '14px 16px',
-                    background: 'var(--c-bg)',
-                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--c-border)',
+                    padding: '12px 20px',
+                    background: 'rgba(0,0,0,0.02)',
+                    borderTop: '1px solid rgba(0,0,0,0.04)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--c-text-secondary)', fontWeight: 500 }}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
-                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line>
-                            </svg>
-                            Cảng dỡ:
-                        </div>
-                        <span style={{ fontWeight: 700, color: 'var(--c-text)' }}>{ship.port || '—'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ color: 'var(--c-text-secondary)', fontSize: 12, fontWeight: 600 }}>TỔNG LƯƠNG</span>
                     </div>
-                    <div style={{ height: 1, background: 'var(--c-border)', opacity: 0.6 }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--c-text-secondary)', fontWeight: 500 }}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                            </svg>
-                            Khách hàng:
-                        </div>
-                        <span style={{ fontWeight: 700, color: 'var(--c-text)' }}>{ship.client || '—'}</span>
-                    </div>
+                    <span style={{ fontWeight: 800, color: ship.isPaid ? 'var(--c-success)' : 'var(--c-danger)', fontSize: 16, letterSpacing: '-0.5px' }}>
+                        {salary.toLocaleString('vi-VN')} đ
+                    </span>
                 </div>
             )}
 
-            {isSatThep && (
-                <div style={{
-                    marginTop: 4, paddingTop: 16, borderTop: '1px dashed var(--c-border)',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    marginBottom: 16
-                }}>
-                    <span style={{ color: 'var(--c-text-secondary)', fontSize: 13, fontWeight: 600 }}>T.Tiền lương dự tính:</span>
-                    <span style={{ fontWeight: 800, color: 'var(--c-primary)', fontSize: 17, letterSpacing: '-0.5px' }}>{salary.toLocaleString('vi-VN')} đ</span>
+            {!isSatThep && ship.documents.length > 0 && (
+                <div style={{ padding: '0 20px 16px 20px' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700, color: 'var(--c-text-secondary)' }}>
+                        <FileText size={12} /> {ship.documents.length} giấy tờ
+                    </span>
                 </div>
             )}
 
             {ship.documents.length > 0 && (
-                <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: 10 }}>
-                    <button onClick={() => setFilesOpen(!filesOpen)} style={{
+                <div style={{ borderTop: '1px solid var(--c-border)', padding: '0 20px 10px 20px' }}>
+                    <button onClick={(e) => { e.stopPropagation(); setFilesOpen(!filesOpen); }} style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
                         background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                        padding: '6px 0', color: 'var(--c-primary)', fontSize: 13, fontWeight: 600,
+                        padding: '12px 0 6px 0', color: 'var(--c-primary)', fontSize: 13, fontWeight: 600,
                     }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <FileText size={15} /> Giấy tờ ({ship.documents.length} file)
@@ -151,7 +161,7 @@ function BossShipCard({ ship }: { ship: Ship }) {
                     {filesOpen && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                             {ship.documents.map(doc => (
-                                <a key={doc.id} href={doc.url} download style={{
+                                <a key={doc.id} href={doc.url} download onClick={(e) => e.stopPropagation()} style={{
                                     display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
                                     background: 'var(--c-bg)', borderRadius: 10, textDecoration: 'none', color: 'var(--c-text)',
                                     fontSize: 13, fontWeight: 500,
