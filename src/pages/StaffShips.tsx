@@ -60,7 +60,7 @@ function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStat
 }
 
 function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
-    const date = new Date(ship.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const isSatThep = ship.division === 'SAT_THEP';
     const salary = ship.weight * 500;
 
@@ -100,15 +100,13 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                         <StatusBadge status={ship.status} completionDate={ship.completionDate} />
                         {isSatThep && (
                             <div style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '4px 12px', borderRadius: 99, fontSize: 10.5, fontWeight: 800,
-                                color: ship.isPaid ? '#047857' : '#b91c1c',
-                                background: ship.isPaid ? 'var(--c-success-light)' : 'var(--c-danger-light)',
-                                border: `1px solid ${ship.isPaid ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                                letterSpacing: '0.5px'
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                padding: '4px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+                                color: ship.isPaid ? '#15803d' : '#b91c1c',
+                                background: ship.isPaid ? '#dcfce7' : '#fee2e2',
                             }}>
-                                {ship.isPaid && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
-                                {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA THANH TOÁN'}
+                                {ship.isPaid ? <CheckCircle size={12} strokeWidth={2.5} /> : <Clock size={12} strokeWidth={2.5} />}
+                                {ship.isPaid ? 'Đã T.Toán' : 'Chưa T.Toán'}
                             </div>
                         )}
                     </div>
@@ -116,9 +114,17 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 4 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày vào</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Calendar size={14} color="var(--c-primary)" /> {date}
+                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {ship.completionDate ? 'Ngày (Vào - Ra)' : 'Ngày vào'}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                            <Calendar size={14} color="var(--c-primary)" /> {fmtDate(ship.arrivalDate)}
+                            {ship.completionDate && (
+                                <>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--c-text-secondary)" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                                    <span style={{ color: 'var(--c-success)' }}>{fmtDate(ship.completionDate)}</span>
+                                </>
+                            )}
                         </span>
                     </div>
                     {isSatThep && (
