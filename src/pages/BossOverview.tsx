@@ -5,6 +5,7 @@ import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
 import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
@@ -38,7 +39,7 @@ export function BossOverview() {
     const paidSalary = selectedPaidWeight * 500;
     const unpaidSalary = totalSalary - paidSalary;
 
-    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false), [ships]);
+    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && (s.status === 'completed' || s.completionDate)), [ships]);
     const globalUnpaidCount = globalUnpaidShips.length;
     const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + s.weight * 500, 0);
 
@@ -96,11 +97,11 @@ export function BossOverview() {
                     <div style={{ padding: '0 16px 16px' }}>
                         <div style={{ height: 1, background: 'var(--c-border)', marginBottom: 12 }} />
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                            <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit', transition: 'all 0.1s', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                 <ChevronLeft size={16} />
                             </button>
                             <span style={{ fontSize: 15, fontWeight: 800 }}>{pickerYear}</span>
-                            <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                            <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit', transition: 'all 0.1s', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                 <ChevronRight size={16} />
                             </button>
                         </div>
@@ -114,8 +115,13 @@ export function BossOverview() {
                                         cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: isActive ? 700 : 500,
                                         background: isActive ? 'var(--c-primary)' : 'var(--c-bg)',
                                         color: isActive ? '#fff' : 'var(--c-text)',
-                                        transition: 'all .15s',
-                                    }}>{label}</button>
+                                        transition: 'all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                        WebkitTapHighlightColor: 'transparent'
+                                    }}
+                                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
+                                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                    >{label}</button>
                                 );
                             })}
                         </div>
@@ -124,36 +130,35 @@ export function BossOverview() {
             </div>
 
             {/* KPI Cards */}
-            <div key={`cards-${selMonth}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+            <div key={`cards-${selMonth}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
                 <div className="fade-up fade-up-d1" style={{
-                    padding: 16, borderRadius: 16, position: 'relative', overflow: 'hidden',
+                    padding: 18, borderRadius: 'var(--radius)', position: 'relative', overflow: 'hidden',
                     background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
-                    boxShadow: '0 4px 16px rgba(79,70,229,.3)',
+                    boxShadow: '0 8px 20px -4px rgba(79,70,229,.4)',
                 }}>
-                    <div style={{ position: 'absolute', top: -12, right: -12, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,.1)' }} />
-                    <div style={{ position: 'absolute', bottom: -8, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, backdropFilter: 'blur(4px)' }}>
-                        <Anchor size={17} color="#fff" />
+                    <div style={{ position: 'absolute', top: -12, right: -12, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,.1)' }} />
+                    <div style={{ position: 'absolute', bottom: -8, right: 16, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
+                    <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, backdropFilter: 'blur(8px)' }}>
+                        <Anchor size={20} color="#fff" strokeWidth={2.5} />
                     </div>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 500, marginBottom: 4 }}>Tàu hoàn thành</p>
+                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.8)', fontWeight: 600, marginBottom: 4 }}>Tàu hoàn thành</p>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', fontWeight: 500 }}>{MONTH_NAMES[selMonth]} · {selYear}</p>
-                    <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginTop: 6 }}>{completedSelectedShips.length}</p>
+                    <p style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginTop: 8, letterSpacing: '-1px' }}>{completedSelectedShips.length}</p>
                 </div>
                 <div className="fade-up fade-up-d2" style={{
-                    padding: 16, borderRadius: 16, position: 'relative', overflow: 'hidden',
+                    padding: 18, borderRadius: 'var(--radius)', position: 'relative', overflow: 'hidden',
                     background: 'linear-gradient(135deg, #059669, #10b981)',
-                    boxShadow: '0 4px 16px rgba(5,150,105,.3)',
+                    boxShadow: '0 8px 20px -4px rgba(5,150,105,.4)',
                 }}>
-                    <div style={{ position: 'absolute', top: -12, right: -12, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,.1)' }} />
-                    <div style={{ position: 'absolute', bottom: -8, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, backdropFilter: 'blur(4px)' }}>
-                        <TrendingUp size={17} color="#fff" />
+                    <div style={{ position: 'absolute', top: -12, right: -12, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,.1)' }} />
+                    <div style={{ position: 'absolute', bottom: -8, right: 16, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
+                    <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, backdropFilter: 'blur(8px)' }}>
+                        <TrendingUp size={20} color="#fff" strokeWidth={2.5} />
                     </div>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,.7)', fontWeight: 500, marginBottom: 4 }}>Sản lượng</p>
+                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,.8)', fontWeight: 600, marginBottom: 4 }}>Sản lượng</p>
                     <p style={{ fontSize: 10, color: 'rgba(255,255,255,.5)', fontWeight: 500 }}>{MONTH_NAMES[selMonth]} · {selYear}</p>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 6 }}>
-                        <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', margin: 0 }}>{selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,.6)' }}>tấn</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 8 }}>
+                        <p style={{ fontSize: 32, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-1px' }}>{selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
                     </div>
                 </div>
             </div>
@@ -163,65 +168,79 @@ export function BossOverview() {
                 <>
                     {/* GLOBAL UNPAID WARNING WIDGET */}
                     {globalUnpaidCount > 0 && (
-                        <div className="card fade-up fade-up-d1" style={{ marginBottom: 16, background: '#fef2f2', border: '1px solid #fca5a5', padding: '14px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                <div style={{ width: 34, height: 34, borderRadius: 10, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Wallet size={18} color="#dc2626" />
+                        <div className="card fade-up fade-up-d1" style={{
+                            marginBottom: 20,
+                            background: 'linear-gradient(145deg, #fef2f2 0%, #fff1f2 100%)',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            boxShadow: 'var(--shadow-glow-danger)',
+                            padding: '16px 18px',
+                            position: 'relative', overflow: 'hidden',
+                        }}>
+                            <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, background: 'radial-gradient(circle, rgba(239,68,68,0.1) 0%, rgba(255,255,255,0) 70%)', pointerEvents: 'none' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--c-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)' }}>
+                                    <Wallet size={20} color="#dc2626" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', margin: 0 }}>Cảnh báo Tiền Lương</p>
-                                    <p style={{ fontSize: 12, color: '#b91c1c', margin: '2px 0 0 0', fontWeight: 500 }}>Từ tất cả các tháng</p>
+                                    <p style={{ fontSize: 14, fontWeight: 800, color: '#991b1b', margin: 0 }}>Cảnh báo Lương Tồn Đọng</p>
+                                    <p style={{ fontSize: 12, color: '#b91c1c', margin: '4px 0 0 0', fontWeight: 600, opacity: 0.8 }}>Tất cả các tháng</p>
                                 </div>
                             </div>
-                            <div style={{ background: '#fff', borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.05)' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', borderRadius: 14, padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.5)' }}>
                                 <div>
-                                    <p style={{ fontSize: 12, color: '#7f1d1d', margin: '0 0 4px 0', fontWeight: 600 }}>Tồn đọng {globalUnpaidCount} chuyến</p>
-                                    <p style={{ fontSize: 18, color: '#dc2626', fontWeight: 800, margin: 0 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
+                                    <p style={{ fontSize: 12, color: '#7f1d1d', margin: '0 0 6px 0', fontWeight: 700 }}>Tồn đọng {globalUnpaidCount} chuyến</p>
+                                    <p style={{ fontSize: 22, color: '#dc2626', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
                                 </div>
                                 <button
                                     onClick={() => navigate('/boss/ships')}
                                     style={{
-                                        background: '#dc2626', color: '#fff', border: 'none', borderRadius: 10,
-                                        padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)'
+                                        background: '#dc2626', color: '#fff', border: 'none', borderRadius: 'var(--radius-round)',
+                                        padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                                        transition: 'transform 0.2s',
+                                        WebkitTapHighlightColor: 'transparent'
                                     }}
+                                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+                                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                    Xem <ArrowRight size={14} />
+                                    Theo dõi <ArrowRight size={16} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {/* --- IRON & STEEL: Cashflow Analytics --- */}
-                    <div key={`salary-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 16, overflow: 'hidden' }}>
-                        <div style={{ padding: '16px', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderBottom: '1px solid var(--c-border)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                <Wallet size={16} color="var(--c-primary)" />
-                                <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Quản lý Chi phí {MONTH_NAMES[selMonth]}</p>
+                    <div key={`salary-${selMonth}`} className="card fade-up fade-up-d2" style={{ padding: 0, marginBottom: 20, overflow: 'hidden' }}>
+                        <div style={{ padding: '20px 18px', background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', borderBottom: '1px solid var(--c-border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                                <div style={{ padding: 6, background: 'var(--c-primary-light)', borderRadius: 8 }}>
+                                    <Wallet size={18} color="var(--c-primary)" strokeWidth={2.5} />
+                                </div>
+                                <p style={{ fontSize: 15, fontWeight: 800, margin: 0, color: 'var(--c-text)' }}>Tổng Lương {MONTH_NAMES[selMonth]}</p>
                             </div>
-                            <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', marginBottom: 4 }}>Tổng chi phí nhân công (500đ/tấn):</p>
-                            <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--c-primary)', margin: 0 }}>
-                                {totalSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 14, color: 'var(--c-text)', fontWeight: 600 }}>VNĐ</span>
+                            <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', marginBottom: 8, fontWeight: 500 }}>Dự chi nhân công (500đ/tấn):</p>
+                            <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--c-primary)', margin: 0, letterSpacing: '-1px' }}>
+                                {totalSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 16, color: 'var(--c-text-secondary)', fontWeight: 600 }}>VNĐ</span>
                             </p>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                            <div style={{ padding: 16, borderRight: '1px solid var(--c-border)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                    <CheckCircle size={14} color="#16a34a" />
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-text-secondary)' }}>Đã thanh toán</span>
+                            <div style={{ padding: 18, borderRight: '1px solid var(--c-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                    <CheckCircle size={16} color="#16a34a" strokeWidth={2.5} />
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text-secondary)' }}>Đã giải ngân</span>
                                 </div>
-                                <p style={{ fontSize: 18, fontWeight: 700, color: '#15803d', margin: 0 }}>
-                                    {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
+                                <p style={{ fontSize: 20, fontWeight: 800, color: '#15803d', margin: 0, letterSpacing: '-0.5px' }}>
+                                    {paidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 13, fontWeight: 600 }}>đ</span>
                                 </p>
                             </div>
-                            <div style={{ padding: 16, background: '#fef2f2' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                    <Clock size={14} color="#dc2626" />
-                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>Chi phí tồn đọng</span>
+                            <div style={{ padding: 18, background: 'var(--c-danger-light)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                    <Clock size={16} color="#dc2626" strokeWidth={2.5} />
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: '#991b1b' }}>Còn nợ</span>
                                 </div>
-                                <p style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', margin: 0 }}>
-                                    {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 11, fontWeight: 600 }}>đ</span>
+                                <p style={{ fontSize: 20, fontWeight: 800, color: '#dc2626', margin: 0, letterSpacing: '-0.5px' }}>
+                                    {unpaidSalary.toLocaleString('vi-VN')} <span style={{ fontSize: 13, fontWeight: 600 }}>đ</span>
                                 </p>
                             </div>
                         </div>
@@ -361,7 +380,7 @@ export function BossOverview() {
                                     </div>
                                 );
                             })}
-                            {yearMonthlyData.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--c-text-secondary)', fontSize: 13 }}>Chưa có dữ liệu</div>}
+                            {yearMonthlyData.length === 0 && <EmptyState title="Chưa có dữ liệu" description="Tháng bạn chọn không có chuyến tàu nào." />}
                         </div>
 
                         {/* Boss KPI Summary details */}

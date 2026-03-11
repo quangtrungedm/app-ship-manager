@@ -27,14 +27,18 @@ body {
 /* Header */
 .mobile-header {
     height: 60px;
-    background: white;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     /* Very subtle bottom border */
     z-index: 20;
+    position: sticky;
+    top: 0;
 }
 
 .mobile-title {
@@ -45,16 +49,17 @@ body {
 }
 
 .mobile-user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background-color: #eff6ff;
-    color: #2563eb;
+    background-color: var(--c-primary-light);
+    color: var(--c-primary-hover);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 0.75rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 /* Content Area */
@@ -79,12 +84,12 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
     z-index: 30;
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.02);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mobile-nav-items {
@@ -104,38 +109,61 @@ body {
     text-decoration: none;
     color: #94a3b8;
     /* Inactive color */
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-nav-item.active {
-    color: #3b82f6;
-    /* Active blue */
+    color: var(--c-primary);
 }
 
 .mobile-nav-icon {
     margin-bottom: 4px;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Bouncy spring */
+}
+
+.mobile-nav-item:active .mobile-nav-icon {
+    transform: scale(0.85);
+    /* Click shrink */
 }
 
 .mobile-nav-item.active .mobile-nav-icon {
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.1);
+    /* Active enlarged */
 }
 
 .mobile-nav-label {
     font-size: 0.7rem;
     font-weight: 600;
+    transition: opacity 0.2s;
 }
 
-/* Safe Area for modern iPhones */
-.pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+/* Active Indicator Dot */
+.mobile-nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--c-primary);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-nav-item.active::after {
+    opacity: 1;
+    transform: scale(1);
 }
 
 /* Cards optimization for mobile */
 .card-container {
-    border-radius: 16px;
+    border-radius: var(--radius);
     margin-bottom: 16px;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    /* Softer shadow */
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-card);
+    background: var(--c-surface);
 }

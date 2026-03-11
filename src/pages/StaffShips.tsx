@@ -6,6 +6,7 @@ import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
 import { Ship, Document as ShipDoc, ShipStatus } from '../types';
 import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
+import { EmptyState } from '../components/EmptyState';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -63,77 +64,86 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
     const salary = ship.weight * 500;
 
     return (
-        <div className="card" onClick={onClick} style={{
-            cursor: 'pointer', padding: 16, marginBottom: 14,
-            borderRadius: 16, border: '1px solid #f1f5f9',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
-            transition: 'transform 0.2s ease, box-shadow 0.2s',
-            background: '#ffffff'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <p style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12 }}>{ship.name}</p>
+        <div className="card fade-up" onClick={onClick} style={{
+            cursor: 'pointer', padding: 20, marginBottom: 16,
+            background: 'var(--c-surface)',
+            border: '1px solid rgba(0,0,0,0.03)',
+            transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+            transformOrigin: 'center center',
+            WebkitTapHighlightColor: 'transparent',
+        }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            onTouchStart={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onTouchEnd={e => e.currentTarget.style.transform = 'scale(1)'}
+            onTouchCancel={e => e.currentTarget.style.transform = 'scale(1)'}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12, letterSpacing: '-0.3px' }}>
+                    {ship.name}
+                </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                     <StatusBadge status={ship.status} completionDate={ship.completionDate} />
                     {isSatThep && (
                         <div style={{
-                            display: 'flex', alignItems: 'center', gap: 4,
-                            padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '4px 12px', borderRadius: 99, fontSize: 10.5, fontWeight: 800,
                             color: ship.isPaid ? '#047857' : '#b91c1c',
-                            background: ship.isPaid ? '#ecfdf5' : '#fef2f2',
-                            border: `1px solid ${ship.isPaid ? '#a7f3d0' : '#fecaca'}`,
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                            background: ship.isPaid ? 'var(--c-success-light)' : 'var(--c-danger-light)',
+                            border: `1px solid ${ship.isPaid ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                            letterSpacing: '0.5px'
                         }}>
-                            {ship.isPaid && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
-                            {ship.isPaid ? 'ĐÃ THANH TOÁN' : 'CHƯA TT'}
+                            {ship.isPaid && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />}
+                            {ship.isPaid ? 'ĐÃ TT LƯƠNG' : 'CHƯA TRẢ'}
                         </div>
                     )}
                 </div>
             </div>
-            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--c-text-secondary)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={13} /> {date}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Weight size={13} /> {ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
+            <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--c-text-secondary)', fontWeight: 500 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} strokeWidth={2.5} /> {date}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Weight size={14} strokeWidth={2.5} /> {ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
                 {ship.documents.length > 0 && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={13} /> {ship.documents.length} file</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FileText size={14} strokeWidth={2.5} /> {ship.documents.length} file</span>
                 )}
             </div>
 
             {isSatThep && (
                 <div style={{
-                    display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13,
-                    marginTop: 14, padding: '12px 14px',
-                    background: 'linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%)',
-                    borderRadius: 12, border: '1px solid #e2e8f0',
-                    boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)'
+                    display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13,
+                    marginTop: 18, padding: '14px 16px',
+                    background: 'var(--c-bg)',
+                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--c-border)',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-secondary)' }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--c-text-secondary)', fontWeight: 500 }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
                                 <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" x2="4" y1="22" y2="15"></line>
                             </svg>
                             Cảng dỡ:
                         </div>
-                        <span style={{ fontWeight: 700, color: '#334155' }}>{ship.port || '—'}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--c-text)' }}>{ship.port || '—'}</span>
                     </div>
-                    <div style={{ height: 1, background: 'rgba(226, 232, 240, 0.6)' }} />
+                    <div style={{ height: 1, background: 'var(--c-border)', opacity: 0.6 }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--c-text-secondary)' }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--c-text-secondary)', fontWeight: 500 }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
                             Khách hàng:
                         </div>
-                        <span style={{ fontWeight: 700, color: '#334155' }}>{ship.client || '—'}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--c-text)' }}>{ship.client || '—'}</span>
                     </div>
                 </div>
             )}
 
             {isSatThep && (
                 <div style={{
-                    marginTop: 14, paddingTop: 12, borderTop: '1px dashed #cbd5e1',
-                    fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--c-border)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <span style={{ color: 'var(--c-text-secondary)', fontWeight: 500 }}>Tổng tiền công:</span>
-                    <span style={{ fontWeight: 800, color: 'var(--c-primary)', fontSize: 16 }}>{salary.toLocaleString('vi-VN')} đ</span>
+                    <span style={{ color: 'var(--c-text-secondary)', fontSize: 13, fontWeight: 600 }}>T.Tiền lương dự tính:</span>
+                    <span style={{ fontWeight: 800, color: 'var(--c-primary)', fontSize: 17, letterSpacing: '-0.5px' }}>{salary.toLocaleString('vi-VN')} đ</span>
                 </div>
             )}
         </div>
@@ -391,11 +401,11 @@ export function StaffShips() {
                             <div style={{ padding: '0 16px 14px' }}>
                                 <div style={{ height: 1, background: 'var(--c-border)', marginBottom: 12 }} />
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                    <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                                    <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit', transition: 'all 0.1s', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                         <ChevronLeft size={15} />
                                     </button>
                                     <span style={{ fontSize: 14, fontWeight: 800 }}>{pickerYear}</span>
-                                    <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit' }}>
+                                    <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'var(--c-bg)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontFamily: 'inherit', transition: 'all 0.1s', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                         <ChevronRight size={15} />
                                     </button>
                                 </div>
@@ -410,8 +420,13 @@ export function StaffShips() {
                                                 cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: isActive ? 700 : 500,
                                                 background: isActive ? 'var(--c-primary)' : 'var(--c-bg)',
                                                 color: isActive ? '#fff' : 'var(--c-text)',
-                                                transition: 'all .15s',
-                                            }}>{label}</button>
+                                                transition: 'all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                                WebkitTapHighlightColor: 'transparent'
+                                            }}
+                                                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
+                                                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                            >{label}</button>
                                         );
                                     })}
                                 </div>
@@ -429,9 +444,10 @@ export function StaffShips() {
                 )}
 
                 {filteredShips.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--c-text-secondary)', fontSize: 14 }}>
-                        {searchQuery ? 'Không tìm thấy tàu phù hợp' : 'Không có tàu trong tháng này'}
-                    </div>
+                    <EmptyState
+                        title={searchQuery ? 'Không tìm thấy tàu' : 'Không có tàu'}
+                        description={searchQuery ? `Không có kết quả nào cho "${searchQuery}"` : 'Không có tàu nào cập bến trong khoảng thời gian này.'}
+                    />
                 ) : (
                     filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
                 )}

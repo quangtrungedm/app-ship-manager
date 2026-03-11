@@ -9,21 +9,44 @@
 }
 
 :root {
-  --c-bg: #f0f2f5;
+  /* ──── Colors ──── */
+  --c-bg: #f5f7fa;
+  /* Slightly lighter, more modern gray */
   --c-surface: #ffffff;
-  --c-primary: #4f6ef7;
-  --c-primary-light: #eef2ff;
-  --c-text: #1a1d26;
-  --c-text-secondary: #6b7280;
-  --c-border: #e5e7eb;
-  --c-success: #22c55e;
+  --c-surface-translucent: rgba(255, 255, 255, 0.85);
+
+  --c-primary: #3b82f6;
+  /* Modern Blue */
+  --c-primary-light: #eff6ff;
+  --c-primary-hover: #2563eb;
+
+  --c-text: #0f172a;
+  /* Slate 900 for sharper text */
+  --c-text-secondary: #64748b;
+  /* Slate 500 */
+  --c-border: #e2e8f0;
+  /* Slate 200 */
+
+  --c-success: #10b981;
+  --c-success-light: #d1fae5;
   --c-warning: #f59e0b;
+  --c-warning-light: #fef3c7;
   --c-info: #6366f1;
+  --c-info-light: #e0e7ff;
   --c-danger: #ef4444;
-  --radius: 16px;
-  --radius-sm: 12px;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --c-danger-light: #fee2e2;
+
+  /* ──── Geometry ──── */
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-round: 9999px;
+
+  /* ──── Shadows (Layered for 3D feel) ──── */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-float: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+  --shadow-glow-danger: 0 4px 14px 0 rgba(239, 68, 68, 0.25);
 }
 
 body {
@@ -121,22 +144,35 @@ body {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all .2s ease;
-  padding: 10px 20px;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 12px 20px;
   line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transform-origin: center center;
 }
 
 .btn:active {
-  transform: scale(.97);
+  transform: scale(0.96) translateY(0);
+  transition-duration: 0.1s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .btn-primary {
   background: var(--c-primary);
   color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:active {
+  background: var(--c-primary-hover);
+  transform: scale(0.96) translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
 }
 
 .btn-primary:hover {
-  background: #3b5de7;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
 }
 
 .btn-danger {
@@ -173,37 +209,55 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-/* ── Status Badges ── */
+.card:hover {
+  box-shadow: var(--shadow-float);
+  transform: translateY(-2px);
+}
+
+/* ── Status Badges (Pills) ── */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-round);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
 }
 
 .badge-waiting {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--c-warning-light);
+  color: #b45309;
+  /* Deeper amber for contrast */
+  border-color: rgba(245, 158, 11, 0.2);
 }
 
 .badge-entering {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--c-info-light);
+  color: #4338ca;
+  /* Deeper indigo */
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
 .badge-loading {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--c-primary-light);
+  color: #1d4ed8;
+  /* Deeper blue */
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .badge-completed {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--c-success-light);
+  color: #15803d;
+  /* Deeper green */
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 /* ── Input Fields ── */
@@ -222,20 +276,25 @@ body {
 .field input,
 .field select {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 1.5px solid var(--c-border);
   border-radius: var(--radius-sm);
   font-size: 15px;
   font-family: inherit;
+  font-weight: 500;
   background: var(--c-surface);
   color: var(--c-text);
-  transition: border-color .2s;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .field input:focus,
 .field select:focus {
   outline: none;
   border-color: var(--c-primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px var(--c-primary-light);
+  transform: translateY(-1px);
 }
 
 /* ── Modal ── */
