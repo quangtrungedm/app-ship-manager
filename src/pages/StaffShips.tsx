@@ -197,7 +197,7 @@ export function StaffShips() {
         });
 
         return result;
-    }, [ships, selectedMonth, searchQuery, sortBy]);
+    }, [ships, selectedMonth, searchQuery, sortBy, activeTab]);
 
     // Form state
     const [name, setName] = useState('');

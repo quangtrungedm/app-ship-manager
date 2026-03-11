@@ -211,7 +211,7 @@ export function BossShips() {
         });
 
         return result;
-    }, [ships, selectedMonth, searchQuery, sortBy]);
+    }, [ships, selectedMonth, searchQuery, sortBy, activeTab]);
 
     const handleExportExcel = () => {
         // Build CSV data
