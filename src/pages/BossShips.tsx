@@ -192,7 +192,7 @@ export function BossShips() {
         } else {
             // 2. Filter by Tab & Month (Only if no search query)
             if (activeTab === 'unpaid') {
-                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false);
+                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && (s.status === 'completed' || s.completionDate));
             } else if (selectedMonth !== 'all') {
                 result = result.filter(s => {
                     const d = new Date(s.arrivalDate);
