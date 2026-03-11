@@ -66,30 +66,52 @@ export function useShips(): UseShipsReturn {
     }, [loadShips]);
 
     const handleAdd = async (ship: Omit<Ship, 'id'>) => {
-        // Auto-inject the current user's division
         const shipPayload = { ...ship, division: division || undefined };
 
-        if (isConfigured()) {
-            const { id } = await api.addShip(shipPayload);
-            setShips(prev => [{ ...shipPayload, id } as Ship, ...prev]);
-        } else {
-            const id = crypto.randomUUID();
-            setShips(prev => [{ ...shipPayload, id } as Ship, ...prev]);
+        // Cập nhật UI ngay lập tức
+        const tempId = (ship as any).id || `shp-${Date.now()}`;
+        const newShip = { ...shipPayload, id: tempId } as Ship;
+        setShips(prev => [newShip, ...prev]);
+
+        if (isConfigured() && !(ship as any)._isBackgroundRealUpdate) {
+            try {
+                const { id } = await api.addShip(shipPayload);
+                // Lặng lẽ thay thế ID thật mà không chớp nhoáng UI
+                setShips(prev => prev.map(s => s.id === tempId ? { ...s, id } : s));
+            } catch (err) {
+                // Rollback nếu API lỗi
+                setShips(prev => prev.filter(s => s.id !== tempId));
+                console.error("Lỗi khi thêm tàu:", err);
+                throw err;
+            }
         }
     };
 
     const handleUpdate = async (ship: Ship) => {
-        if (isConfigured()) {
-            await api.updateShip(ship);
-        }
+        // Cập nhật UI ngay lập tức
         setShips(prev => prev.map(s => s.id === ship.id ? ship : s));
+
+        if (isConfigured()) {
+            try {
+                await api.updateShip(ship);
+            } catch (err) {
+                console.error("Lỗi khi cập nhật tàu:", err);
+                // Có thể trigger fetch lại nếu thực sự khắt khe về data sync
+            }
+        }
     };
 
     const handleDelete = async (id: string) => {
-        if (isConfigured()) {
-            await api.deleteShip(id);
-        }
+        // Cập nhật UI ngay lập tức
         setShips(prev => prev.filter(s => s.id !== id));
+
+        if (isConfigured()) {
+            try {
+                await api.deleteShip(id);
+            } catch (err) {
+                console.error("Lỗi khi xóa tàu:", err);
+            }
+        }
     };
 
     return {

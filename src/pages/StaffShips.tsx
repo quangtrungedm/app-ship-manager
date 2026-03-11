@@ -7,6 +7,7 @@ import { isConfigured } from '../lib/config';
 import { Ship, Document as ShipDoc, ShipStatus } from '../types';
 import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
+import imageCompression from 'browser-image-compression';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -247,40 +248,68 @@ export function StaffShips() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
-        try {
-            // Upload pending files to Drive
-            let uploadedDocs = docs.filter(d => !d.id.startsWith('doc-new-'));
-            if (isConfigured() && pendingFiles.length > 0) {
-                for (const file of pendingFiles) {
-                    const uploaded = await uploadFile(file);
-                    uploadedDocs.push(uploaded);
+
+        // 1. Xử lý ID & Dữ liệu cơ bản
+        const tempId = editing?.id || `shp-${Date.now()}`;
+        const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
+
+        const shipData: Ship = {
+            id: tempId,
+            name, arrivalDate: new Date(arrival).toISOString(),
+            completionDate: completion ? new Date(completion).toISOString() : undefined,
+            weight: parsedWeight, documents: [...docs], // Bốc luôn URL blob ảnh tạm ở Local để hiển thị
+            status: status,
+            division: division || undefined,
+            isPaid: division === 'SAT_THEP' ? isPaid : undefined,
+            port: division === 'SAT_THEP' ? port : undefined,
+            client: division === 'SAT_THEP' ? client : undefined,
+        };
+
+        // 2. Cập nhật UI Tức thời (Optimistic Update)
+        if (editing) { updateShipApi(shipData); }
+        else { addShip(shipData); }
+
+        // Cất Form, giải phóng UI cho User làm việc khác
+        const currentPendingFiles = [...pendingFiles];
+        const currentDocs = [...docs];
+        setPendingFiles([]);
+        setShowForm(false);
+        setSubmitting(false);
+
+        // 3. Tiến trình chạy ngầm (Background Task)
+        if (!isConfigured()) return; // Nếu ko có API thì thôi
+
+        (async () => {
+            try {
+                let uploadedDocs = currentDocs.filter(d => !d.id.startsWith('doc-new-'));
+
+                // Nén ảnh & Tải lên Song song (Parallel Upload)
+                if (currentPendingFiles.length > 0) {
+                    const uploadPromises = currentPendingFiles.map(async (file) => {
+                        let fileToUpload = file;
+                        // Nén ảnh nếu là ảnh (giảm từ 5MB xuống ~300kb)
+                        if (file.type.startsWith('image/')) {
+                            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+                            try { fileToUpload = await imageCompression(file, options); }
+                            catch (e) { console.error('Lỗi nén ảnh:', e); }
+                        }
+                        return uploadFile(fileToUpload);
+                    });
+
+                    const newUploadedDocs = await Promise.all(uploadPromises);
+                    uploadedDocs = [...uploadedDocs, ...newUploadedDocs];
                 }
-            } else {
-                uploadedDocs = docs;
+
+                // Châm ngoi Lưu ngầm trên server
+                const finalShipData = { ...shipData, documents: uploadedDocs };
+                if (editing) { await updateShipApi({ ...finalShipData, _isBackgroundRealUpdate: true } as any); }
+                else { await updateShipApi({ ...finalShipData, _isBackgroundRealUpdate: true } as any); }
+                // Mẹo: addShip tạo 1 ID ảo. Trên Server sẽ cập nhật đúng ID ảo đấy, nên ta gọi updateShipApi thay cho gọi addShip để đồng bộ URL thật.
+
+            } catch (err) {
+                console.error('Lỗi lưu ngầm:', err);
             }
-
-            const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
-
-            const shipData: Ship = {
-                id: editing?.id || `shp-${Date.now()}`,
-                name, arrivalDate: new Date(arrival).toISOString(),
-                completionDate: completion ? new Date(completion).toISOString() : undefined,
-                weight: parsedWeight, documents: uploadedDocs,
-                status: status,
-                division: division || undefined,
-                isPaid: division === 'SAT_THEP' ? isPaid : undefined,
-                port: division === 'SAT_THEP' ? port : undefined,
-                client: division === 'SAT_THEP' ? client : undefined,
-            };
-            if (editing) { await updateShipApi(shipData); }
-            else { await addShip(shipData); }
-            setPendingFiles([]);
-            setShowForm(false);
-        } catch (err) {
-            alert('Lỗi: ' + (err instanceof Error ? err.message : 'Unknown'));
-        } finally {
-            setSubmitting(false);
-        }
+        })();
     };
 
     const handleDelete = async () => {
