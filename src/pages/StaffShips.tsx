@@ -178,7 +178,7 @@ export function StaffShips() {
         } else {
             // 2. Filter by Tab & Month (Only if no search query)
             if (activeTab === 'unpaid') {
-                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && (s.status === 'completed' || s.completionDate));
+                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && s.status === 'completed');
             } else if (selectedMonth !== 'all') {
                 result = result.filter(s => {
                     const d = new Date(s.arrivalDate);
