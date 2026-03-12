@@ -98,15 +98,20 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     return (
         <div style={{
             display: 'flex', flexDirection: 'column', height: '100dvh', maxWidth: 500,
-            margin: '0 auto', background: 'var(--c-bg)', position: 'relative', overflow: 'hidden',
+            margin: '0 auto', background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(40px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+            position: 'relative', overflow: 'hidden',
+            boxShadow: '0 0 40px rgba(0,0,0,0.05)',
+            borderLeft: '1px solid rgba(255,255,255,0.3)',
+            borderRight: '1px solid rgba(255,255,255,0.3)'
         }}>
             <header style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '14px 20px', background: 'var(--c-surface)',
-                borderBottom: '2px solid transparent',
-                backgroundImage: 'linear-gradient(var(--c-surface), var(--c-surface)), linear-gradient(90deg, var(--c-primary), #f59e0b)',
-                backgroundOrigin: 'padding-box, border-box',
-                backgroundClip: 'padding-box, border-box',
+                padding: '14px 20px',
+                background: 'rgba(255, 255, 255, 0.25)',
+                borderBottom: '1px solid rgba(255,255,255,0.4)',
+                position: 'relative', zIndex: 10
             }}>
                 <div>
                     <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--c-primary)', letterSpacing: '.5px', textTransform: 'uppercase' }}>
