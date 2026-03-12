@@ -4,8 +4,9 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight, FileText } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
+import { DocumentGeneratorModal } from '../components/DocumentGeneratorModal';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
@@ -29,6 +30,7 @@ export function BossOverview() {
     const [selMonth, setSelMonth] = useState(now.getMonth());
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
+    const [docModalOpen, setDocModalOpen] = useState(false);
 
     const selectedShips = useMemo(() => ships.filter(s => {
         const d = new Date(s.arrivalDate);
@@ -270,6 +272,29 @@ export function BossOverview() {
             ) : (
                 // --- VIN CAN GIO: KPI Analytics ---
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
+
+                    {/* Document Input Trigger */}
+                    <div className="fade-up fade-up-d1" style={{ ...glassStyle, padding: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <FileText size={20} color="#3b82f6" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Hồ Sơ Giấy Tờ</p>
+                                    <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2, fontWeight: 600 }}>Phiếu cân, tỉ trọng, biên bản</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setDocModalOpen(true)}
+                            className="btn btn-primary"
+                            style={{ width: '100%', borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+                        >
+                            <FileText size={16} /> Nhập liệu & Xuất PDF
+                        </button>
+                    </div>
+
                     {/* KPI Progress */}
                     <div key={`kpi-${selMonth}`} className="fade-up fade-up-d2" style={{ ...glassStyle, padding: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px' }}>
@@ -420,6 +445,13 @@ export function BossOverview() {
                     </div>
                 </div>
             )}
+
+            <DocumentGeneratorModal
+                isOpen={docModalOpen}
+                onClose={() => setDocModalOpen(false)}
+                ships={ships.filter(s => s.division === 'VIN_CAN_GIO')}
+            />
+
         </MobileLayout>
     );
 }
