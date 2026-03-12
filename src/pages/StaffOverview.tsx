@@ -12,11 +12,9 @@ const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10
 const GRID_MONTHS = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
 
 const glassStyle = {
-    background: 'rgba(255, 255, 255, 0.75)',
-    backdropFilter: 'blur(24px) saturate(150%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-    border: '1px solid rgba(255, 255, 255, 0.9)',
-    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)',
+    background: '#ffffff',
+    border: '1px solid rgba(0,0,0,0.03)',
+    boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)',
     borderRadius: 28,
     overflow: 'hidden',
     position: 'relative' as const
@@ -172,11 +170,9 @@ export function StaffOverview() {
                     {/* GLOBAL UNPAID WARNING WIDGET */}
                     {globalUnpaidCount > 0 && (
                         <div className="fade-up fade-up-d1" style={{
-                            background: 'rgba(255, 241, 242, 0.85)',
-                            backdropFilter: 'blur(24px) saturate(150%)',
-                            WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-                            border: '1px solid rgba(254, 205, 211, 0.8)',
-                            boxShadow: '0 16px 40px -12px rgba(225, 29, 72, 0.2)',
+                            background: '#fff1f2',
+                            border: '1px solid #ffe4e6',
+                            boxShadow: '0 8px 30px -6px rgba(225, 29, 72, 0.15)',
                             padding: 16, borderRadius: 20,
                             position: 'relative', overflow: 'hidden',
                         }}>
@@ -193,7 +189,7 @@ export function StaffOverview() {
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid rgba(255,255,255,0.9)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
+                            <div style={{ background: '#ffffff', borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid rgba(0,0,0,0.03)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                                 <div>
                                     <p style={{ fontSize: 12, color: '#be123c', margin: '0 0 4px 0', fontWeight: 700 }}>{globalUnpaidCount} tàu chờ lương</p>
                                     <p style={{ fontSize: 24, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
@@ -231,7 +227,7 @@ export function StaffOverview() {
                         </div>
 
                         {/* Total Expected Box */}
-                        <div style={{ background: 'rgba(241, 245, 249, 0.6)', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid rgba(255,255,255,0.7)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
+                        <div style={{ background: '#f8fafc', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid rgba(0,0,0,0.03)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.01)' }}>
                             <p style={{ fontSize: 11, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t)</p>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                                 <p style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
@@ -243,7 +239,7 @@ export function StaffOverview() {
 
                         {/* Grid for Paid / Unpaid */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                            <div style={{ background: 'rgba(209, 250, 229, 0.5)', border: '1px solid rgba(167, 243, 208, 0.8)', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: -8, right: -8, width: 50, height: 50, background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                                     <div style={{ width: 20, height: 20, borderRadius: 6, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>
@@ -256,7 +252,7 @@ export function StaffOverview() {
                                 </p>
                             </div>
 
-                            <div style={{ background: 'rgba(255, 228, 230, 0.5)', border: '1px solid rgba(254, 205, 211, 0.8)', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ background: '#fff1f2', border: '1px solid #ffe4e6', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: -8, right: -8, width: 50, height: 50, background: 'radial-gradient(circle, rgba(225,29,72,0.15) 0%, transparent 70%)' }} />
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                                     <div style={{ width: 20, height: 20, borderRadius: 6, background: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(225,29,72,0.3)' }}>
