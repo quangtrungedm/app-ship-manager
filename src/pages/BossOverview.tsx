@@ -177,34 +177,34 @@ export function BossOverview() {
                             WebkitBackdropFilter: 'blur(24px) saturate(150%)',
                             border: '1px solid rgba(254, 205, 211, 0.8)',
                             boxShadow: '0 16px 40px -12px rgba(225, 29, 72, 0.2)',
-                            padding: 24, borderRadius: 28,
+                            padding: 16, borderRadius: 20,
                             position: 'relative', overflow: 'hidden',
                         }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #f43f5e, #fda4af)' }} />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                    <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(225,29,72,0.1)' }}>
-                                        <Wallet size={24} color="#e11d48" strokeWidth={2.5} />
-                                        <div style={{ position: 'absolute', top: -3, right: -3, width: 12, height: 12, borderRadius: '50%', background: '#f43f5e', border: '2px solid #fff', animation: 'pulse 2s infinite' }} />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(225,29,72,0.1)' }}>
+                                        <Wallet size={20} color="#e11d48" strokeWidth={2.5} />
+                                        <div style={{ position: 'absolute', top: -3, right: -3, width: 10, height: 10, borderRadius: '50%', background: '#f43f5e', border: '2px solid #fff', animation: 'pulse 2s infinite' }} />
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: 12, color: '#e11d48', margin: '0 0 2px 0', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tồn đọng</p>
-                                        <p style={{ fontSize: 20, fontWeight: 800, color: '#9f1239', margin: 0, letterSpacing: '-0.3px' }}>Chưa thanh toán</p>
+                                        <p style={{ fontSize: 11, color: '#e11d48', margin: '0 0 2px 0', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tồn đọng</p>
+                                        <p style={{ fontSize: 16, fontWeight: 800, color: '#9f1239', margin: 0, letterSpacing: '-0.3px' }}>Chưa thanh toán</p>
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid rgba(255,255,255,0.9)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid rgba(255,255,255,0.9)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
                                 <div>
-                                    <p style={{ fontSize: 13, color: '#be123c', margin: '0 0 4px 0', fontWeight: 700 }}>{globalUnpaidCount} tàu chờ lương</p>
-                                    <p style={{ fontSize: 26, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
+                                    <p style={{ fontSize: 12, color: '#be123c', margin: '0 0 4px 0', fontWeight: 700 }}>{globalUnpaidCount} tàu chờ lương</p>
+                                    <p style={{ fontSize: 24, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
                                 </div>
                                 <button
                                     onClick={() => navigate('/boss/ships', { state: { defaultTab: 'unpaid' } })}
                                     style={{
                                         width: '100%',
-                                        background: 'linear-gradient(135deg, #e11d48, #be123c)', color: '#fff', border: 'none', borderRadius: 14,
-                                        padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 20px -6px rgba(225, 29, 72, 0.4)',
+                                        background: 'linear-gradient(135deg, #e11d48, #be123c)', color: '#fff', border: 'none', borderRadius: 12,
+                                        padding: '10px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 8px 20px -6px rgba(225, 29, 72, 0.4)',
                                         transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                                         WebkitTapHighlightColor: 'transparent'
                                     }}
@@ -212,59 +212,59 @@ export function BossOverview() {
                                     onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                    Rà soát <ArrowRight size={18} strokeWidth={2.5} />
+                                    Rà soát <ArrowRight size={16} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {/* --- IRON & STEEL: Cashflow Analytics (New Grid) --- */}
-                    <div className="fade-up fade-up-d2" style={{ ...glassStyle, padding: '24px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: 16, background: 'rgba(71,85,105,0.06)', border: '1px solid rgba(71,85,105,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Wallet size={22} color="#334155" strokeWidth={2.5} />
+                    <div className="fade-up fade-up-d2" style={{ ...glassStyle, padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(71,85,105,0.06)', border: '1px solid rgba(71,85,105,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Wallet size={20} color="#334155" strokeWidth={2.5} />
                             </div>
                             <div>
-                                <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', fontWeight: 800, margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dòng tiền Sắt Thép</p>
-                                <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Tổng Lương {SHORT_MONTHS[selMonth]}</p>
+                                <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 800, margin: '0 0 2px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dòng tiền Sắt Thép</p>
+                                <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Tổng Lương {SHORT_MONTHS[selMonth]}</p>
                             </div>
                         </div>
 
                         {/* Total Expected Box */}
-                        <div style={{ background: 'rgba(241, 245, 249, 0.6)', borderRadius: 20, padding: '20px 20px', marginBottom: 16, border: '1px solid rgba(255,255,255,0.7)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
-                            <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t)</p>
+                        <div style={{ background: 'rgba(241, 245, 249, 0.6)', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid rgba(255,255,255,0.7)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
+                            <p style={{ fontSize: 11, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t)</p>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                                <p style={{ fontSize: 30, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
                                     {totalSalary.toLocaleString('vi-VN')}
                                 </p>
-                                <span style={{ fontSize: 16, color: '#64748b', fontWeight: 800 }}>đ</span>
+                                <span style={{ fontSize: 14, color: '#64748b', fontWeight: 800 }}>đ</span>
                             </div>
                         </div>
 
                         {/* Grid for Paid / Unpaid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                            <div style={{ background: 'rgba(209, 250, 229, 0.5)', border: '1px solid rgba(167, 243, 208, 0.8)', borderRadius: 20, padding: 16, position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                                    <div style={{ width: 24, height: 24, borderRadius: 8, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>
-                                        <CheckCircle size={14} color="#fff" strokeWidth={3} />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <div style={{ background: 'rgba(209, 250, 229, 0.5)', border: '1px solid rgba(167, 243, 208, 0.8)', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -8, right: -8, width: 50, height: 50, background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                    <div style={{ width: 20, height: 20, borderRadius: 6, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>
+                                        <CheckCircle size={12} color="#fff" strokeWidth={3} />
                                     </div>
-                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#065f46' }}>Đã TT</span>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: '#065f46' }}>Đã TT</span>
                                 </div>
-                                <p style={{ fontSize: 22, fontWeight: 800, color: '#047857', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 18, fontWeight: 800, color: '#047857', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
                                     {paidSalary.toLocaleString('vi-VN')}
                                 </p>
                             </div>
 
-                            <div style={{ background: 'rgba(255, 228, 230, 0.5)', border: '1px solid rgba(254, 205, 211, 0.8)', borderRadius: 20, padding: 16, position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, background: 'radial-gradient(circle, rgba(225,29,72,0.15) 0%, transparent 70%)' }} />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                                    <div style={{ width: 24, height: 24, borderRadius: 8, background: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(225,29,72,0.3)' }}>
-                                        <Clock size={14} color="#fff" strokeWidth={3} />
+                            <div style={{ background: 'rgba(255, 228, 230, 0.5)', border: '1px solid rgba(254, 205, 211, 0.8)', borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', top: -8, right: -8, width: 50, height: 50, background: 'radial-gradient(circle, rgba(225,29,72,0.15) 0%, transparent 70%)' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                    <div style={{ width: 20, height: 20, borderRadius: 6, background: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(225,29,72,0.3)' }}>
+                                        <Clock size={12} color="#fff" strokeWidth={3} />
                                     </div>
-                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#9f1239' }}>Chưa TT</span>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: '#9f1239' }}>Chưa TT</span>
                                 </div>
-                                <p style={{ fontSize: 22, fontWeight: 800, color: '#be123c', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 18, fontWeight: 800, color: '#be123c', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
                                     {unpaidSalary.toLocaleString('vi-VN')}
                                 </p>
                             </div>
