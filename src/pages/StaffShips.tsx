@@ -114,19 +114,19 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 4 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {ship.completionDate ? 'Ngày (Vào - Ra)' : 'Ngày vào'}
-                        </span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày vào</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <Calendar size={14} color="var(--c-primary)" /> {fmtDate(ship.arrivalDate)}
-                            {ship.completionDate && (
-                                <>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--c-text-secondary)" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                                    <span style={{ color: 'var(--c-success)' }}>{fmtDate(ship.completionDate)}</span>
-                                </>
-                            )}
                         </span>
                     </div>
+                    {ship.completionDate && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày ra</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <Calendar size={14} color="var(--c-success)" /> {fmtDate(ship.completionDate)}
+                            </span>
+                        </div>
+                    )}
                     {isSatThep && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cảng dỡ</span>
