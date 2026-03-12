@@ -38,7 +38,7 @@ export function StaffOverview() {
     }), [ships, selYear, selMonth]);
 
     const completedSelectedShips = useMemo(() =>
-        selectedShips.filter(s => s.status === 'completed')
+        selectedShips.filter(s => s.status === 'completed' || !!s.completionDate)
         , [selectedShips]);
 
     const selectedWeight = completedSelectedShips.reduce((a, s) => a + s.weight, 0);
@@ -50,7 +50,7 @@ export function StaffOverview() {
     const paidSalary = selectedPaidWeight * 500;
     const unpaidSalary = totalSalary - paidSalary;
 
-    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && s.status === 'completed'), [ships]);
+    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && (s.status === 'completed' || !!s.completionDate)), [ships]);
     const globalUnpaidCount = globalUnpaidShips.length;
     const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + s.weight * 500, 0);
 
@@ -69,7 +69,7 @@ export function StaffOverview() {
             const d = new Date(s.arrivalDate);
             if (d.getFullYear() === selYear) {
                 const m = d.getMonth();
-                if (s.status === 'completed') {
+                if (s.status === 'completed' || !!s.completionDate) {
                     data[m].shipCount++;
                     data[m].weight += s.weight;
                 }
