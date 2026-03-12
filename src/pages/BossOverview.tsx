@@ -152,14 +152,14 @@ export function BossOverview() {
                         <Anchor size={22} color="#fff" strokeWidth={2.5} />
                     </div>
                     <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', fontWeight: 700, margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tàu hoàn thành</p>
-                    <p style={{ fontSize: 40, fontWeight: 800, color: 'var(--c-text)', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>{completedSelectedShips.length}</p>
+                    <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--c-text)', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{completedSelectedShips.length}</p>
                 </div>
                 <div className="fade-up fade-up-d2" style={{ ...glassStyle, padding: 20 }}>
                     <div style={{ width: 44, height: 44, borderRadius: 16, background: 'linear-gradient(135deg, #059669, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 16px -4px rgba(5,150,105,0.4)' }}>
                         <TrendingUp size={22} color="#fff" strokeWidth={2.5} />
                     </div>
                     <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', fontWeight: 700, margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sản lượng</p>
-                    <p style={{ fontSize: 32, fontWeight: 800, color: 'var(--c-text)', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
+                    <p style={{ fontSize: 26, fontWeight: 800, color: 'var(--c-text)', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
                         {selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}
                         <span style={{ fontSize: 14, color: 'var(--c-text-secondary)', fontWeight: 700, marginLeft: 4 }}>tấn</span>
                     </p>
@@ -188,7 +188,7 @@ export function BossOverview() {
                                         <div style={{ position: 'absolute', top: -3, right: -3, width: 12, height: 12, borderRadius: '50%', background: '#f43f5e', border: '2px solid #fff', animation: 'pulse 2s infinite' }} />
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: 12, color: '#e11d48', margin: '0 0 2px 0', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tồn đọng toàn bệ</p>
+                                        <p style={{ fontSize: 12, color: '#e11d48', margin: '0 0 2px 0', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tồn đọng</p>
                                         <p style={{ fontSize: 20, fontWeight: 800, color: '#9f1239', margin: 0, letterSpacing: '-0.3px' }}>Chưa thanh toán</p>
                                     </div>
                                 </div>
@@ -196,10 +196,10 @@ export function BossOverview() {
                             <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 20, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12, border: '1px solid rgba(255,255,255,0.9)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
                                 <div>
                                     <p style={{ fontSize: 13, color: '#be123c', margin: '0 0 4px 0', fontWeight: 700 }}>{globalUnpaidCount} tàu chờ lương</p>
-                                    <p style={{ fontSize: 32, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
+                                    <p style={{ fontSize: 26, color: '#e11d48', fontWeight: 800, margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{globalUnpaidSalary.toLocaleString('vi-VN')} đ</p>
                                 </div>
                                 <button
-                                    onClick={() => navigate('/boss/ships')}
+                                    onClick={() => navigate('/boss/ships', { state: { defaultTab: 'unpaid' } })}
                                     style={{
                                         width: '100%',
                                         background: 'linear-gradient(135deg, #e11d48, #be123c)', color: '#fff', border: 'none', borderRadius: 14,
@@ -212,7 +212,7 @@ export function BossOverview() {
                                     onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                    Rà soát trên thẻ Tàu <ArrowRight size={18} strokeWidth={2.5} />
+                                    Rà soát <ArrowRight size={18} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
@@ -234,10 +234,10 @@ export function BossOverview() {
                         <div style={{ background: 'rgba(241, 245, 249, 0.6)', borderRadius: 20, padding: '20px 20px', marginBottom: 16, border: '1px solid rgba(255,255,255,0.7)', boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5)' }}>
                             <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t)</p>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                                <p style={{ fontSize: 36, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 30, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
                                     {totalSalary.toLocaleString('vi-VN')}
                                 </p>
-                                <span style={{ fontSize: 18, color: '#64748b', fontWeight: 800 }}>đ</span>
+                                <span style={{ fontSize: 16, color: '#64748b', fontWeight: 800 }}>đ</span>
                             </div>
                         </div>
 
@@ -251,7 +251,7 @@ export function BossOverview() {
                                     </div>
                                     <span style={{ fontSize: 13, fontWeight: 800, color: '#065f46' }}>Đã TT</span>
                                 </div>
-                                <p style={{ fontSize: 24, fontWeight: 800, color: '#047857', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 22, fontWeight: 800, color: '#047857', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
                                     {paidSalary.toLocaleString('vi-VN')}
                                 </p>
                             </div>
@@ -264,7 +264,7 @@ export function BossOverview() {
                                     </div>
                                     <span style={{ fontSize: 13, fontWeight: 800, color: '#9f1239' }}>Chưa TT</span>
                                 </div>
-                                <p style={{ fontSize: 24, fontWeight: 800, color: '#be123c', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
+                                <p style={{ fontSize: 22, fontWeight: 800, color: '#be123c', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
                                     {unpaidSalary.toLocaleString('vi-VN')}
                                 </p>
                             </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
@@ -188,8 +189,9 @@ function BossShipCard({ ship }: { ship: Ship }) {
 export function BossShips() {
     const { ships, loading } = useShips();
     const { division } = useAuth();
+    const location = useLocation();
     const [selectedMonth, setSelectedMonth] = useState('all');
-    const [activeTab, setActiveTab] = useState<'all' | 'unpaid'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'unpaid'>(location.state?.defaultTab || 'all');
     const [pickerOpen, setPickerOpen] = useState(false);
     const now = new Date();
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
