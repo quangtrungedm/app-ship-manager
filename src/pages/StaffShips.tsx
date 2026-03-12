@@ -118,15 +118,15 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <Calendar size={14} color="var(--c-primary)" /> {fmtDate(ship.arrivalDate)}
                         </span>
+                        {ship.completionDate && (
+                            <>
+                                <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 2 }}>Ngày ra</span>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Calendar size={14} color="var(--c-success)" /> {fmtDate(ship.completionDate)}
+                                </span>
+                            </>
+                        )}
                     </div>
-                    {ship.completionDate && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ngày ra</span>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Calendar size={14} color="var(--c-success)" /> {fmtDate(ship.completionDate)}
-                            </span>
-                        </div>
-                    )}
                     {isSatThep && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cảng dỡ</span>
