@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-export type Role = 'STAFF' | 'BOSS' | null;
+export type Role = 'STAFF' | 'BOSS' | 'DOC' | null;
 export type Division = 'VIN_CAN_GIO' | 'SAT_THEP' | null;
 
 export const DIVISION_LABELS: Record<string, string> = {
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [role, setRole] = useState<Role>(() => {
         const saved = localStorage.getItem('app_role');
-        return (saved === 'STAFF' || saved === 'BOSS') ? saved : null;
+        return (saved === 'STAFF' || saved === 'BOSS' || saved === 'DOC') ? saved : null;
     });
 
     const [division, setDivision] = useState<Division>(() => {

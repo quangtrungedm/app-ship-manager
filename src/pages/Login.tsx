@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth, Division } from '../lib/AuthContext';
-import { Ship, BarChart3, Building2, Hammer } from 'lucide-react';
+import { Ship, BarChart3, Building2, Hammer, FileText } from 'lucide-react';
 import { useState } from 'react';
 
 export function Login() {
@@ -15,10 +15,14 @@ export function Login() {
         { key: 'SAT_THEP', label: 'Sắt Thép', desc: 'Mảng sắt thép', icon: Hammer, color: '#d97706', bg: '#fef3c7' },
     ];
 
-    const enter = (role: 'STAFF' | 'BOSS') => {
+    const enter = (role: 'STAFF' | 'BOSS' | 'DOC') => {
         if (!selectedDiv) return;
         login(role, selectedDiv);
-        navigate(role === 'STAFF' ? '/staff/overview' : '/boss/overview');
+        if (role === 'DOC') {
+            navigate('/doc-entry');
+        } else {
+            navigate(role === 'STAFF' ? '/staff/overview' : '/boss/overview');
+        }
     };
 
     return (
@@ -93,13 +97,34 @@ export function Login() {
                     background: 'var(--c-surface)', border: 'none', borderRadius: 'var(--radius)',
                     cursor: 'pointer', fontFamily: 'inherit', boxShadow: 'var(--shadow-card)',
                     transition: 'transform .15s, box-shadow .15s',
-                }}>
+                }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                     <div style={{ width: 44, height: 44, borderRadius: 12, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <Ship size={22} color="#4f6ef7" />
                     </div>
                     <div style={{ textAlign: 'left' }}>
                         <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Nhân viên</p>
                         <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Nhập liệu & quản lý tàu</p>
+                    </div>
+                </button>
+
+                <button onClick={() => enter('DOC')} style={{
+                    display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px',
+                    background: 'var(--c-surface)', border: 'none', borderRadius: 'var(--radius)',
+                    cursor: 'pointer', fontFamily: 'inherit', boxShadow: 'var(--shadow-card)',
+                    transition: 'transform .15s, box-shadow .15s',
+                }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <FileText size={22} color="#0d9488" />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Hiện Trường</p>
+                        <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Nhập liệu giấy tờ</p>
                     </div>
                 </button>
 

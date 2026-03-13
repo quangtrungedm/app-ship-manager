@@ -6,6 +6,7 @@ import { StaffOverview } from './pages/StaffOverview';
 import { StaffShips } from './pages/StaffShips';
 import { BossOverview } from './pages/BossOverview';
 import { BossShips } from './pages/BossShips';
+import { DocumentEntry } from './pages/DocumentEntry';
 
 function App() {
     return (
@@ -45,6 +46,13 @@ function App() {
                     <Route path="/boss/ships" element={
                         <ProtectedRoute allowedRole="BOSS">
                             <BossShips />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Document Entry Route */}
+                    <Route path="/doc-entry" element={
+                        <ProtectedRoute allowedRole="DOC">
+                            <DocumentEntry />
                         </ProtectedRoute>
                     } />
 

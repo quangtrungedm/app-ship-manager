@@ -4,9 +4,8 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight, FileText } from 'lucide-react';
+import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
-import { DocumentGeneratorModal } from '../components/DocumentGeneratorModal';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
@@ -30,7 +29,6 @@ export function StaffOverview() {
     const [selMonth, setSelMonth] = useState(now.getMonth());
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
-    const [docModalOpen, setDocModalOpen] = useState(false);
 
     const selectedShips = useMemo(() => ships.filter(s => {
         const d = new Date(s.arrivalDate);
@@ -273,35 +271,6 @@ export function StaffOverview() {
                 // --- VIN CAN GIO: KPI Analytics ---
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
 
-                    {/* KHỐI NGHIỆP VỤ ĐỘC LẬP */}
-                    <div className="fade-up" onClick={() => setDocModalOpen(true)} style={{
-                        background: 'radial-gradient(120% 120% at 50% 0%, #0369a1 0%, #0c4a6e 100%)',
-                        borderRadius: 28, padding: '24px 28px', cursor: 'pointer',
-                        boxShadow: '0 12px 30px -8px rgba(3, 105, 161, 0.5)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)', WebkitTapHighlightColor: 'transparent',
-                        position: 'relative', overflow: 'hidden'
-                    }}
-                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
-                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                    >
-                        {/* Glow effect */}
-                        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', filter: 'blur(30px)' }} />
-                        <div style={{ position: 'absolute', bottom: -20, left: 20, width: 80, height: 80, background: 'rgba(56,189,248,0.2)', borderRadius: '50%', filter: 'blur(20px)' }} />
-
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            <p style={{ fontSize: 12, color: '#bae6fd', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 10px #38bdf8' }} /> Nghiệp Vụ
-                            </p>
-                            <h3 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Nhập Liệu Giấy Tờ</h3>
-                            <p style={{ fontSize: 13, color: '#7dd3fc', margin: 0, fontWeight: 600 }}>Tạo phiếu cân, tỉ trọng, xuất PDF</p>
-                        </div>
-                        <div style={{ position: 'relative', zIndex: 1, width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <FileText size={32} color="#fff" strokeWidth={2} />
-                        </div>
-                    </div>
-
                     {/* KPI Progress */}
                     <div key={`kpi-${selMonth}`} className="fade-up fade-up-d2" style={{ ...glassStyle, padding: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px' }}>
@@ -453,11 +422,7 @@ export function StaffOverview() {
                 </div>
             )}
 
-            <DocumentGeneratorModal
-                isOpen={docModalOpen}
-                onClose={() => setDocModalOpen(false)}
-                ships={ships.filter(s => s.division === 'VIN_CAN_GIO')}
-            />
+
 
         </MobileLayout>
     );
