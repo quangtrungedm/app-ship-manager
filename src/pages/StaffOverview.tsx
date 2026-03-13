@@ -273,26 +273,33 @@ export function StaffOverview() {
                 // --- VIN CAN GIO: KPI Analytics ---
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
 
-                    {/* Document Input Trigger */}
-                    <div className="fade-up fade-up-d1" style={{ ...glassStyle, padding: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <FileText size={20} color="#3b82f6" strokeWidth={2.5} />
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Hồ Sơ Giấy Tờ</p>
-                                    <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2, fontWeight: 600 }}>Phiếu cân, tỉ trọng, biên bản</p>
-                                </div>
-                            </div>
+                    {/* KHỐI NGHIỆP VỤ ĐỘC LẬP */}
+                    <div className="fade-up" onClick={() => setDocModalOpen(true)} style={{
+                        background: 'radial-gradient(120% 120% at 50% 0%, #0369a1 0%, #0c4a6e 100%)',
+                        borderRadius: 28, padding: '24px 28px', cursor: 'pointer',
+                        boxShadow: '0 12px 30px -8px rgba(3, 105, 161, 0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)', WebkitTapHighlightColor: 'transparent',
+                        position: 'relative', overflow: 'hidden'
+                    }}
+                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
+                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                        {/* Glow effect */}
+                        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', filter: 'blur(30px)' }} />
+                        <div style={{ position: 'absolute', bottom: -20, left: 20, width: 80, height: 80, background: 'rgba(56,189,248,0.2)', borderRadius: '50%', filter: 'blur(20px)' }} />
+
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                            <p style={{ fontSize: 12, color: '#bae6fd', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 10px #38bdf8' }} /> Nghiệp Vụ
+                            </p>
+                            <h3 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Nhập Liệu Giấy Tờ</h3>
+                            <p style={{ fontSize: 13, color: '#7dd3fc', margin: 0, fontWeight: 600 }}>Tạo phiếu cân, tỉ trọng, xuất PDF</p>
                         </div>
-                        <button
-                            onClick={() => setDocModalOpen(true)}
-                            className="btn btn-primary"
-                            style={{ width: '100%', borderRadius: 12, padding: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
-                        >
-                            <FileText size={16} /> Nhập liệu & Xuất PDF
-                        </button>
+                        <div style={{ position: 'relative', zIndex: 1, width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <FileText size={32} color="#fff" strokeWidth={2} />
+                        </div>
                     </div>
 
                     {/* KPI Progress */}
