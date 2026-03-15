@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAllShips } from '../lib/useAllShips';
 import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
@@ -7,9 +8,18 @@ import {
     Plus, Calendar, Weight, X, Upload, FileText, Trash2,
     Ship as ShipIcon, CheckCircle, Loader2, Search, ArrowDownUp,
     Clock, ArrowRight, Anchor, User, MapPin, ExternalLink,
+    LogOut, ChevronDown, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
+
+const MONTH_NAMES = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+const GRID_MONTHS = ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
+
+function formatMonthLabel(ym: string) {
+    const [y, m] = ym.split('-');
+    return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
+}
 
 const PORTS = ['Sowatco Long Bình', 'Vĩnh Tân', 'Cần Giờ'];
 
@@ -137,7 +147,9 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 export function BossManager() {
+    const navigate = useNavigate();
     const { ships, loading, addShip, updateShip: updateShipApi, deleteShip } = useAllShips();
+    const now = new Date();
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Ship | null>(null);
     const [activeTab, setActiveTab] = useState<'all' | ShipStatus>('all');
@@ -146,6 +158,10 @@ export function BossManager() {
     const [submitting, setSubmitting] = useState(false);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    // Month picker
+    const [selectedMonth, setSelectedMonth] = useState('all');
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerYear, setPickerYear] = useState(now.getFullYear());
 
     // Form state
     const [name, setName] = useState('');
@@ -174,8 +190,16 @@ export function BossManager() {
                 || (s.employee && removeAccents(s.employee.toLowerCase()).includes(q))
                 || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
             );
-        } else if (activeTab !== 'all') {
-            result = result.filter(s => (s.status || 'waiting') === activeTab);
+        } else {
+            if (selectedMonth !== 'all') {
+                result = result.filter(s => {
+                    const d = new Date(s.arrivalDate);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+                });
+            }
+            if (activeTab !== 'all') {
+                result = result.filter(s => (s.status || 'waiting') === activeTab);
+            }
         }
         return [...result].sort((a, b) => {
             if (sortBy === 'newest') return new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime();
@@ -184,7 +208,7 @@ export function BossManager() {
             if (sortBy === 'weight-asc') return a.weight - b.weight;
             return 0;
         });
-    }, [ships, activeTab, searchQuery, sortBy]);
+    }, [ships, activeTab, searchQuery, sortBy, selectedMonth]);
 
     const openNew = () => {
         setEditing(null); setName(''); setStatus('waiting'); setArrival('');
@@ -303,18 +327,31 @@ export function BossManager() {
                         </p>
                         <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, lineHeight: 1.3 }}>Quản Lý Tổng</h1>
                     </div>
-                    <button
-                        onClick={openNew}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px',
-                            background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                            border: 'none', borderRadius: 14, color: '#fff',
-                            fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                            boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
-                        }}
-                    >
-                        <Plus size={16} strokeWidth={2.5} /> Thêm tàu
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                            onClick={openNew}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px',
+                                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                                border: 'none', borderRadius: 14, color: '#fff',
+                                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                                boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
+                            }}
+                        >
+                            <Plus size={16} strokeWidth={2.5} /> Thêm tàu
+                        </button>
+                        <button
+                            onClick={() => navigate('/login')}
+                            title="Đăng xuất"
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: 40, height: 40, border: 'none', borderRadius: 12,
+                                background: '#fee2e2', color: '#dc2626', cursor: 'pointer', flexShrink: 0,
+                            }}
+                        >
+                            <LogOut size={18} strokeWidth={2.5} style={{ marginLeft: -2 }} />
+                        </button>
+                    </div>
                 </header>
 
                 <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 24 }}>
@@ -336,6 +373,63 @@ export function BossManager() {
                                     <p style={{ fontSize: 10, color: item.color, fontWeight: 700, margin: '4px 0 0', opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.3px' }}>{item.label}</p>
                                 </div>
                             ))}
+                        </div>
+
+                        {/* Month Picker */}
+                        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 12, overflow: 'hidden' }}>
+                            <button
+                                onClick={() => { setPickerOpen(!pickerOpen); setPickerYear(selectedMonth !== 'all' ? parseInt(selectedMonth.split('-')[0]) : now.getFullYear()); }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                    width: '100%', padding: '11px 16px', border: 'none', background: 'transparent',
+                                    cursor: 'pointer', fontFamily: 'inherit',
+                                }}
+                            >
+                                <Calendar size={15} color="#7c3aed" />
+                                <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>
+                                    {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}
+                                </span>
+                                <ChevronDown size={15} color="#94a3b8" style={{ transition: 'transform .2s', transform: pickerOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
+                            </button>
+                            {pickerOpen && (
+                                <div style={{ padding: '0 14px 14px' }}>
+                                    <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginBottom: 10 }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                        <button onClick={() => setPickerYear(y => y - 1)} style={{ border: 'none', background: 'rgba(0,0,0,0.04)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform='scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform='scale(1)'} onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}><ChevronLeft size={15} /></button>
+                                        <span style={{ fontSize: 14, fontWeight: 800 }}>{pickerYear}</span>
+                                        <button onClick={() => setPickerYear(y => y + 1)} style={{ border: 'none', background: 'rgba(0,0,0,0.04)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', WebkitTapHighlightColor: 'transparent' }} onMouseDown={e => e.currentTarget.style.transform='scale(0.92)'} onMouseUp={e => e.currentTarget.style.transform='scale(1)'} onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}><ChevronRight size={15} /></button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 8 }}>
+                                        {GRID_MONTHS.map((label, i) => {
+                                            const key = `${pickerYear}-${String(i + 1).padStart(2, '0')}`;
+                                            const isActive = selectedMonth === key;
+                                            const isCurrent = now.getMonth() === i && now.getFullYear() === pickerYear;
+                                            return (
+                                                <button key={i} onClick={() => { setSelectedMonth(key); setPickerOpen(false); }} style={{
+                                                    padding: '9px 0', borderRadius: 10,
+                                                    border: isCurrent && !isActive ? '2px solid #8b5cf6' : '2px solid transparent',
+                                                    cursor: 'pointer', fontFamily: 'inherit', fontSize: 12,
+                                                    fontWeight: isActive ? 700 : 500,
+                                                    background: isActive ? '#7c3aed' : 'rgba(0,0,0,0.03)',
+                                                    color: isActive ? '#fff' : '#475569',
+                                                    WebkitTapHighlightColor: 'transparent',
+                                                    transition: 'all 0.15s ease',
+                                                }}
+                                                    onMouseDown={e => e.currentTarget.style.transform='scale(0.92)'}
+                                                    onMouseUp={e => e.currentTarget.style.transform='scale(1)'}
+                                                    onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
+                                                >{label}</button>
+                                            );
+                                        })}
+                                    </div>
+                                    <button onClick={() => { setSelectedMonth('all'); setPickerOpen(false); }} style={{
+                                        width: '100%', padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                        fontFamily: 'inherit', fontSize: 12, fontWeight: selectedMonth === 'all' ? 700 : 500,
+                                        background: selectedMonth === 'all' ? '#7c3aed' : 'rgba(0,0,0,0.04)',
+                                        color: selectedMonth === 'all' ? '#fff' : '#64748b',
+                                    }}>Tất cả tháng</button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Search + Sort */}
