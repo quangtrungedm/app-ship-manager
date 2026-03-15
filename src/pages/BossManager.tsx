@@ -553,45 +553,129 @@ export function BossManager() {
                         </>)}
 
                         {/* ── STATS VIEW ── */}
-                        {bottomView === 'stats' && (
-                            <div>
-                                {([
-                                    { key: 'satThep',   label: 'Sắt Thép',   sub: 'Quang Trung · Hoàng Thái', dot: '#3b82f6', data: divStats.satThep },
-                                    { key: 'vinCanGio', label: 'Vin Cần Giờ', sub: 'NV Cần Giờ',            dot: '#10b981', data: divStats.vinCanGio },
-                                ] as const).map(({ key, label, sub, dot, data }) => (
-                                    <div key={key} style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                            <div style={{ width: 10, height: 10, borderRadius: 5, background: dot, flexShrink: 0 }} />
-                                            <span style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{label}</span>
-                                            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{sub}</span>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                                            <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-                                                <p style={{ fontSize: 28, fontWeight: 800, color: '#334155', margin: 0, letterSpacing: '-1px' }}>{data.total}</p>
-                                                <p style={{ fontSize: 10, color: '#64748b', fontWeight: 700, margin: '4px 0 0', textTransform: 'uppercase' }}>Tổng tàu</p>
+                        {bottomView === 'stats' && (() => {
+                            const totalShips = divStats.satThep.total + divStats.vinCanGio.total;
+                            const totalWeight = divStats.satThep.totalWeight + divStats.vinCanGio.totalWeight;
+                            const totalCompleted = divStats.satThep.completed + divStats.vinCanGio.completed;
+                            const completionPct = totalShips > 0 ? Math.round(totalCompleted / totalShips * 100) : 0;
+                            return (
+                                <div>
+                                    {/* Period badge */}
+                                    <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', background: '#ede9fe', padding: '5px 14px', borderRadius: 20, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                                            {selectedMonth === 'all' ? 'Tất cả thời gian' : formatMonthLabel(selectedMonth)}
+                                        </span>
+                                    </div>
+
+                                    {/* Hero summary card */}
+                                    <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%)', borderRadius: 22, padding: '20px 18px 18px', marginBottom: 12, position: 'relative', overflow: 'hidden' }}>
+                                        <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: 60, background: 'rgba(139,92,246,0.18)', filter: 'blur(24px)', pointerEvents: 'none' }} />
+                                        <div style={{ position: 'absolute', bottom: -20, left: -10, width: 80, height: 80, borderRadius: 40, background: 'rgba(59,130,246,0.12)', filter: 'blur(20px)', pointerEvents: 'none' }} />
+                                        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 14px' }}>Tổng hợp chung</p>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 }}>
+                                            <div>
+                                                <p style={{ fontSize: 52, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>{totalShips}</p>
+                                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: '5px 0 0', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Chuyến tàu</p>
                                             </div>
-                                            <div style={{ background: '#dbeafe', borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-                                                <p style={{ fontSize: 20, fontWeight: 800, color: '#1d4ed8', margin: 0, letterSpacing: '-0.5px' }}>{data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</p>
-                                                <p style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 700, margin: '4px 0 0', textTransform: 'uppercase' }}>Tổng tấn</p>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <p style={{ fontSize: 24, fontWeight: 900, color: '#a78bfa', margin: 0, letterSpacing: '-0.5px' }}>{totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 0 })}</p>
+                                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: '4px 0 0', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Tổng tấn</p>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                                            {[
-                                                { label: 'Neo',  value: data.waiting,   color: '#b45309', bg: '#fef3c7' },
-                                                { label: 'Cập',  value: data.entering,  color: '#1d4ed8', bg: '#dbeafe' },
-                                                { label: 'Làm',  value: data.working,   color: '#7c3aed', bg: '#ede9fe' },
-                                                { label: 'Xong', value: data.completed, color: '#15803d', bg: '#dcfce7' },
-                                            ].map(item => (
-                                                <div key={item.label} style={{ background: item.bg, borderRadius: 10, padding: '10px 4px', textAlign: 'center' }}>
-                                                    <p style={{ fontSize: 20, fontWeight: 800, color: item.color, margin: 0 }}>{item.value}</p>
-                                                    <p style={{ fontSize: 9, color: item.color, fontWeight: 700, margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{item.label}</p>
-                                                </div>
-                                            ))}
+                                        <div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                                                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.4px' }}>Tỷ lệ hoàn thành</span>
+                                                <span style={{ fontSize: 12, color: '#4ade80', fontWeight: 800 }}>{completionPct}%</span>
+                                            </div>
+                                            <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${completionPct}%`, background: 'linear-gradient(90deg, #10b981, #4ade80)', borderRadius: 3 }} />
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+
+                                    {/* Quick compare */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+                                        {[
+                                            { label: 'Sắt Thép', gradient: 'linear-gradient(135deg, #1e3a8a, #2563eb)', data: divStats.satThep },
+                                            { label: 'Vin Cần Giờ', gradient: 'linear-gradient(135deg, #064e3b, #059669)', data: divStats.vinCanGio },
+                                        ].map(item => (
+                                            <div key={item.label} style={{ background: item.gradient, borderRadius: 18, padding: '14px 16px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+                                                <div style={{ position: 'absolute', bottom: -12, right: -12, width: 60, height: 60, borderRadius: 30, background: 'rgba(255,255,255,0.08)' }} />
+                                                <p style={{ fontSize: 10, fontWeight: 700, opacity: 0.65, textTransform: 'uppercase', margin: '0 0 8px', letterSpacing: '0.5px' }}>{item.label}</p>
+                                                <p style={{ fontSize: 36, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-1.5px', lineHeight: 1 }}>{item.data.total}</p>
+                                                <p style={{ fontSize: 11, opacity: 0.75, margin: 0, fontWeight: 700 }}>{item.data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tấn</p>
+                                                <p style={{ fontSize: 10, opacity: 0.55, margin: '3px 0 0', fontWeight: 600 }}>{item.data.completed} hoàn thành</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Division detail cards */}
+                                    {([
+                                        { key: 'satThep',   label: 'Sắt Thép',   sub: 'Quang Trung · Hoàng Thái', gradient: 'linear-gradient(135deg, #1e3a8a, #2563eb)', accent: '#3b82f6', light: '#eff6ff', data: divStats.satThep },
+                                        { key: 'vinCanGio', label: 'Vin Cần Giờ', sub: 'NV Cần Giờ',              gradient: 'linear-gradient(135deg, #064e3b, #059669)', accent: '#10b981', light: '#f0fdf4', data: divStats.vinCanGio },
+                                    ] as const).map(({ key, label, sub, gradient, accent, light, data }) => {
+                                        const donePct = data.total > 0 ? Math.round(data.completed / data.total * 100) : 0;
+                                        const rows = [
+                                            { label: 'Hoàn thành', value: data.completed, color: '#22c55e', track: '#dcfce7' },
+                                            { label: 'Đang làm',   value: data.working,   color: '#8b5cf6', track: '#ede9fe' },
+                                            { label: 'Đã cập bến', value: data.entering,  color: '#3b82f6', track: '#dbeafe' },
+                                            { label: 'Đang neo',   value: data.waiting,   color: '#f59e0b', track: '#fef3c7' },
+                                        ];
+                                        return (
+                                            <div key={key} style={{ background: '#fff', borderRadius: 22, overflow: 'hidden', marginBottom: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
+                                                {/* Gradient header */}
+                                                <div style={{ background: gradient, padding: '18px 18px 28px', position: 'relative', overflow: 'hidden' }}>
+                                                    <div style={{ position: 'absolute', bottom: -18, right: -18, width: 90, height: 90, borderRadius: 45, background: 'rgba(255,255,255,0.1)' }} />
+                                                    <div style={{ position: 'absolute', top: -12, right: 40, width: 55, height: 55, borderRadius: 28, background: 'rgba(255,255,255,0.06)' }} />
+                                                    <p style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: '0 0 3px', position: 'relative' }}>{label}</p>
+                                                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', margin: 0, fontWeight: 600, position: 'relative' }}>{sub}</p>
+                                                </div>
+                                                <div style={{ padding: '0 16px 16px' }}>
+                                                    {/* Floating stat chips */}
+                                                    <div style={{ display: 'flex', gap: 8, marginTop: -18, marginBottom: 16 }}>
+                                                        <div style={{ flex: 1, background: '#fff', borderRadius: 14, padding: '11px 14px', boxShadow: '0 3px 14px rgba(0,0,0,0.1)' }}>
+                                                            <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 3px' }}>Chuyến</p>
+                                                            <p style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{data.total}</p>
+                                                        </div>
+                                                        <div style={{ flex: 1, background: light, borderRadius: 14, padding: '11px 14px', boxShadow: '0 3px 14px rgba(0,0,0,0.04)' }}>
+                                                            <p style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 3px', opacity: 0.8 }}>Tấn</p>
+                                                            <p style={{ fontSize: 22, fontWeight: 900, color: accent, margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>{data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 0 })}</p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Completion bar */}
+                                                    <div style={{ marginBottom: 14, background: '#f8fafc', borderRadius: 12, padding: '10px 12px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+                                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tỷ lệ hoàn thành</span>
+                                                            <span style={{ fontSize: 14, fontWeight: 900, color: '#22c55e' }}>{donePct}%</span>
+                                                        </div>
+                                                        <div style={{ height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
+                                                            <div style={{ height: '100%', width: `${donePct}%`, background: 'linear-gradient(90deg, #10b981, #22c55e)', borderRadius: 4 }} />
+                                                        </div>
+                                                    </div>
+                                                    {/* Status rows */}
+                                                    <div>
+                                                        {rows.map(row => {
+                                                            const pct = data.total > 0 ? Math.round(row.value / data.total * 100) : 0;
+                                                            return (
+                                                                <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+                                                                    <div style={{ width: 7, height: 7, borderRadius: 3.5, background: row.color, flexShrink: 0 }} />
+                                                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#475569', width: 88, flexShrink: 0 }}>{row.label}</span>
+                                                                    <div style={{ flex: 1, height: 5, background: row.track, borderRadius: 3, overflow: 'hidden' }}>
+                                                                        <div style={{ height: '100%', width: `${pct}%`, background: row.color, borderRadius: 3 }} />
+                                                                    </div>
+                                                                    <span style={{ fontSize: 14, fontWeight: 800, color: row.color, width: 20, textAlign: 'right', flexShrink: 0 }}>{row.value}</span>
+                                                                    <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', width: 28, textAlign: 'right', flexShrink: 0 }}>{pct}%</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
 
                         {/* ── SALARY VIEW ── */}
                         {bottomView === 'salary' && (
