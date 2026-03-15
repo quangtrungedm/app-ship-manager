@@ -6,7 +6,7 @@ import { useAuth } from '../lib/AuthContext';
 import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
 import { Ship, Document as ShipDoc, ShipStatus } from '../types';
-import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
+import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
 
@@ -38,8 +38,9 @@ const formatVNWeight = (value: string) => {
 };
 
 const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
-    waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
+    waiting: { label: 'Đang neo', color: '#b45309', bg: '#fef3c7', icon: Anchor },
     entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
+    working: { label: 'Đang làm', color: '#7c3aed', bg: '#ede9fe', icon: Clock },
     completed: { label: 'Đã hoàn thành', color: '#15803d', bg: '#dcfce7', icon: CheckCircle },
 };
 

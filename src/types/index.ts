@@ -1,4 +1,4 @@
-export type ShipStatus = 'waiting' | 'entering' | 'completed';
+export type ShipStatus = 'waiting' | 'entering' | 'working' | 'completed';
 
 export interface Ship {
     id: string;
@@ -11,6 +11,7 @@ export interface Ship {
     isPaid?: boolean;
     port?: string;
     client?: string;
+    employee?: string;
     documents: Document[];
     bossNotes?: string;
 }

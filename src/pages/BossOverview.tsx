@@ -4,7 +4,7 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight, LayoutList, Ship as ShipIcon } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
@@ -141,6 +141,37 @@ export function BossOverview() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* ── Quản lý tổng Card ── */}
+            <div className="fade-up" style={{ marginBottom: 20 }}>
+                <button
+                    onClick={() => navigate('/boss/manager')}
+                    style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '18px 20px', border: 'none', borderRadius: 24, cursor: 'pointer',
+                        fontFamily: 'inherit', textAlign: 'left',
+                        background: 'linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%)',
+                        boxShadow: '0 8px 28px rgba(109,40,217,0.35)',
+                    }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 16, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <LayoutList size={24} color="#fff" strokeWidth={2} />
+                        </div>
+                        <div>
+                            <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.3px' }}>Quản Lý Tổng</p>
+                            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', margin: '3px 0 0', fontWeight: 500 }}>Xem & quản lý toàn bộ chuyến tàu</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ShipIcon size={18} color="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                        <ArrowRight size={20} color="rgba(255,255,255,0.7)" strokeWidth={2.5} />
+                    </div>
+                </button>
             </div>
 
             {/* KPI Cards */}

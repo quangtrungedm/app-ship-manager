@@ -4,7 +4,7 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { Ship, ShipStatus } from '../types';
-import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight } from 'lucide-react';
+import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 
 function formatMonthLabel(ym: string) {
@@ -18,8 +18,9 @@ const removeAccents = (str: string) => {
 };
 
 const STATUS_CONFIG: Record<ShipStatus, { label: string, color: string, bg: string, icon: any }> = {
-    waiting: { label: 'Chờ slot', color: '#b45309', bg: '#fef3c7', icon: Clock },
+    waiting: { label: 'Đang neo', color: '#b45309', bg: '#fef3c7', icon: Anchor },
     entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight },
+    working: { label: 'Đang làm', color: '#7c3aed', bg: '#ede9fe', icon: Clock },
     completed: { label: 'Đã hoàn thành', color: '#15803d', bg: '#dcfce7', icon: CheckCircle },
 };
 

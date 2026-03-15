@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { X, FileText, Printer, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, FileText, Printer, ChevronDown } from 'lucide-react';
 import { Ship } from '../types';
+import { PrintTemplate } from './PrintTemplate';
 
 interface Props {
     isOpen: boolean;
@@ -9,149 +10,236 @@ interface Props {
 }
 
 export function DocumentGeneratorModal({ isOpen, onClose, ships }: Props) {
-    const [selectedShipId, setSelectedShipId] = useState('');
-    const [docType, setDocType] = useState('phieu_can');
-    const [driverName, setDriverName] = useState('');
-    const [truckPlate, setTruckPlate] = useState('');
-    const [actualWeight, setActualWeight] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [previewUrl] = useState<string | null>(null); // TODO: setPreviewUrl when generating PDF
+    const [selectedShipId, setSelectedShipId] = useState<string>('');
+    const [docType, setDocType] = useState<'khoi_luong' | 'ty_trong'>('khoi_luong');
+
+    // Form fields
+    const [vinconsRep, setVinconsRep] = useState('');
+    const [securityRep, setSecurityRep] = useState('');
+    const [materialName, setMaterialName] = useState('Cát Bơm');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [totalWeight, setTotalWeight] = useState('');
+    const [totalQuyDoi, setTotalQuyDoi] = useState('');
+    const [words, setWords] = useState('');
+
+    const [hocData, setHocData] = useState(
+        Array(5).fill({ khongHang: '', coHang: '', hang: '', quyDoi: '' })
+    );
 
     const activeShip = ships.find(s => s.id === selectedShipId);
 
-    // Auto-fill actual weight from ship if available
+    // Auto-fill total weight when ship selected
     useEffect(() => {
         if (activeShip) {
-            setActualWeight(activeShip.weight.toString());
-        } else {
-            setActualWeight('');
+            setTotalWeight(activeShip.weight.toString());
+            // Assume 1 chuyến by default for khoi_luong, 5 hộc for ty_trong
+            setQuantity(docType === 'khoi_luong' ? '1' : '5');
         }
-    }, [activeShip]);
+    }, [activeShip, docType]);
 
     if (!isOpen) return null;
 
-    const handleGenerate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsGenerating(true);
+    const handleHocChange = (index: number, field: string, value: string) => {
+        const newData = [...hocData];
+        newData[index] = { ...newData[index], [field]: value };
+        setHocData(newData);
+    };
 
-        // TODO: Integrate pdf-lib here when the user uploads the template
-        // await new Promise(r => setTimeout(r, 1500)); // Simulate generation
+    const handlePrint = () => {
+        window.print();
+    };
 
-        setIsGenerating(false);
-        alert('Tính năng nhúng font và tạo PDF đang chờ bạn tải lên file PDF mẫu. Hãy quay lại chat để gửi file nhé!');
+    // Prepare data for PrintTemplate
+    const printData = {
+        date: new Date(),
+        vinconsRep,
+        securityRep,
+        materialName,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        quantity,
+        totalWeight,
+        shipName: activeShip?.name || '....................',
+        hocData,
+        totalQuyDoi,
+        words
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="modal-sheet" style={{ display: 'flex', flexDirection: 'column', height: '90dvh', padding: 0 }}>
+        <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, padding: 24, paddingBottom: 'env(safe-area-inset-bottom, 24px)'
+        }}>
+            <div className="fade-up" style={{
+                background: '#fff', width: '100%', maxWidth: 1000, maxHeight: '90vh',
+                borderRadius: 24, boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden'
+            }}>
                 {/* Header */}
-                <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <FileText size={18} color="#3b82f6" strokeWidth={2.5} />
+                <div style={{
+                    padding: '20px 24px', borderBottom: '1px solid #f1f5f9',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'var(--c-surface)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(13, 148, 136, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FileText size={20} color="#0d9488" />
                         </div>
-                        <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>In Hồ Sơ / Giấy Tờ</h2>
+                        <div>
+                            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--c-text)' }}>Khởi tạo Hồ sơ In</h2>
+                            <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Phiếu cân & Tỉ trọng tự động</p>
+                        </div>
                     </div>
-                    <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 16, background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <X size={18} color="#64748b" strokeWidth={2.5} />
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', color: 'var(--c-text-secondary)' }}>
+                        <X size={24} />
                     </button>
                 </div>
 
-                {/* Form Body */}
-                <form id="doc-form" onSubmit={handleGenerate} style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-                    <div className="field">
-                        <label>Loại giấy tờ</label>
-                        <div style={{ position: 'relative' }}>
-                            <select value={docType} onChange={e => setDocType(e.target.value)} style={{ appearance: 'none', background: '#fff' }}>
-                                <option value="phieu_can">Phiếu cân hàng / Tỉ trọng</option>
-                                <option value="bien_ban">Biên bản nghiệm thu</option>
-                            </select>
-                            <ChevronDown size={16} color="#94a3b8" style={{ position: 'absolute', right: 14, top: 16, pointerEvents: 'none' }} strokeWidth={2.5} />
-                        </div>
-                    </div>
+                {/* Body (Form & Preview) */}
+                <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-                    <div className="field">
-                        <label>Chọn chuyến tàu (Lấy dữ liệu gốc)</label>
-                        <div style={{ position: 'relative' }}>
-                            <select value={selectedShipId} onChange={e => setSelectedShipId(e.target.value)} required style={{ appearance: 'none', background: '#fff' }}>
-                                <option value="" disabled>-- Chọn tàu để điền dữ liệu --</option>
-                                {ships.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name} - {new Date(s.arrivalDate).toLocaleDateString('vi-VN')} ({s.weight} tấn)</option>
-                                ))}
-                            </select>
-                            <ChevronDown size={16} color="#94a3b8" style={{ position: 'absolute', right: 14, top: 16, pointerEvents: 'none' }} strokeWidth={2.5} />
-                        </div>
-                    </div>
+                    {/* Form Left Side */}
+                    <div style={{ width: '45%', padding: 24, borderRight: '1px solid #e2e8f0', overflowY: 'auto', background: '#f8fafc' }}>
 
-                    {activeShip && (
-                        <div className="fade-up" style={{ background: '#f8fafc', padding: 16, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 20 }}>
-                            <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 12 }}>Dữ liệu tự động (Auto-fill)</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
+                        <div style={{ background: '#fff', padding: 16, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#475569' }}>Loại giấy tờ</label>
+                            <div style={{ position: 'relative' }}>
+                                <select
+                                    className="input-field"
+                                    value={docType}
+                                    onChange={e => setDocType(e.target.value as any)}
+                                    style={{ width: '100%', paddingLeft: 16, appearance: 'none', background: '#f8fafc' }}
+                                >
+                                    <option value="khoi_luong">Biên bản xác nhận Khối Lượng</option>
+                                    <option value="ty_trong">Biên bản xác nhận Tỷ Trọng</option>
+                                </select>
+                                <ChevronDown size={18} color="#64748b" style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                            </div>
+                        </div>
+
+                        <div style={{ background: '#fff', padding: 16, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#475569' }}>Tàu áp dụng (Tại VIN)</label>
+                            <div style={{ position: 'relative' }}>
+                                <select
+                                    className="input-field"
+                                    value={selectedShipId}
+                                    onChange={e => setSelectedShipId(e.target.value)}
+                                    style={{ width: '100%', paddingLeft: 16, appearance: 'none', background: '#f8fafc' }}
+                                >
+                                    <option value="" disabled>-- Chọn tàu --</option>
+                                    {ships.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name} - {s.weight.toLocaleString()} tấn</option>
+                                    ))}
+                                </select>
+                                <ChevronDown size={18} color="#64748b" style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                            </div>
+                        </div>
+
+                        <div style={{ background: '#fff', padding: 16, borderRadius: 16, border: '1px solid #e2e8f0', marginBottom: 16 }}>
+                            <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 800 }}>Thông tin Cơ bản</h4>
+
+                            <div style={{ marginBottom: 12 }}>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tên vật tư</label>
+                                <input type="text" className="input-field" value={materialName} onChange={e => setMaterialName(e.target.value)} placeholder="Cát Bơm..." style={{ padding: '10px 14px' }} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                                 <div>
-                                    <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>Tên tàu</p>
-                                    <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{activeShip.name}</p>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Đại diện VINCONS</label>
+                                    <input type="text" className="input-field" value={vinconsRep} onChange={e => setVinconsRep(e.target.value)} placeholder="Nhập tên..." style={{ padding: '10px 14px' }} />
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>Ngày vào</p>
-                                    <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{new Date(activeShip.arrivalDate).toLocaleDateString('vi-VN')}</p>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Đại diện An Ninh</label>
+                                    <input type="text" className="input-field" value={securityRep} onChange={e => setSecurityRep(e.target.value)} placeholder="Nhập tên..." style={{ padding: '10px 14px' }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                <div>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Từ ngày (Bắt đầu)</label>
+                                    <input type="datetime-local" className="input-field" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: '10px 14px' }} />
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>Khối lượng (Tấn)</p>
-                                    <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{activeShip.weight.toLocaleString('vi-VN')}</p>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Đến ngày (Kết thúc)</label>
+                                    <input type="datetime-local" className="input-field" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: '10px 14px' }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <div>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Số lượng {docType === 'khoi_luong' ? '(Chuyến)' : '(Hộc)'}</label>
+                                    <input type="text" className="input-field" value={quantity} onChange={e => setQuantity(e.target.value)} style={{ padding: '10px 14px' }} />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tổng khối lượng (KG)</label>
+                                    <input type="text" className="input-field" value={totalWeight} onChange={e => setTotalWeight(e.target.value)} style={{ padding: '10px 14px' }} />
                                 </div>
                             </div>
                         </div>
-                    )}
 
-                    <div className="field">
-                        <label>Thông tin bổ sung (Tuỳ chọn)</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <input
-                                placeholder="Tên tài xế/Người nhận..."
-                                value={driverName} onChange={e => setDriverName(e.target.value)}
-                            />
-                            <input
-                                placeholder="Biển số xe..."
-                                value={truckPlate} onChange={e => setTruckPlate(e.target.value)}
-                            />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <input
-                                    type="number"
-                                    placeholder="Tỉ trọng / Cân thực tế..."
-                                    value={actualWeight} onChange={e => setActualWeight(e.target.value)}
-                                    style={{ flex: 1 }}
-                                />
-                                <span style={{ fontSize: 14, fontWeight: 600, color: '#64748b' }}>Tấn</span>
+                        <div style={{ background: '#fff', padding: 16, borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                            <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 800 }}>Dữ liệu Hộc (Tuỳ chọn)</h4>
+                            {hocData.map((hoc, i) => (
+                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                    <input type="text" placeholder={`Hộc ${i + 1} rỗng`} className="input-field" value={hoc.khongHang} onChange={e => handleHocChange(i, 'khongHang', e.target.value)} style={{ padding: '8px 10px', fontSize: 13 }} />
+                                    <input type="text" placeholder={`Có hàng`} className="input-field" value={hoc.coHang} onChange={e => handleHocChange(i, 'coHang', e.target.value)} style={{ padding: '8px 10px', fontSize: 13 }} />
+                                    <input type="text" placeholder={`TL hàng`} className="input-field" value={hoc.hang} onChange={e => handleHocChange(i, 'hang', e.target.value)} style={{ padding: '8px 10px', fontSize: 13 }} />
+                                </div>
+                            ))}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+                                <div>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Tổng Quy Đổi (M3)</label>
+                                    <input type="text" className="input-field" value={totalQuyDoi} onChange={e => setTotalQuyDoi(e.target.value)} style={{ padding: '10px 14px' }} />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Viết bằng chữ</label>
+                                    <input type="text" className="input-field" value={words} onChange={e => setWords(e.target.value)} style={{ padding: '10px 14px' }} />
+                                </div>
                             </div>
+                        </div>
+
+                    </div>
+
+                    {/* Preview Right Side */}
+                    <div style={{ flex: 1, padding: 24, background: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
+                        <div style={{
+                            width: '210mm', minHeight: '297mm', background: '#fff',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                            transform: 'scale(0.85)', transformOrigin: 'top center',
+                            marginBottom: -80, // Adjust for scale 
+                        }}>
+                            <PrintTemplate type={docType} data={printData} />
                         </div>
                     </div>
 
-                    {previewUrl && (
-                        <div style={{ marginTop: 20, textAlign: 'center' }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: '#10b981', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                                <Check size={16} strokeWidth={3} /> Đã có bản xem trước
-                            </p>
-                            <a href={previewUrl} target="_blank" rel="noreferrer" className="btn" style={{ background: '#f1f5f9', color: '#0f172a', width: '100%' }}>
-                                Mở / Tải file PDF
-                            </a>
-                        </div>
-                    )}
-                </form>
+                </div>
 
-                {/* Footer Action */}
-                <div style={{ padding: 20, borderTop: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
+                {/* Footer Actions */}
+                <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', background: '#fff', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                    <button onClick={onClose} className="btn" style={{ padding: '12px 24px', borderRadius: 12 }}>Đóng</button>
                     <button
-                        type="submit"
-                        form="doc-form"
-                        disabled={!selectedShipId || isGenerating}
-                        className="btn btn-primary btn-block btn-lg"
-                        style={{ opacity: !selectedShipId || isGenerating ? 0.7 : 1 }}
+                        onClick={handlePrint}
+                        disabled={!selectedShipId}
+                        className="btn btn-primary"
+                        style={{ padding: '12px 24px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}
                     >
-                        {isGenerating ? <Loader2 size={20} className="spin" /> : <Printer size={20} />}
-                        Xem trước & In PDF
+                        <Printer size={18} /> In PDF ngay
                     </button>
                 </div>
             </div>
+
+            <style>
+                {`
+                    @media print {
+                        .fade-up { display: none !important; }
+                    }
+                `}
+            </style>
         </div>
     );
 }
