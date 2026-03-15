@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAllShips } from '../lib/useAllShips';
 import { uploadFile } from '../lib/api';
@@ -175,6 +175,32 @@ export function BossManager() {
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
     const [bottomView, setBottomView] = useState<'list' | 'stats' | 'salary'>('list');
+    const mainRef = useRef<HTMLElement>(null);
+    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const lastScrollY = useRef(0);
+    const [navCollapsed, setNavCollapsed] = useState(false);
+
+    const resetTimer = useCallback(() => {
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setNavCollapsed(true), 2500);
+    }, []);
+    const expandNav = useCallback(() => {
+        setNavCollapsed(false);
+        resetTimer();
+    }, [resetTimer]);
+    useEffect(() => {
+        const el = mainRef.current;
+        if (!el) return;
+        const onScroll = () => {
+            const y = el.scrollTop;
+            if (y > lastScrollY.current + 10) setNavCollapsed(true);
+            else if (y < lastScrollY.current - 10) expandNav();
+            lastScrollY.current = y;
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        resetTimer();
+        return () => { el.removeEventListener('scroll', onScroll); clearTimeout(timerRef.current); };
+    }, [expandNav, resetTimer]);
 
     // Form state
     const [name, setName] = useState('');
@@ -399,7 +425,7 @@ export function BossManager() {
                     </div>
                 </header>
 
-                <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 80 }}>
+                <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 80 }} ref={mainRef}>
                     <div style={{ padding: '16px 16px 0' }}>
 
                         {/* Stats Row */}
@@ -619,34 +645,98 @@ export function BossManager() {
                     </div>
                 </main>
 
-                {/* ── Bottom Nav Bar ── */}
-                <nav style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 64,
-                    background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)',
-                    borderTop: '1px solid rgba(0,0,0,0.06)',
-                    display: 'flex', alignItems: 'stretch', zIndex: 40,
-                }}>
-                    {([
-                        { key: 'list'   as const, label: 'Danh sách', Icon: List },
-                        { key: 'stats'  as const, label: 'Thống kê',  Icon: BarChart3 },
-                        { key: 'salary' as const, label: 'Lương NV',  Icon: Wallet },
-                    ]).map(({ key, label, Icon }) => {
-                        const active = bottomView === key;
-                        return (
-                            <button key={key} onClick={() => setBottomView(key)} style={{
-                                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
-                                border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
-                                WebkitTapHighlightColor: 'transparent',
-                                borderTop: active ? '2.5px solid #7c3aed' : '2.5px solid transparent',
-                                color: active ? '#7c3aed' : '#94a3b8',
-                                transition: 'color .2s',
+                {/* ── Bottom Nav Bar (animated pill) ── */}
+                {(() => {
+                    const NAV_TABS = [
+                        { key: 'list'   as const, label: 'Danh sách', Icon: List,     color: '#3b82f6', bg: 'linear-gradient(135deg, rgba(59,130,246,.25), rgba(37,99,235,.15))' },
+                        { key: 'stats'  as const, label: 'Thống kê',  Icon: BarChart3, color: '#10b981', bg: 'linear-gradient(135deg, rgba(16,185,129,.25), rgba(5,150,105,.15))' },
+                        { key: 'salary' as const, label: 'Lương NV',  Icon: Wallet,   color: '#8b5cf6', bg: 'linear-gradient(135deg, rgba(139,92,246,.25), rgba(109,40,217,.15))' },
+                    ];
+                    const activeNavTab = NAV_TABS.find(t => t.key === bottomView) ?? NAV_TABS[0];
+                    const ActiveNavIcon = activeNavTab.Icon;
+                    return (
+                        <div
+                            onMouseEnter={expandNav}
+                            onTouchStart={expandNav}
+                            onClick={navCollapsed ? expandNav : undefined}
+                            style={{
+                                position: 'absolute',
+                                bottom: 20,
+                                left: navCollapsed ? 'calc(100% - 68px)' : '50%',
+                                transform: navCollapsed ? 'translateX(0)' : 'translateX(-50%)',
+                                width: navCollapsed ? 52 : 300,
+                                height: 52,
+                                borderRadius: 26,
+                                zIndex: 50,
+                                background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+                                boxShadow: '0 6px 24px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.07)',
+                                cursor: navCollapsed ? 'pointer' : 'default',
+                                overflow: 'hidden',
+                                transition: 'left .35s ease, transform .35s ease, width .35s ease',
+                                willChange: 'left, transform, width',
+                            }}
+                        >
+                            {/* Collapsed: active icon */}
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                opacity: navCollapsed ? 1 : 0,
+                                transition: 'opacity .2s ease',
+                                pointerEvents: navCollapsed ? 'auto' : 'none',
                             }}>
-                                <Icon size={21} strokeWidth={active ? 2.5 : 1.8} />
-                                <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: '0.2px' }}>{label}</span>
-                            </button>
-                        );
-                    })}
-                </nav>
+                                <ActiveNavIcon size={22} color="#fff" strokeWidth={2} />
+                            </div>
+                            {/* Expanded: tab buttons */}
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', alignItems: 'center',
+                                opacity: navCollapsed ? 0 : 1,
+                                transition: 'opacity .2s ease .05s',
+                                pointerEvents: navCollapsed ? 'none' : 'auto',
+                            }}>
+                                {NAV_TABS.map(({ key, label, Icon: TabIcon, color, bg }) => {
+                                    const active = bottomView === key;
+                                    return (
+                                        <button key={key} onClick={() => { setBottomView(key); expandNav(); }}
+                                            style={{
+                                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                gap: 6, height: '100%', border: 'none', background: 'transparent',
+                                                cursor: 'pointer', fontFamily: 'inherit',
+                                                color: active ? '#fff' : 'rgba(255,255,255,.35)',
+                                                transition: 'color .2s ease', position: 'relative',
+                                                WebkitTapHighlightColor: 'transparent',
+                                            }}
+                                        >
+                                            {active && (
+                                                <div style={{
+                                                    position: 'absolute', inset: 5, borderRadius: 20,
+                                                    background: bg, boxShadow: `0 0 12px ${color}33`,
+                                                    transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                }} />
+                                            )}
+                                            <TabIcon size={18} strokeWidth={active ? 2.5 : 1.5}
+                                                color={active ? color : 'inherit'}
+                                                style={{
+                                                    position: 'relative', zIndex: 1,
+                                                    transform: active ? 'translateY(-1px)' : 'translateY(0)',
+                                                    transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                }}
+                                            />
+                                            <span style={{
+                                                fontSize: 12, fontWeight: active ? 800 : 500,
+                                                color: active ? color : 'inherit',
+                                                position: 'relative', zIndex: 1, letterSpacing: '.2px',
+                                                whiteSpace: 'nowrap',
+                                                transform: active ? 'translateY(1px)' : 'translateY(0)',
+                                                transition: 'all .3s ease',
+                                            }}>{label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* ── Bottom Sheet Form ── */}
