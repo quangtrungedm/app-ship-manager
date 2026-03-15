@@ -614,7 +614,6 @@ export function BossManager() {
                                         { key: 'satThep',   label: 'Sắt Thép',   sub: 'Quang Trung · Hoàng Thái', gradient: 'linear-gradient(135deg, #1e3a8a, #2563eb)', accent: '#3b82f6', light: '#eff6ff', data: divStats.satThep },
                                         { key: 'vinCanGio', label: 'Vin Cần Giờ', sub: 'NV Cần Giờ',              gradient: 'linear-gradient(135deg, #064e3b, #059669)', accent: '#10b981', light: '#f0fdf4', data: divStats.vinCanGio },
                                     ] as const).map(({ key, label, sub, gradient, accent, light, data }) => {
-                                        const donePct = data.total > 0 ? Math.round(data.completed / data.total * 100) : 0;
                                         const rows = [
                                             { label: 'Hoàn thành', value: data.completed, color: '#22c55e', track: '#dcfce7' },
                                             { label: 'Đang làm',   value: data.working,   color: '#8b5cf6', track: '#ede9fe' },
@@ -630,9 +629,9 @@ export function BossManager() {
                                                     <p style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: '0 0 3px', position: 'relative' }}>{label}</p>
                                                     <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', margin: 0, fontWeight: 600, position: 'relative' }}>{sub}</p>
                                                 </div>
-                                                <div style={{ padding: '0 16px 16px' }}>
+                                                <div style={{ padding: '0 16px 18px' }}>
                                                     {/* Floating stat chips */}
-                                                    <div style={{ display: 'flex', gap: 8, marginTop: -18, marginBottom: 16 }}>
+                                                    <div style={{ display: 'flex', gap: 8, marginTop: -18, marginBottom: 18 }}>
                                                         <div style={{ flex: 1, background: '#fff', borderRadius: 14, padding: '11px 14px', boxShadow: '0 3px 14px rgba(0,0,0,0.1)' }}>
                                                             <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 3px' }}>Chuyến</p>
                                                             <p style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{data.total}</p>
@@ -640,16 +639,6 @@ export function BossManager() {
                                                         <div style={{ flex: 1, background: light, borderRadius: 14, padding: '11px 14px', boxShadow: '0 3px 14px rgba(0,0,0,0.04)' }}>
                                                             <p style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 3px', opacity: 0.8 }}>Tấn</p>
                                                             <p style={{ fontSize: 22, fontWeight: 900, color: accent, margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>{data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 0 })}</p>
-                                                        </div>
-                                                    </div>
-                                                    {/* Completion bar */}
-                                                    <div style={{ marginBottom: 14, background: '#f8fafc', borderRadius: 12, padding: '10px 12px' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
-                                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tỷ lệ hoàn thành</span>
-                                                            <span style={{ fontSize: 14, fontWeight: 900, color: '#22c55e' }}>{donePct}%</span>
-                                                        </div>
-                                                        <div style={{ height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
-                                                            <div style={{ height: '100%', width: `${donePct}%`, background: 'linear-gradient(90deg, #10b981, #22c55e)', borderRadius: 4 }} />
                                                         </div>
                                                     </div>
                                                     {/* Status rows */}
