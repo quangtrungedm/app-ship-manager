@@ -23,6 +23,17 @@ function formatMonthLabel(ym: string) {
 
 const PORTS = ['Sowatco Long Bình', 'Vĩnh Tân', 'Cần Giờ'];
 
+const EMPLOYEES: { name: string; division: string }[] = [
+    { name: 'Quang Trung', division: 'SAT_THEP' },
+    { name: 'Hoàng Thái',  division: 'SAT_THEP' },
+    { name: 'NV Cần Giờ', division: 'VIN_CAN_GIO' },
+];
+
+const DIVISION_LABELS: Record<string, string> = {
+    SAT_THEP: 'Sắt Thép',
+    VIN_CAN_GIO: 'Vin Cần Giờ',
+};
+
 const STATUS_CONFIG: Record<ShipStatus, { label: string; color: string; bg: string; icon: any; bar: string }> = {
     waiting:   { label: 'Đang neo',      color: '#b45309', bg: '#fef3c7', icon: Anchor,      bar: '#f59e0b' },
     entering:  { label: 'Đã cập bến',    color: '#1d4ed8', bg: '#dbeafe', icon: ArrowRight,  bar: '#3b82f6' },
@@ -170,6 +181,7 @@ export function BossManager() {
     const [completion, setCompletion] = useState('');
     const [weight, setWeight] = useState('');
     const [employee, setEmployee] = useState('');
+    const [formDivision, setFormDivision] = useState('');
     const [port, setPort] = useState('');
     const [docs, setDocs] = useState<ShipDoc[]>([]);
 
@@ -212,7 +224,7 @@ export function BossManager() {
 
     const openNew = () => {
         setEditing(null); setName(''); setStatus('waiting'); setArrival('');
-        setCompletion(''); setWeight(''); setEmployee(''); setPort(''); setDocs([]);
+        setCompletion(''); setWeight(''); setEmployee(''); setFormDivision(''); setPort(''); setDocs([]);
         setPendingFiles([]);
         setShowForm(true);
     };
@@ -223,6 +235,7 @@ export function BossManager() {
         setCompletion(s.completionDate?.split('T')[0] || '');
         setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
         setEmployee(s.employee || '');
+        setFormDivision(s.division || '');
         setPort(s.port || '');
         setDocs([...s.documents]);
         setPendingFiles([]);
@@ -260,7 +273,7 @@ export function BossManager() {
             status,
             employee: employee || undefined,
             port: port || undefined,
-            division: editing?.division,
+            division: formDivision || editing?.division,
             documents: [...docs],
             isPaid: editing?.isPaid,
             client: editing?.client,
@@ -611,11 +624,27 @@ export function BossManager() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="field">
                                     <label>Nhân viên</label>
-                                    <input
+                                    <select
                                         value={employee}
-                                        onChange={e => setEmployee(e.target.value)}
-                                        placeholder="Tên nhân viên"
-                                    />
+                                        onChange={e => {
+                                            const name = e.target.value;
+                                            setEmployee(name);
+                                            const found = EMPLOYEES.find(emp => emp.name === name);
+                                            if (found) setFormDivision(found.division);
+                                            else setFormDivision('');
+                                        }}
+                                        style={{ padding: '10px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', background: '#fff', outline: 'none', width: '100%' }}
+                                    >
+                                        <option value="">— Chọn nhân viên —</option>
+                                        {EMPLOYEES.map(emp => (
+                                            <option key={emp.name} value={emp.name}>{emp.name}</option>
+                                        ))}
+                                    </select>
+                                    {formDivision && (
+                                        <p style={{ fontSize: 11, margin: '4px 0 0', color: formDivision === 'SAT_THEP' ? '#1d4ed8' : '#15803d', fontWeight: 700 }}>
+                                            → Mảng: {DIVISION_LABELS[formDivision]}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="field">
                                     <label>Cảng dỡ</label>
