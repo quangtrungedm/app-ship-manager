@@ -273,7 +273,7 @@ export function BossManager() {
             status,
             employee: employee || undefined,
             port: port || undefined,
-            division: formDivision || editing?.division,
+            division: 'BOSS_MANAGER',
             documents: [...docs],
             isPaid: editing?.isPaid,
             client: editing?.client,

@@ -14,7 +14,8 @@ interface UseAllShipsReturn {
     refresh: () => Promise<void>;
 }
 
-const CACHE_KEY = 'ship_manager_cache_ALL';
+const BOSS_DIVISION = 'BOSS_MANAGER';
+const CACHE_KEY = 'ship_manager_cache_BOSS';
 
 export function useAllShips(): UseAllShipsReturn {
     const [ships, setShips] = useState<Ship[]>(() => {
@@ -36,8 +37,9 @@ export function useAllShips(): UseAllShipsReturn {
         setError(null);
         try {
             const data = await api.fetchShips();
-            setShips(data);
-            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            const bossShips = data.filter((s: Ship) => s.division === BOSS_DIVISION);
+            setShips(bossShips);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(bossShips));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Lỗi tải dữ liệu');
             if (ships.length === 0) setShips(MOCK_SHIPS);
@@ -56,7 +58,7 @@ export function useAllShips(): UseAllShipsReturn {
 
     const handleAdd = async (ship: Omit<Ship, 'id'>) => {
         const tempId = `shp-boss-${Date.now()}`;
-        const newShip = { ...ship, id: tempId } as Ship;
+        const newShip = { ...ship, id: tempId, division: BOSS_DIVISION } as Ship;
         setShips(prev => [newShip, ...prev]);
 
         if (isConfigured()) {
