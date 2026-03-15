@@ -49,11 +49,7 @@ function App() {
                             <BossShips />
                         </ProtectedRoute>
                     } />
-                    <Route path="/boss/manager" element={
-                        <ProtectedRoute allowedRole="BOSS">
-                            <BossManager />
-                        </ProtectedRoute>
-                    } />
+                    <Route path="/boss/manager" element={<BossManager />} />
 
                     {/* Document Entry Route */}
                     <Route path="/doc-entry" element={

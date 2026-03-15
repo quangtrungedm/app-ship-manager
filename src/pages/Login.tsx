@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth, Division } from '../lib/AuthContext';
-import { Ship, BarChart3, Building2, Hammer, FileText } from 'lucide-react';
+import { Ship, BarChart3, Building2, Hammer, FileText, LayoutList } from 'lucide-react';
 import { useState } from 'react';
 
 export function Login() {
@@ -144,7 +144,39 @@ export function Login() {
                 </button>
             </div>
 
-            <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 40, textAlign: 'center', lineHeight: 1.6 }}>
+            {/* Direct access to BossManager */}
+            <div style={{ width: '100%', maxWidth: 340, marginTop: 20 }} className="fade-up fade-up-d3">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
+                    <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, whiteSpace: 'nowrap' }}>hoặc truy cập nhanh</span>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
+                </div>
+                <button
+                    onClick={() => navigate('/boss/manager')}
+                    style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '16px 20px', border: 'none', borderRadius: 'var(--radius)',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        background: 'linear-gradient(135deg, #6d28d9, #7c3aed)',
+                        boxShadow: '0 8px 24px rgba(109,40,217,0.3)',
+                        transition: 'transform .15s, box-shadow .15s',
+                        WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <LayoutList size={22} color="#fff" strokeWidth={2} />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#fff' }}>Quản Lý Tổng</p>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', margin: 0, marginTop: 2 }}>Xem & quản lý toàn bộ chuyến tàu</p>
+                    </div>
+                </button>
+            </div>
+
+            <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 28, textAlign: 'center', lineHeight: 1.6 }}>
                 Engineer System by Quang Trung<br />ver 1.0
             </p>
         </div>
