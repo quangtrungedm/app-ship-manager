@@ -9,6 +9,7 @@ import {
     Ship as ShipIcon, CheckCircle, Loader2, Search, ArrowDownUp,
     Clock, ArrowRight, Anchor, User, MapPin, ExternalLink,
     LogOut, ChevronDown, ChevronLeft, ChevronRight,
+    BarChart3, Wallet, List,
 } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
@@ -173,6 +174,7 @@ export function BossManager() {
     const [selectedMonth, setSelectedMonth] = useState('all');
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
+    const [bottomView, setBottomView] = useState<'list' | 'stats' | 'salary'>('list');
 
     // Form state
     const [name, setName] = useState('');
@@ -193,6 +195,36 @@ export function BossManager() {
         working: ships.filter(s => s.status === 'working').length,
         completed: ships.filter(s => s.status === 'completed' || !!s.completionDate).length,
     }), [ships]);
+
+    const monthShips = useMemo(() => {
+        if (selectedMonth === 'all') return ships;
+        return ships.filter(s => {
+            const d = new Date(s.arrivalDate);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+        });
+    }, [ships, selectedMonth]);
+
+    const divStats = useMemo(() => {
+        const satThepShips = monthShips.filter(s => s.employee === 'Quang Trung' || s.employee === 'Hoàng Thái');
+        const vinCanGioShips = monthShips.filter(s => s.employee === 'NV Cần Giờ');
+        const calc = (arr: Ship[]) => ({
+            total: arr.length,
+            totalWeight: arr.reduce((sum, s) => sum + s.weight, 0),
+            waiting: arr.filter(s => (s.status || 'waiting') === 'waiting').length,
+            entering: arr.filter(s => s.status === 'entering').length,
+            working: arr.filter(s => s.status === 'working').length,
+            completed: arr.filter(s => s.status === 'completed').length,
+        });
+        return { satThep: calc(satThepShips), vinCanGio: calc(vinCanGioShips) };
+    }, [monthShips]);
+
+    const salaryData = useMemo(() =>
+        ['Quang Trung', 'Hoàng Thái'].map(name => {
+            const empShips = monthShips.filter(s => s.employee === name);
+            const totalWeight = empShips.reduce((sum, s) => sum + s.weight, 0);
+            return { name, empShips, totalWeight, salary: totalWeight * 500 };
+        })
+    , [monthShips]);
 
     const filteredShips = useMemo(() => {
         let result = ships;
@@ -367,7 +399,7 @@ export function BossManager() {
                     </div>
                 </header>
 
-                <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 24 }}>
+                <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 80 }}>
                     <div style={{ padding: '16px 16px 0' }}>
 
                         {/* Stats Row */}
@@ -445,104 +477,176 @@ export function BossManager() {
                             )}
                         </div>
 
-                        {/* Search + Sort */}
-                        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                            <div style={{ flex: 1, position: 'relative' }}>
-                                <Search size={15} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Tìm tàu, nhân viên, cảng..."
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    style={{
-                                        width: '100%', padding: '10px 12px 10px 34px', boxSizing: 'border-box',
-                                        border: 'none', borderRadius: 12, background: '#fff',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                                        fontSize: 13, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none',
-                                    }}
-                                />
-                                {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, display: 'flex' }}>
-                                        <X size={14} color="var(--c-text-secondary)" />
-                                    </button>
-                                )}
+                        {/* ── LIST VIEW ── */}
+                        {bottomView === 'list' && (<>
+                            {/* Search + Sort */}
+                            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                <div style={{ flex: 1, position: 'relative' }}>
+                                    <Search size={15} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                                    <input type="text" placeholder="Tìm tàu, nhân viên, cảng..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                        style={{ width: '100%', padding: '10px 12px 10px 34px', boxSizing: 'border-box', border: 'none', borderRadius: 12, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', fontSize: 13, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none' }}
+                                    />
+                                    {searchQuery && (<button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 4, display: 'flex' }}><X size={14} color="var(--c-text-secondary)" /></button>)}
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
+                                        style={{ appearance: 'none', padding: '10px 34px 10px 12px', border: 'none', borderRadius: 12, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', color: 'var(--c-text)', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="newest">Mới nhất</option>
+                                        <option value="oldest">Cũ nhất</option>
+                                        <option value="weight-desc">Sản lượng ↓</option>
+                                        <option value="weight-asc">Sản lượng ↑</option>
+                                    </select>
+                                    <ArrowDownUp size={13} color="var(--c-text-secondary)" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                                </div>
                             </div>
-                            <div style={{ position: 'relative' }}>
-                                <select
-                                    value={sortBy}
-                                    onChange={e => setSortBy(e.target.value as any)}
-                                    style={{
-                                        appearance: 'none', padding: '10px 34px 10px 12px',
-                                        border: 'none', borderRadius: 12, background: '#fff',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                                        fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-                                        color: 'var(--c-text)', outline: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    <option value="newest">Mới nhất</option>
-                                    <option value="oldest">Cũ nhất</option>
-                                    <option value="weight-desc">Sản lượng ↓</option>
-                                    <option value="weight-asc">Sản lượng ↑</option>
-                                </select>
-                                <ArrowDownUp size={13} color="var(--c-text-secondary)" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                            {!searchQuery && (
+                                <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                                    {STATUS_TABS.map(tab => {
+                                        const active = activeTab === tab.key;
+                                        const cfg = tab.key !== 'all' ? STATUS_CONFIG[tab.key as ShipStatus] : null;
+                                        return (
+                                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ flexShrink: 0, padding: '7px 14px', border: 'none', borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: active ? 700 : 500, background: active ? (cfg ? cfg.bg : '#0f172a') : '#fff', color: active ? (cfg ? cfg.color : '#fff') : '#64748b', boxShadow: active ? '0 2px 8px rgba(0,0,0,0.1)' : '0 1px 4px rgba(0,0,0,0.04)', transition: 'all 0.2s ease', WebkitTapHighlightColor: 'transparent' }}>
+                                                {tab.label}
+                                                {tab.key !== 'all' && (<span style={{ marginLeft: 5, fontSize: 11, fontWeight: 700, background: active ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.05)', padding: '1px 6px', borderRadius: 6 }}>{stats[tab.key as keyof typeof stats]}</span>)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+                                <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', margin: 0 }}>
+                                    {filteredShips.length} chuyến tàu
+                                    {loading && <Loader2 size={12} className="spin" color="var(--c-primary)" style={{ marginLeft: 6 }} />}
+                                </p>
                             </div>
-                        </div>
+                            {filteredShips.length === 0 ? (
+                                <EmptyState title={searchQuery ? 'Không tìm thấy' : 'Chưa có tàu'} description={searchQuery ? `Không có kết quả cho "${searchQuery}"` : 'Chưa có chuyến tàu nào.'} />
+                            ) : (
+                                filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
+                            )}
+                        </>)}
 
-                        {/* Status Filter Tabs */}
-                        {!searchQuery && (
-                            <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-                                {STATUS_TABS.map(tab => {
-                                    const active = activeTab === tab.key;
-                                    const cfg = tab.key !== 'all' ? STATUS_CONFIG[tab.key as ShipStatus] : null;
-                                    return (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            style={{
-                                                flexShrink: 0, padding: '7px 14px',
-                                                border: 'none', borderRadius: 10, cursor: 'pointer',
-                                                fontFamily: 'inherit', fontSize: 12, fontWeight: active ? 700 : 500,
-                                                background: active ? (cfg ? cfg.bg : '#0f172a') : '#fff',
-                                                color: active ? (cfg ? cfg.color : '#fff') : '#64748b',
-                                                boxShadow: active ? '0 2px 8px rgba(0,0,0,0.1)' : '0 1px 4px rgba(0,0,0,0.04)',
-                                                transition: 'all 0.2s ease',
-                                                WebkitTapHighlightColor: 'transparent',
-                                            }}
-                                        >
-                                            {tab.label}
-                                            {tab.key !== 'all' && (
-                                                <span style={{
-                                                    marginLeft: 5, fontSize: 11, fontWeight: 700,
-                                                    background: active ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.05)',
-                                                    padding: '1px 6px', borderRadius: 6,
-                                                }}>
-                                                    {stats[tab.key as keyof typeof stats]}
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
+                        {/* ── STATS VIEW ── */}
+                        {bottomView === 'stats' && (
+                            <div>
+                                {([
+                                    { key: 'satThep',   label: 'Sắt Thép',   sub: 'Quang Trung · Hoàng Thái', dot: '#3b82f6', data: divStats.satThep },
+                                    { key: 'vinCanGio', label: 'Vin Cần Giờ', sub: 'NV Cần Giờ',            dot: '#10b981', data: divStats.vinCanGio },
+                                ] as const).map(({ key, label, sub, dot, data }) => (
+                                    <div key={key} style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                            <div style={{ width: 10, height: 10, borderRadius: 5, background: dot, flexShrink: 0 }} />
+                                            <span style={{ fontSize: 15, fontWeight: 800, color: '#1e293b' }}>{label}</span>
+                                            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{sub}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                                            <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                                                <p style={{ fontSize: 28, fontWeight: 800, color: '#334155', margin: 0, letterSpacing: '-1px' }}>{data.total}</p>
+                                                <p style={{ fontSize: 10, color: '#64748b', fontWeight: 700, margin: '4px 0 0', textTransform: 'uppercase' }}>Tổng tàu</p>
+                                            </div>
+                                            <div style={{ background: '#dbeafe', borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                                                <p style={{ fontSize: 20, fontWeight: 800, color: '#1d4ed8', margin: 0, letterSpacing: '-0.5px' }}>{data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}</p>
+                                                <p style={{ fontSize: 10, color: '#1d4ed8', fontWeight: 700, margin: '4px 0 0', textTransform: 'uppercase' }}>Tổng tấn</p>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                                            {[
+                                                { label: 'Neo',  value: data.waiting,   color: '#b45309', bg: '#fef3c7' },
+                                                { label: 'Cập',  value: data.entering,  color: '#1d4ed8', bg: '#dbeafe' },
+                                                { label: 'Làm',  value: data.working,   color: '#7c3aed', bg: '#ede9fe' },
+                                                { label: 'Xong', value: data.completed, color: '#15803d', bg: '#dcfce7' },
+                                            ].map(item => (
+                                                <div key={item.label} style={{ background: item.bg, borderRadius: 10, padding: '10px 4px', textAlign: 'center' }}>
+                                                    <p style={{ fontSize: 20, fontWeight: 800, color: item.color, margin: 0 }}>{item.value}</p>
+                                                    <p style={{ fontSize: 9, color: item.color, fontWeight: 700, margin: '3px 0 0', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{item.label}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
-                        {/* Ship List */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                            <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', margin: 0 }}>
-                                {filteredShips.length} chuyến tàu
-                                {loading && <Loader2 size={12} className="spin" color="var(--c-primary)" style={{ marginLeft: 6 }} />}
-                            </p>
-                        </div>
-
-                        {filteredShips.length === 0 ? (
-                            <EmptyState
-                                title={searchQuery ? 'Không tìm thấy' : 'Chưa có tàu'}
-                                description={searchQuery ? `Không có kết quả cho "${searchQuery}"` : 'Chưa có chuyến tàu nào trong danh sách.'}
-                            />
-                        ) : (
-                            filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
+                        {/* ── SALARY VIEW ── */}
+                        {bottomView === 'salary' && (
+                            <div>
+                                <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>Lương = Sản lượng × 500đ &nbsp;·&nbsp; {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}</p>
+                                {salaryData.map(({ name, empShips, totalWeight, salary }) => (
+                                    <div key={name} style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <User size={22} color="#7c3aed" />
+                                            </div>
+                                            <div>
+                                                <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: '#1e293b' }}>{name}</p>
+                                                <p style={{ fontSize: 12, color: '#94a3b8', margin: '2px 0 0', fontWeight: 600 }}>Sắt Thép &nbsp;·&nbsp; {empShips.length} chuyến</p>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: empShips.length > 0 ? 14 : 0 }}>
+                                            <div style={{ background: '#f8fafc', borderRadius: 12, padding: '12px' }}>
+                                                <p style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Sản lượng</p>
+                                                <p style={{ fontSize: 18, fontWeight: 800, color: '#334155', margin: 0 }}>{totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tấn</p>
+                                            </div>
+                                            <div style={{ background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', borderRadius: 12, padding: '12px' }}>
+                                                <p style={{ fontSize: 10, color: '#15803d', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Lương ước tính</p>
+                                                <p style={{ fontSize: 17, fontWeight: 800, color: '#15803d', margin: 0 }}>{salary.toLocaleString('vi-VN')}đ</p>
+                                            </div>
+                                        </div>
+                                        {empShips.length > 0 ? (
+                                            <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: 10 }}>
+                                                <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Chi tiết từng tàu</p>
+                                                {empShips.map(s => (
+                                                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                                                        <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{s.name}</span>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <p style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', margin: 0 }}>{s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tấn</p>
+                                                            <p style={{ fontSize: 11, fontWeight: 600, color: '#15803d', margin: '1px 0 0' }}>{(s.weight * 500).toLocaleString('vi-VN')}đ</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10 }}>
+                                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>Tổng cộng</span>
+                                                    <span style={{ fontSize: 16, fontWeight: 800, color: '#15803d' }}>{salary.toLocaleString('vi-VN')}đ</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', margin: '4px 0 0' }}>{selectedMonth === 'all' ? 'Chưa có chuyến tàu' : 'Không có tàu trong tháng này'}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </main>
+
+                {/* ── Bottom Nav Bar ── */}
+                <nav style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 64,
+                    background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)',
+                    borderTop: '1px solid rgba(0,0,0,0.06)',
+                    display: 'flex', alignItems: 'stretch', zIndex: 40,
+                }}>
+                    {([
+                        { key: 'list'   as const, label: 'Danh sách', Icon: List },
+                        { key: 'stats'  as const, label: 'Thống kê',  Icon: BarChart3 },
+                        { key: 'salary' as const, label: 'Lương NV',  Icon: Wallet },
+                    ]).map(({ key, label, Icon }) => {
+                        const active = bottomView === key;
+                        return (
+                            <button key={key} onClick={() => setBottomView(key)} style={{
+                                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+                                border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit',
+                                WebkitTapHighlightColor: 'transparent',
+                                borderTop: active ? '2.5px solid #7c3aed' : '2.5px solid transparent',
+                                color: active ? '#7c3aed' : '#94a3b8',
+                                transition: 'color .2s',
+                            }}>
+                                <Icon size={21} strokeWidth={active ? 2.5 : 1.8} />
+                                <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, letterSpacing: '0.2px' }}>{label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
             </div>
 
             {/* ── Bottom Sheet Form ── */}
