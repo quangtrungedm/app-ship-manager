@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 
 interface PrintTemplateProps {
     type: 'khoi_luong' | 'ty_trong';

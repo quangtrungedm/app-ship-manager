@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, FileText, Printer, ChevronDown } from 'lucide-react';
 import { Ship } from '../types';
 import { PrintTemplate } from './PrintTemplate';
