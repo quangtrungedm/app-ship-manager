@@ -623,7 +623,7 @@ export function BossManager() {
                                         return (
                                             <div key={key} style={{ background: '#fff', borderRadius: 22, overflow: 'hidden', marginBottom: 14, boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
                                                 {/* Gradient header */}
-                                                <div style={{ background: gradient, padding: '18px 18px 28px', position: 'relative', overflow: 'hidden' }}>
+                                                <div style={{ background: gradient, padding: '18px 18px 32px', position: 'relative', overflow: 'hidden' }}>
                                                     <div style={{ position: 'absolute', bottom: -18, right: -18, width: 90, height: 90, borderRadius: 45, background: 'rgba(255,255,255,0.1)' }} />
                                                     <div style={{ position: 'absolute', top: -12, right: 40, width: 55, height: 55, borderRadius: 28, background: 'rgba(255,255,255,0.06)' }} />
                                                     <p style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: '0 0 3px', position: 'relative' }}>{label}</p>
@@ -631,7 +631,7 @@ export function BossManager() {
                                                 </div>
                                                 <div style={{ padding: '0 16px 18px' }}>
                                                     {/* Floating stat chips */}
-                                                    <div style={{ display: 'flex', gap: 8, marginTop: -18, marginBottom: 18 }}>
+                                                    <div style={{ display: 'flex', gap: 8, marginTop: -12, marginBottom: 18 }}>
                                                         <div style={{ flex: 1, background: '#fff', borderRadius: 14, padding: '11px 14px', boxShadow: '0 3px 14px rgba(0,0,0,0.1)' }}>
                                                             <p style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.4px', margin: '0 0 3px' }}>Chuyến</p>
                                                             <p style={{ fontSize: 28, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>{data.total}</p>
