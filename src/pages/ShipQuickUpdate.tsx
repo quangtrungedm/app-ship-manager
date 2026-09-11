@@ -5,8 +5,9 @@ import { Ship, ShipStatus } from '../types';
 import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 import {
     ArrowLeft, Search, Star, Coffee, ClipboardCheck,
-    Save, CheckCircle2, RotateCcw, Ship as ShipIcon,
-    Clock, PlusCircle
+    Save, CheckCircle2, Ship as ShipIcon,
+    Plus, X, Edit3, Calendar, MapPin,
+    Weight, RefreshCw
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -36,11 +37,18 @@ const formatVNWeight = (value: string) => {
 };
 
 const STAR_LABELS: Record<number, { text: string; color: string; bg: string }> = {
-    1: { text: 'Kém / Phát sinh sự cố', color: '#dc2626', bg: '#fef2f2' },
-    2: { text: 'Chậm / Khó làm hàng', color: '#ea580c', bg: '#fff7ed' },
-    3: { text: 'Bình thường / Tạm ổn', color: '#ca8a04', bg: '#fefce8' },
+    1: { text: 'Kém / Sự cố', color: '#dc2626', bg: '#fef2f2' },
+    2: { text: 'Chậm / Khó làm', color: '#ea580c', bg: '#fff7ed' },
+    3: { text: 'Bình thường', color: '#ca8a04', bg: '#fefce8' },
     4: { text: 'Tốt / Thuận lợi', color: '#16a34a', bg: '#f0fdf4' },
-    5: { text: 'Rất tốt / Nhanh chóng', color: '#2563eb', bg: '#eff6ff' },
+    5: { text: 'Rất tốt / Nhanh', color: '#2563eb', bg: '#eff6ff' },
+};
+
+const STATUS_MAP: Record<ShipStatus, { label: string; color: string; bg: string }> = {
+    waiting: { label: 'Đang neo', color: '#b45309', bg: '#fef3c7' },
+    entering: { label: 'Đã cập bến', color: '#1d4ed8', bg: '#dbeafe' },
+    working: { label: 'Đang làm hàng', color: '#7c3aed', bg: '#ede9fe' },
+    completed: { label: 'Hoàn thành', color: '#15803d', bg: '#dcfce7' },
 };
 
 const QUICK_CAFE_AMOUNTS = [50000, 100000, 200000, 500000];
@@ -48,18 +56,18 @@ const QUICK_TALLY_AMOUNTS = [100000, 200000, 300000, 500000];
 
 export function ShipQuickUpdate() {
     const navigate = useNavigate();
-    const { ships, updateShip, addShip } = useShips();
+    const { ships, loading, refresh, updateShip, addShip } = useShips();
 
-    // Mode: 'create' (Nhập tàu mới) | 'update' (Tìm & cập nhật tàu có sẵn)
-    const [mode, setMode] = useState<'create' | 'update'>('create');
-
-    // Ship Search & Selection State (for 'update' mode)
+    // Filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
+    const [filterTab, setFilterTab] = useState<'all' | 'rated' | 'cafe' | 'tally'>('all');
 
-    // Form fields for ship details
-    const [shipNameInput, setShipNameInput] = useState('');
+    // Modal state for editing or creating ship
+    const [showModal, setShowModal] = useState(false);
+    const [editingShip, setEditingShip] = useState<Ship | null>(null);
+
+    // Form fields in modal
+    const [name, setName] = useState('');
     const [status, setStatus] = useState<ShipStatus>('waiting');
     const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().split('T')[0]);
     const [completionDate, setCompletionDate] = useState('');
@@ -71,7 +79,7 @@ export function ShipQuickUpdate() {
     const [hasBarge, setHasBarge] = useState(false);
     const [bargeCount, setBargeCount] = useState(1);
 
-    // Evaluation & operational costs
+    // Operational costs & evaluation
     const [rating, setRating] = useState<number>(0);
     const [ratingComment, setRatingComment] = useState('');
     const [hasCafeFee, setHasCafeFee] = useState(false);
@@ -81,43 +89,27 @@ export function ShipQuickUpdate() {
     const [tallyFee, setTallyFee] = useState<number>(0);
     const [tallyNote, setTallyNote] = useState('');
 
-    // Feedback State
     const [isSaving, setIsSaving] = useState(false);
-    const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+    const [toastMsg, setToastMsg] = useState('');
 
-    // Filter ships for autocomplete
-    const suggestedShips = useMemo(() => {
-        if (!searchQuery.trim()) return ships.slice(0, 8);
-        const q = removeAccents(searchQuery.toLowerCase().trim());
-        return ships.filter(s =>
-            removeAccents(s.name.toLowerCase()).includes(q)
-            || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
-            || (s.client && removeAccents(s.client.toLowerCase()).includes(q))
-        ).slice(0, 8);
-    }, [ships, searchQuery]);
-
-    // Fill form when selecting a ship in 'update' mode
-    const handleSelectShip = (ship: Ship) => {
-        setSelectedShip(ship);
-        setShipNameInput(ship.name);
-        setSearchQuery(ship.name);
-        setIsDropdownOpen(false);
-
-        // Fill ship details
-        setStatus(ship.status || 'waiting');
-        setArrivalDate(ship.arrivalDate ? ship.arrivalDate.split('T')[0] : new Date().toISOString().split('T')[0]);
-        setCompletionDate(ship.completionDate ? ship.completionDate.split('T')[0] : '');
-        setWeightInput(ship.weight ? ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }) : '');
+    // Open Modal for Edit
+    const handleOpenEdit = (s: Ship) => {
+        setEditingShip(s);
+        setName(s.name);
+        setStatus(s.status || 'waiting');
+        setArrivalDate(s.arrivalDate ? s.arrivalDate.split('T')[0] : new Date().toISOString().split('T')[0]);
+        setCompletionDate(s.completionDate ? s.completionDate.split('T')[0] : '');
+        setWeightInput(s.weight ? s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }) : '');
 
         // Port
-        if (ship.port) {
-            const isPresetPort = (STANDARD_PORTS as readonly string[]).includes(ship.port) && ship.port !== 'Cảng Khác';
-            if (isPresetPort) {
-                setPort(ship.port);
+        if (s.port) {
+            const isPreset = (STANDARD_PORTS as readonly string[]).includes(s.port) && s.port !== 'Cảng Khác';
+            if (isPreset) {
+                setPort(s.port);
                 setCustomPort('');
             } else {
                 setPort('Cảng Khác');
-                setCustomPort(ship.port === 'Cảng Khác' ? '' : ship.port);
+                setCustomPort(s.port === 'Cảng Khác' ? '' : s.port);
             }
         } else {
             setPort('Sowatco Long Bình');
@@ -125,39 +117,40 @@ export function ShipQuickUpdate() {
         }
 
         // Client
-        if (ship.client) {
-            const isPresetClient = (STANDARD_CLIENTS as readonly string[]).includes(ship.client) && ship.client !== 'Khác (Tự nhập)';
-            if (isPresetClient) {
-                setClient(ship.client);
+        if (s.client) {
+            const isPreset = (STANDARD_CLIENTS as readonly string[]).includes(s.client) && s.client !== 'Khác (Tự nhập)';
+            if (isPreset) {
+                setClient(s.client);
                 setCustomClient('');
             } else {
                 setClient('Khác (Tự nhập)');
-                setCustomClient(ship.client === 'Khác (Tự nhập)' ? '' : ship.client);
+                setCustomClient(s.client === 'Khác (Tự nhập)' ? '' : s.client);
             }
         } else {
             setClient('Hoà Phát');
             setCustomClient('');
         }
 
-        // Barge
-        setHasBarge(!!ship.hasBarge);
-        setBargeCount(ship.bargeCount && ship.bargeCount > 0 ? ship.bargeCount : 1);
+        setHasBarge(!!s.hasBarge);
+        setBargeCount(s.bargeCount && s.bargeCount > 0 ? s.bargeCount : 1);
 
         // Rating, Cafe, Tally
-        setRating(ship.rating || 0);
-        setRatingComment(ship.ratingComment || '');
-        setHasCafeFee(!!ship.hasCafeFee);
-        setCafeFee(ship.cafeFee || 0);
-        setCafeNote(ship.cafeNote || '');
-        setHasTally(!!ship.hasTally);
-        setTallyFee(ship.tallyFee || 0);
-        setTallyNote(ship.tallyNote || '');
+        setRating(s.rating || 0);
+        setRatingComment(s.ratingComment || '');
+        setHasCafeFee(!!s.hasCafeFee);
+        setCafeFee(s.cafeFee || 0);
+        setCafeNote(s.cafeNote || '');
+        setHasTally(!!s.hasTally);
+        setTallyFee(s.tallyFee || 0);
+        setTallyNote(s.tallyNote || '');
+
+        setShowModal(true);
     };
 
-    const handleClearForm = () => {
-        setSelectedShip(null);
-        setShipNameInput('');
-        setSearchQuery('');
+    // Open Modal for New Ship
+    const handleOpenNew = () => {
+        setEditingShip(null);
+        setName('');
         setStatus('waiting');
         setArrivalDate(new Date().toISOString().split('T')[0]);
         setCompletionDate('');
@@ -171,18 +164,20 @@ export function ShipQuickUpdate() {
         setRating(0);
         setRatingComment('');
         setHasCafeFee(false);
-        setCafeFee(0);
+        setCafeFee(100000);
         setCafeNote('');
         setHasTally(false);
-        setTallyFee(0);
+        setTallyFee(200000);
         setTallyNote('');
+        setShowModal(true);
     };
 
-    const handleSave = async (e: React.FormEvent) => {
+    // Save Ship
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalName = (mode === 'update' && selectedShip ? selectedShip.name : shipNameInput).trim();
-        if (!finalName) {
-            alert('Vui lòng nhập tên chuyến tàu!');
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            alert('Vui lòng nhập tên tàu!');
             return;
         }
 
@@ -192,12 +187,11 @@ export function ShipQuickUpdate() {
 
         setIsSaving(true);
         try {
-            if (mode === 'update' && selectedShip) {
-                // Update existing ship
+            if (editingShip) {
                 const updated: Ship = {
-                    ...selectedShip,
-                    name: finalName,
-                    status: status,
+                    ...editingShip,
+                    name: trimmedName,
+                    status,
                     arrivalDate: new Date(arrivalDate).toISOString(),
                     completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
                     weight: parsedWeight,
@@ -215,85 +209,90 @@ export function ShipQuickUpdate() {
                     tallyNote: hasTally ? tallyNote.trim() : undefined,
                 };
                 await updateShip(updated);
-                setSaveSuccessMsg(`Đã cập nhật thông tin tàu "${finalName}" thành công!`);
+                setToastMsg(`Đã cập nhật thông tin tàu "${trimmedName}" thành công!`);
             } else {
-                // Create new ship or update if exact name exists
-                const existing = ships.find(s => s.name.toLowerCase().trim() === finalName.toLowerCase());
-                if (existing) {
-                    const updated: Ship = {
-                        ...existing,
-                        status: status,
-                        arrivalDate: new Date(arrivalDate).toISOString(),
-                        completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
-                        weight: parsedWeight,
-                        port: finalPort,
-                        client: finalClient,
-                        hasBarge: !!hasBarge,
-                        bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
-                        rating: rating > 0 ? rating : undefined,
-                        ratingComment: ratingComment.trim() || undefined,
-                        hasCafeFee: !!hasCafeFee,
-                        cafeFee: hasCafeFee ? (Number(cafeFee) || 0) : 0,
-                        cafeNote: hasCafeFee ? cafeNote.trim() : undefined,
-                        hasTally: !!hasTally,
-                        tallyFee: hasTally ? (Number(tallyFee) || 0) : 0,
-                        tallyNote: hasTally ? tallyNote.trim() : undefined,
-                    };
-                    await updateShip(updated);
-                    setSaveSuccessMsg(`Đã cập nhật dữ liệu tàu "${finalName}" thành công!`);
-                } else {
-                    const newShip: Ship = {
-                        id: `shp-${Date.now()}`,
-                        name: finalName,
-                        arrivalDate: new Date(arrivalDate).toISOString(),
-                        completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
-                        weight: parsedWeight,
-                        division: 'SAT_THEP',
-                        status: status,
-                        port: finalPort,
-                        client: finalClient,
-                        hasBarge: !!hasBarge,
-                        bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
-                        documents: [],
-                        rating: rating > 0 ? rating : undefined,
-                        ratingComment: ratingComment.trim() || undefined,
-                        hasCafeFee: !!hasCafeFee,
-                        cafeFee: hasCafeFee ? (Number(cafeFee) || 0) : 0,
-                        cafeNote: hasCafeFee ? cafeNote.trim() : undefined,
-                        hasTally: !!hasTally,
-                        tallyFee: hasTally ? (Number(tallyFee) || 0) : 0,
-                        tallyNote: hasTally ? tallyNote.trim() : undefined,
-                    };
-                    await addShip(newShip);
-                    setSaveSuccessMsg(`Đã nhập chuyến tàu mới "${finalName}" thành công!`);
-                    handleClearForm();
-                }
+                const newShip: Ship = {
+                    id: `shp-${Date.now()}`,
+                    name: trimmedName,
+                    arrivalDate: new Date(arrivalDate).toISOString(),
+                    completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
+                    weight: parsedWeight,
+                    division: 'SAT_THEP',
+                    status,
+                    port: finalPort,
+                    client: finalClient,
+                    hasBarge: !!hasBarge,
+                    bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
+                    documents: [],
+                    rating: rating > 0 ? rating : undefined,
+                    ratingComment: ratingComment.trim() || undefined,
+                    hasCafeFee: !!hasCafeFee,
+                    cafeFee: hasCafeFee ? (Number(cafeFee) || 0) : 0,
+                    cafeNote: hasCafeFee ? cafeNote.trim() : undefined,
+                    hasTally: !!hasTally,
+                    tallyFee: hasTally ? (Number(tallyFee) || 0) : 0,
+                    tallyNote: hasTally ? tallyNote.trim() : undefined,
+                };
+                await addShip(newShip);
+                setToastMsg(`Đã thêm mới chuyến tàu "${trimmedName}" thành công!`);
             }
-            setTimeout(() => setSaveSuccessMsg(''), 4500);
+            setShowModal(false);
+            setTimeout(() => setToastMsg(''), 4000);
         } catch (err: any) {
-            console.error('Lỗi khi lưu thông tin tàu:', err);
-            alert('Lỗi: ' + (err.message || 'Không thể lưu dữ liệu'));
+            console.error('Lỗi khi lưu tàu:', err);
+            alert('Lỗi lưu: ' + (err.message || 'Không thể lưu dữ liệu'));
         } finally {
             setIsSaving(false);
         }
     };
 
-    // Recently updated/created ships
-    const recentShips = useMemo(() => {
-        return [...ships]
-            .sort((a, b) => new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime())
-            .slice(0, 6);
-    }, [ships]);
+    // Filtered ships list
+    const filteredShips = useMemo(() => {
+        let list = [...ships];
+
+        // 1. Text search
+        if (searchQuery.trim()) {
+            const q = removeAccents(searchQuery.toLowerCase().trim());
+            list = list.filter(s =>
+                removeAccents(s.name.toLowerCase()).includes(q)
+                || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
+                || (s.client && removeAccents(s.client.toLowerCase()).includes(q))
+                || (s.ratingComment && removeAccents(s.ratingComment.toLowerCase()).includes(q))
+                || (s.cafeNote && removeAccents(s.cafeNote.toLowerCase()).includes(q))
+                || (s.tallyNote && removeAccents(s.tallyNote.toLowerCase()).includes(q))
+            );
+        }
+
+        // 2. Tab filter
+        if (filterTab === 'rated') {
+            list = list.filter(s => s.rating && s.rating > 0);
+        } else if (filterTab === 'cafe') {
+            list = list.filter(s => s.hasCafeFee);
+        } else if (filterTab === 'tally') {
+            list = list.filter(s => s.hasTally);
+        }
+
+        // 3. Sort by newest arrival date
+        return list.sort((a, b) => new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime());
+    }, [ships, searchQuery, filterTab]);
+
+    // Summary counts
+    const counts = useMemo(() => ({
+        all: ships.length,
+        rated: ships.filter(s => s.rating && s.rating > 0).length,
+        cafe: ships.filter(s => s.hasCafeFee).length,
+        tally: ships.filter(s => s.hasTally).length,
+    }), [ships]);
 
     return (
         <div style={{
             minHeight: '100dvh',
             background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
-            padding: '16px 16px 60px 16px',
+            padding: '16px 16px 80px 16px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
-            <div style={{ maxWidth: 480, margin: '0 auto' }}>
-                {/* ── Top Header ── */}
+            <div style={{ maxWidth: 540, margin: '0 auto' }}>
+                {/* ── Top Bar ── */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <button
                         onClick={() => navigate('/login')}
@@ -307,76 +306,57 @@ export function ShipQuickUpdate() {
                     >
                         <ArrowLeft size={16} /> Màn hình chính
                     </button>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#d1fae5', padding: '4px 8px', borderRadius: 8 }}>
-                        Sắt Thép
-                    </span>
+                    <button
+                        onClick={handleOpenNew}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 12,
+                            background: 'linear-gradient(135deg, #059669, #10b981)',
+                            border: 'none', color: '#ffffff', fontSize: 13, fontWeight: 800,
+                            cursor: 'pointer', boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
+                        }}
+                    >
+                        <Plus size={16} strokeWidth={2.5} /> Nhập tàu mới
+                    </button>
                 </div>
 
                 {/* ── Title Banner ── */}
                 <div style={{
                     background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                    borderRadius: 20, padding: '18px 20px', color: '#fff',
+                    borderRadius: 20, padding: '20px 20px', color: '#fff',
                     marginBottom: 16, boxShadow: '0 10px 25px -5px rgba(15,23,42,0.25)',
                     position: 'relative', overflow: 'hidden'
                 }}>
-                    <div style={{ position: 'absolute', right: -15, bottom: -15, opacity: 0.08, pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', right: -10, bottom: -15, opacity: 0.08, pointerEvents: 'none' }}>
                         <ShipIcon size={120} color="#fff" />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ClipboardCheck size={20} color="#38bdf8" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <ClipboardCheck size={20} color="#38bdf8" />
+                            </div>
+                            <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.2px' }}>
+                                Cập Nhật & Danh Sách Tàu
+                            </h1>
                         </div>
-                        <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.2px' }}>
-                            Cập Nhật Tàu & Nhập Tàu
-                        </h1>
+                        <button
+                            onClick={() => refresh()}
+                            title="Làm mới dữ liệu"
+                            style={{
+                                background: 'rgba(255,255,255,0.12)', border: 'none',
+                                borderRadius: 8, padding: 6, color: '#fff', cursor: 'pointer'
+                            }}
+                        >
+                            <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                        </button>
                     </div>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-                        Nhập thông tin chuyến tàu, đánh giá chất lượng, tiền cafe và chi phí tally
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.4 }}>
+                        Hiển thị toàn bộ danh sách {ships.length} tàu • Đánh giá, tiền cafe & chi phí tally
                     </p>
                 </div>
 
-                {/* ── Mode Segmented Control ── */}
-                <div style={{
-                    display: 'flex', background: '#e2e8f0', borderRadius: 14,
-                    padding: 4, marginBottom: 18
-                }}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setMode('create');
-                            setSelectedShip(null);
-                        }}
-                        style={{
-                            flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none',
-                            fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                            background: mode === 'create' ? '#ffffff' : 'transparent',
-                            color: mode === 'create' ? '#059669' : '#64748b',
-                            boxShadow: mode === 'create' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        <PlusCircle size={16} /> Nhập tàu mới
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setMode('update')}
-                        style={{
-                            flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none',
-                            fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                            background: mode === 'update' ? '#ffffff' : 'transparent',
-                            color: mode === 'update' ? '#059669' : '#64748b',
-                            boxShadow: mode === 'update' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        <Search size={16} /> Tìm & Cập nhật
-                    </button>
-                </div>
-
                 {/* ── Success Toast ── */}
-                {saveSuccessMsg && (
+                {toastMsg && (
                     <div style={{
                         background: '#ecfdf5', border: '1.5px solid #10b981',
                         borderRadius: 14, padding: '12px 14px', marginBottom: 16,
@@ -385,676 +365,653 @@ export function ShipQuickUpdate() {
                         boxShadow: '0 4px 12px rgba(16,185,129,0.15)'
                     }}>
                         <CheckCircle2 size={18} color="#10b981" />
-                        <span>{saveSuccessMsg}</span>
+                        <span>{toastMsg}</span>
                     </div>
                 )}
 
-                {/* ── Form Section ── */}
-                <form onSubmit={handleSave}>
-                    {/* Card 1: Thông tin tàu */}
-                    <div style={{
-                        background: '#ffffff', borderRadius: 18, padding: 18,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0',
-                        marginBottom: 16, position: 'relative'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <div style={{ width: 28, height: 28, borderRadius: 8, background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <ShipIcon size={16} color="#0284c7" />
-                                </div>
-                                <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>
-                                    {mode === 'create' ? 'Thông tin chuyến tàu mới' : 'Tìm & Chọn chuyến tàu'}
-                                </span>
-                            </div>
-                            {mode === 'update' && selectedShip && (
-                                <button
-                                    type="button"
-                                    onClick={handleClearForm}
-                                    style={{
-                                        border: 'none', background: '#fee2e2', color: '#b91c1c',
-                                        fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6,
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
-                                    }}
-                                >
-                                    <RotateCcw size={11} /> Chọn tàu khác
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Search in 'update' mode */}
-                        {mode === 'update' && (
-                            <div style={{ position: 'relative', marginBottom: 12 }}>
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={e => {
-                                        setSearchQuery(e.target.value);
-                                        setShipNameInput(e.target.value);
-                                        setIsDropdownOpen(true);
-                                    }}
-                                    onFocus={() => setIsDropdownOpen(true)}
-                                    placeholder="Gõ tên tàu để tìm kiếm..."
-                                    required
-                                    style={{
-                                        width: '100%', padding: '12px 14px 12px 38px',
-                                        borderRadius: 12, border: selectedShip ? '1.5px solid #059669' : '1px solid #cbd5e1',
-                                        background: selectedShip ? '#f0fdf4' : '#ffffff',
-                                        fontSize: 14, fontWeight: selectedShip ? 700 : 500,
-                                        outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                />
-                                <div style={{ position: 'absolute', left: 12, top: 13, color: '#94a3b8' }}>
-                                    <Search size={18} />
-                                </div>
-
-                                {/* Autocomplete Dropdown */}
-                                {isDropdownOpen && suggestedShips.length > 0 && (
-                                    <div style={{
-                                        position: 'absolute', left: 0, right: 0, top: '100%', zIndex: 30,
-                                        background: '#ffffff', borderRadius: 14, marginTop: 6,
-                                        border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
-                                        maxHeight: 240, overflowY: 'auto'
-                                    }}>
-                                        <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
-                                            GỢI Ý TÀU CÓ SẴN ({suggestedShips.length})
-                                        </div>
-                                        {suggestedShips.map(s => (
-                                            <div
-                                                key={s.id}
-                                                onClick={() => handleSelectShip(s)}
-                                                style={{
-                                                    padding: '10px 14px', cursor: 'pointer',
-                                                    borderBottom: '1px solid #f8fafc',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                                                onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
-                                            >
-                                                <div>
-                                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
-                                                    <div style={{ fontSize: 11, color: '#64748b' }}>
-                                                        {new Date(s.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} • {s.port || 'Sowatco'} {s.client ? `• ${s.client}` : ''}
-                                                    </div>
-                                                </div>
-                                                {s.rating && (
-                                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>
-                                                        ⭐ {s.rating}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Ship Name input in 'create' mode */}
-                        {mode === 'create' && (
-                            <div style={{ marginBottom: 12 }}>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Tên tàu <span style={{ color: '#dc2626' }}>*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={shipNameInput}
-                                    onChange={e => setShipNameInput(e.target.value)}
-                                    placeholder="VD: Hải An 01, Ever Given..."
-                                    required
-                                    style={{
-                                        width: '100%', padding: '10px 12px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 14, outline: 'none',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                        )}
-
-                        {/* Trạng thái + Sản lượng */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Trạng thái
-                                </label>
-                                <select
-                                    value={status}
-                                    onChange={e => {
-                                        const val = e.target.value as ShipStatus;
-                                        setStatus(val);
-                                        if (val === 'completed' && !completionDate) {
-                                            setCompletionDate(new Date().toISOString().split('T')[0]);
-                                        }
-                                    }}
-                                    style={{
-                                        width: '100%', padding: '10px 12px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
-                                        outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                >
-                                    <option value="waiting">Đang neo (Chờ slot)</option>
-                                    <option value="entering">Đã cập bến</option>
-                                    <option value="working">Đang làm hàng</option>
-                                    <option value="completed">Đã hoàn thành</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Sản lượng (tấn)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={weightInput}
-                                    onChange={e => setWeightInput(formatVNWeight(e.target.value))}
-                                    placeholder="VD: 5.000"
-                                    inputMode="decimal"
-                                    style={{
-                                        width: '100%', padding: '10px 12px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Ngày vào + Ngày xong */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Ngày vào cảng
-                                </label>
-                                <input
-                                    type="date"
-                                    value={arrivalDate}
-                                    onChange={e => setArrivalDate(e.target.value)}
-                                    required
-                                    style={{
-                                        width: '100%', padding: '9px 10px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 12, outline: 'none',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Ngày hoàn thành
-                                </label>
-                                <input
-                                    type="date"
-                                    value={completionDate}
-                                    onChange={e => setCompletionDate(e.target.value)}
-                                    style={{
-                                        width: '100%', padding: '9px 10px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 12, outline: 'none',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Cảng dỡ + Khách hàng */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Cảng dỡ
-                                </label>
-                                <select
-                                    value={port}
-                                    onChange={e => {
-                                        setPort(e.target.value);
-                                        if (e.target.value !== 'Cảng Khác') setCustomPort('');
-                                    }}
-                                    style={{
-                                        width: '100%', padding: '10px 10px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
-                                        outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                >
-                                    {STANDARD_PORTS.map(p => <option key={p} value={p}>{p}</option>)}
-                                </select>
-                                {port === 'Cảng Khác' && (
-                                    <input
-                                        type="text"
-                                        value={customPort}
-                                        onChange={e => setCustomPort(e.target.value)}
-                                        placeholder="Nhập tên cảng khác..."
-                                        style={{
-                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 8,
-                                            border: '1px solid #0284c7', background: '#f8fafc',
-                                            fontSize: 12, outline: 'none', boxSizing: 'border-box'
-                                        }}
-                                    />
-                                )}
-                            </div>
-
-                            <div>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
-                                    Khách hàng (Hàng)
-                                </label>
-                                <select
-                                    value={client}
-                                    onChange={e => {
-                                        setClient(e.target.value);
-                                        if (e.target.value !== 'Khác (Tự nhập)') setCustomClient('');
-                                    }}
-                                    style={{
-                                        width: '100%', padding: '10px 10px', borderRadius: 10,
-                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
-                                        outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                >
-                                    {STANDARD_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                                {client === 'Khác (Tự nhập)' && (
-                                    <input
-                                        type="text"
-                                        value={customClient}
-                                        onChange={e => setCustomClient(e.target.value)}
-                                        placeholder="Nhập tên khách hàng..."
-                                        style={{
-                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 8,
-                                            border: '1px solid #0284c7', background: '#f8fafc',
-                                            fontSize: 12, outline: 'none', boxSizing: 'border-box'
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Xà lan (Salan) Switch */}
-                        <div style={{
-                            background: hasBarge ? '#eff6ff' : '#f8fafc',
-                            border: hasBarge ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-                            borderRadius: 12, padding: '10px 12px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
-                                    Kèm xà lan (Salan)
-                                    <span style={{ display: 'block', fontSize: 11, color: hasBarge ? '#2563eb' : '#64748b', fontWeight: 500 }}>
-                                        {hasBarge ? `+${(bargeCount * 200000).toLocaleString('vi-VN')}đ (+200k/salan)` : 'Không có xà lan'}
-                                    </span>
-                                </div>
-                                <label style={{ position: 'relative', display: 'inline-block', width: 40, height: 22, cursor: 'pointer' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={hasBarge}
-                                        onChange={e => {
-                                            setHasBarge(e.target.checked);
-                                            if (e.target.checked && (!bargeCount || bargeCount < 1)) setBargeCount(1);
-                                        }}
-                                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
-                                    />
-                                    <span style={{
-                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                        backgroundColor: hasBarge ? '#2563eb' : '#cbd5e1',
-                                        transition: '.3s', borderRadius: 34, pointerEvents: 'none'
-                                    }}>
-                                        <span style={{
-                                            position: 'absolute', height: 16, width: 16, left: 3, bottom: 3,
-                                            backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
-                                            transform: hasBarge ? 'translateX(18px)' : 'translateX(0)'
-                                        }} />
-                                    </span>
-                                </label>
-                            </div>
-                            {hasBarge && (
-                                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af' }}>Số lượng xà lan:</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setBargeCount(Math.max(1, bargeCount - 1))}
-                                            style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
-                                        >-</button>
-                                        <span style={{ fontSize: 13, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{bargeCount}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setBargeCount(bargeCount + 1)}
-                                            style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
-                                        >+</button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Card 2: Đánh giá tàu */}
-                    <div style={{
-                        background: '#ffffff', borderRadius: 18, padding: 18,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0',
-                        marginBottom: 16
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Star size={16} color="#d97706" />
-                            </div>
-                            <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>Đánh giá tàu</span>
-                        </div>
-
-                        {/* Interactive Stars */}
-                        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 0' }}>
-                            {[1, 2, 3, 4, 5].map(starNum => {
-                                const active = rating >= starNum;
-                                return (
-                                    <button
-                                        key={starNum}
-                                        type="button"
-                                        onClick={() => setRating(rating === starNum ? 0 : starNum)}
-                                        style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}
-                                    >
-                                        <Star
-                                            size={36}
-                                            fill={active ? '#f59e0b' : '#e2e8f0'}
-                                            color={active ? '#d97706' : '#cbd5e1'}
-                                            strokeWidth={1.5}
-                                        />
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {rating > 0 && STAR_LABELS[rating] && (
-                            <div style={{
-                                textAlign: 'center', margin: '4px 0 10px 0',
-                                padding: '6px 10px', borderRadius: 8,
-                                background: STAR_LABELS[rating].bg,
-                                color: STAR_LABELS[rating].color,
-                                fontSize: 13, fontWeight: 700
-                            }}>
-                                {rating} sao: {STAR_LABELS[rating].text}
-                            </div>
-                        )}
-
-                        <textarea
-                            value={ratingComment}
-                            onChange={e => setRatingComment(e.target.value)}
-                            placeholder="Ghi chú đánh giá (VD: cẩu bốc dỡ nhanh, hàng cuộn đẹp, thuận lợi...)"
-                            rows={2}
-                            style={{
-                                width: '100%', padding: '10px 12px', borderRadius: 10,
-                                border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
-                                fontFamily: 'inherit', boxSizing: 'border-box'
-                            }}
-                        />
-                    </div>
-
-                    {/* Card 3: Tiền Cafe Tàu */}
-                    <div style={{
-                        background: hasCafeFee ? '#fffbeb' : '#ffffff',
-                        border: hasCafeFee ? '1.5px solid #fde68a' : '1px solid #e2e8f0',
-                        borderRadius: 18, padding: 18,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-                        marginBottom: 16, transition: 'all 0.2s ease'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{
-                                    width: 34, height: 34, borderRadius: 10,
-                                    background: hasCafeFee ? '#fef3c7' : '#f1f5f9',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: hasCafeFee ? '#b45309' : '#64748b'
-                                }}>
-                                    <Coffee size={18} />
-                                </div>
-                                <div>
-                                    <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b', display: 'block' }}>
-                                        Tiền Cafe Tàu
-                                    </span>
-                                    <span style={{ fontSize: 11, color: hasCafeFee ? '#b45309' : '#64748b' }}>
-                                        {hasCafeFee ? `${formatVNCurrency(cafeFee)}đ` : 'Không phát sinh tiền cafe'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={hasCafeFee}
-                                    onChange={e => {
-                                        setHasCafeFee(e.target.checked);
-                                        if (e.target.checked && (!cafeFee || cafeFee === 0)) setCafeFee(100000);
-                                    }}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
-                                />
-                                <span style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                    backgroundColor: hasCafeFee ? '#f59e0b' : '#cbd5e1',
-                                    transition: '.3s', borderRadius: 34, pointerEvents: 'none'
-                                }}>
-                                    <span style={{
-                                        position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
-                                        backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
-                                        transform: hasCafeFee ? 'translateX(20px)' : 'translateX(0)'
-                                    }} />
-                                </span>
-                            </label>
-                        </div>
-
-                        {hasCafeFee && (
-                            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed #fcd34d' }}>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#92400e', display: 'block', marginBottom: 6 }}>
-                                    Số tiền cafe (VNĐ):
-                                </label>
-                                <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                                    {QUICK_CAFE_AMOUNTS.map(amt => (
-                                        <button
-                                            key={amt}
-                                            type="button"
-                                            onClick={() => setCafeFee(amt)}
-                                            style={{
-                                                padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                                background: cafeFee === amt ? '#d97706' : '#ffffff',
-                                                color: cafeFee === amt ? '#ffffff' : '#78350f',
-                                                border: '1px solid #fde68a', cursor: 'pointer'
-                                            }}
-                                        >
-                                            {formatVNCurrency(amt)}đ
-                                        </button>
-                                    ))}
-                                </div>
-                                <input
-                                    type="text"
-                                    value={cafeFee ? formatVNCurrency(cafeFee) : ''}
-                                    onChange={e => {
-                                        const clean = e.target.value.replace(/\D/g, '');
-                                        setCafeFee(clean ? parseInt(clean, 10) : 0);
-                                    }}
-                                    placeholder="Nhập số tiền..."
-                                    style={{
-                                        width: '100%', padding: '10px 12px', borderRadius: 10,
-                                        border: '1px solid #d97706', background: '#ffffff',
-                                        fontSize: 14, fontWeight: 700, outline: 'none',
-                                        marginBottom: 8, boxSizing: 'border-box'
-                                    }}
-                                />
-                                <input
-                                    type="text"
-                                    value={cafeNote}
-                                    onChange={e => setCafeNote(e.target.value)}
-                                    placeholder="Ghi chú tiền cafe (ai chi / ai nhận)..."
-                                    style={{
-                                        width: '100%', padding: '8px 10px', borderRadius: 8,
-                                        border: '1px solid #fde68a', background: '#ffffff',
-                                        fontSize: 12, outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Card 4: Tally Tàu */}
-                    <div style={{
-                        background: hasTally ? '#eff6ff' : '#ffffff',
-                        border: hasTally ? '1.5px solid #93c5fd' : '1px solid #e2e8f0',
-                        borderRadius: 18, padding: 18,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-                        marginBottom: 20, transition: 'all 0.2s ease'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{
-                                    width: 34, height: 34, borderRadius: 10,
-                                    background: hasTally ? '#dbeafe' : '#f1f5f9',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: hasTally ? '#1d4ed8' : '#64748b'
-                                }}>
-                                    <ClipboardCheck size={18} />
-                                </div>
-                                <div>
-                                    <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b', display: 'block' }}>
-                                        Tally Tàu
-                                    </span>
-                                    <span style={{ fontSize: 11, color: hasTally ? '#1d4ed8' : '#64748b' }}>
-                                        {hasTally ? `Chi phí tally: ${formatVNCurrency(tallyFee)}đ` : 'Không có tally tàu'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={hasTally}
-                                    onChange={e => {
-                                        setHasTally(e.target.checked);
-                                        if (e.target.checked && (!tallyFee || tallyFee === 0)) setTallyFee(200000);
-                                    }}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
-                                />
-                                <span style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                    backgroundColor: hasTally ? '#2563eb' : '#cbd5e1',
-                                    transition: '.3s', borderRadius: 34, pointerEvents: 'none'
-                                }}>
-                                    <span style={{
-                                        position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
-                                        backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
-                                        transform: hasTally ? 'translateX(20px)' : 'translateX(0)'
-                                    }} />
-                                </span>
-                            </label>
-                        </div>
-
-                        {hasTally && (
-                            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed #bfdbfe' }}>
-                                <label style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', display: 'block', marginBottom: 6 }}>
-                                    Chi phí tally (VNĐ):
-                                </label>
-                                <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                                    {QUICK_TALLY_AMOUNTS.map(amt => (
-                                        <button
-                                            key={amt}
-                                            type="button"
-                                            onClick={() => setTallyFee(amt)}
-                                            style={{
-                                                padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                                                background: tallyFee === amt ? '#2563eb' : '#ffffff',
-                                                color: tallyFee === amt ? '#ffffff' : '#1e3a8a',
-                                                border: '1px solid #bfdbfe', cursor: 'pointer'
-                                            }}
-                                        >
-                                            {formatVNCurrency(amt)}đ
-                                        </button>
-                                    ))}
-                                </div>
-                                <input
-                                    type="text"
-                                    value={tallyFee ? formatVNCurrency(tallyFee) : ''}
-                                    onChange={e => {
-                                        const clean = e.target.value.replace(/\D/g, '');
-                                        setTallyFee(clean ? parseInt(clean, 10) : 0);
-                                    }}
-                                    placeholder="Nhập chi phí tally..."
-                                    style={{
-                                        width: '100%', padding: '10px 12px', borderRadius: 10,
-                                        border: '1px solid #2563eb', background: '#ffffff',
-                                        fontSize: 14, fontWeight: 700, outline: 'none',
-                                        marginBottom: 8, boxSizing: 'border-box'
-                                    }}
-                                />
-                                <input
-                                    type="text"
-                                    value={tallyNote}
-                                    onChange={e => setTallyNote(e.target.value)}
-                                    placeholder="Người/đơn vị phụ trách tally hoặc ghi chú..."
-                                    style={{
-                                        width: '100%', padding: '8px 10px', borderRadius: 8,
-                                        border: '1px solid #bfdbfe', background: '#ffffff',
-                                        fontSize: 12, outline: 'none', boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* ── Submit Button ── */}
-                    <button
-                        type="submit"
-                        disabled={isSaving}
+                {/* ── Search Bar ── */}
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Tìm tên tàu, cảng, khách hàng, ghi chú..."
                         style={{
-                            width: '100%', padding: '16px 20px', borderRadius: 16,
-                            background: isSaving
-                                ? '#94a3b8'
-                                : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                            color: '#ffffff', border: 'none', cursor: isSaving ? 'not-allowed' : 'pointer',
-                            fontSize: 16, fontWeight: 800, display: 'flex',
-                            alignItems: 'center', justifyContent: 'center', gap: 10,
-                            boxShadow: '0 8px 24px rgba(16,185,129,0.3)',
-                            transition: 'all 0.15s ease'
+                            width: '100%', padding: '12px 14px 12px 40px',
+                            borderRadius: 14, border: '1px solid #cbd5e1',
+                            background: '#ffffff', fontSize: 14, outline: 'none',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.03)', boxSizing: 'border-box'
+                        }}
+                    />
+                    <div style={{ position: 'absolute', left: 14, top: 13, color: '#94a3b8' }}>
+                        <Search size={18} />
+                    </div>
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            style={{
+                                position: 'absolute', right: 12, top: 11,
+                                border: 'none', background: '#f1f5f9', borderRadius: '50%',
+                                width: 22, height: 22, display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', cursor: 'pointer', color: '#64748b'
+                            }}
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+                </div>
+
+                {/* ── Filter Tabs ── */}
+                <div style={{
+                    display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6,
+                    marginBottom: 16, scrollbarWidth: 'none'
+                }}>
+                    <button
+                        onClick={() => setFilterTab('all')}
+                        style={{
+                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'all' ? '#0f172a' : '#ffffff',
+                            color: filterTab === 'all' ? '#ffffff' : '#64748b',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                         }}
                     >
-                        <Save size={20} />
-                        {isSaving ? 'Đang lưu dữ liệu...' : (mode === 'create' ? 'Lưu Chuyến Tàu Mới' : 'Lưu Cập Nhật Tàu')}
+                        Tất cả ({counts.all})
                     </button>
-                </form>
+                    <button
+                        onClick={() => setFilterTab('rated')}
+                        style={{
+                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'rated' ? '#f59e0b' : '#ffffff',
+                            color: filterTab === 'rated' ? '#ffffff' : '#78350f',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        ⭐ Có đánh giá ({counts.rated})
+                    </button>
+                    <button
+                        onClick={() => setFilterTab('cafe')}
+                        style={{
+                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'cafe' ? '#b45309' : '#ffffff',
+                            color: filterTab === 'cafe' ? '#ffffff' : '#78350f',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        ☕ Có cafe ({counts.cafe})
+                    </button>
+                    <button
+                        onClick={() => setFilterTab('tally')}
+                        style={{
+                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'tally' ? '#2563eb' : '#ffffff',
+                            color: filterTab === 'tally' ? '#ffffff' : '#1e3a8a',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        📋 Có tally ({counts.tally})
+                    </button>
+                </div>
 
-                {/* ── Recent Ships Section ── */}
-                {recentShips.length > 0 && (
-                    <div style={{ marginTop: 28 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                            <Clock size={16} color="#64748b" />
-                            <span style={{ fontSize: 13, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                                Các tàu gần đây
-                            </span>
+                {/* ── FULL LIST OF SHIPS ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {filteredShips.length === 0 ? (
+                        <div style={{
+                            background: '#ffffff', borderRadius: 16, padding: 32,
+                            textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0'
+                        }}>
+                            <ShipIcon size={36} color="#cbd5e1" style={{ margin: '0 auto 8px' }} />
+                            <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 4px', color: '#1e293b' }}>
+                                Không tìm thấy chuyến tàu nào
+                            </p>
+                            <p style={{ fontSize: 13, margin: 0 }}>
+                                Thử tìm với từ khóa khác hoặc bấm nút "+ Nhập tàu mới" bên trên.
+                            </p>
                         </div>
+                    ) : (
+                        filteredShips.map(s => {
+                            const statusCfg = STATUS_MAP[s.status || 'waiting'];
+                            const arrDate = new Date(s.arrivalDate).toLocaleDateString('vi-VN', {
+                                day: '2-digit', month: '2-digit', year: 'numeric'
+                            });
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {recentShips.map(s => (
+                            return (
                                 <div
                                     key={s.id}
-                                    onClick={() => {
-                                        setMode('update');
-                                        handleSelectShip(s);
-                                    }}
+                                    onClick={() => handleOpenEdit(s)}
                                     style={{
-                                        background: '#ffffff', borderRadius: 14, padding: '12px 14px',
-                                        border: '1px solid #e2e8f0', cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                        background: '#ffffff', borderRadius: 18, padding: '16px 18px',
+                                        border: '1px solid #e2e8f0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+                                        cursor: 'pointer', transition: 'all 0.15s ease', position: 'relative'
                                     }}
+                                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                                 >
-                                    <div>
-                                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
-                                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                                            {new Date(s.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} • {s.port || 'Sowatco'} • {s.weight ? `${s.weight.toLocaleString('vi-VN')}t` : '0t'}
+                                    {/* Card Header: Ship Name + Status */}
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+                                        <div>
+                                            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: '0 0 3px 0' }}>
+                                                {s.name}
+                                            </h3>
+                                            <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                    <Calendar size={13} color="#94a3b8" /> {arrDate}
+                                                </span>
+                                                <span>•</span>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                    <MapPin size={13} color="#94a3b8" /> {s.port || 'Sowatco'}
+                                                </span>
+                                                {s.client && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span style={{ fontWeight: 600, color: '#047857' }}>{s.client}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div style={{
+                                            padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 800,
+                                            background: statusCfg.bg, color: statusCfg.color, whiteSpace: 'nowrap'
+                                        }}>
+                                            {statusCfg.label}
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                                        {s.rating && (
-                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '3px 6px', borderRadius: 6 }}>
-                                                ⭐ {s.rating}
-                                            </span>
-                                        )}
-                                        {s.hasCafeFee && (
-                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', padding: '3px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>
-                                                ☕
-                                            </span>
-                                        )}
-                                        {s.hasTally && (
-                                            <span style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', background: '#eff6ff', padding: '3px 6px', borderRadius: 6, border: '1px solid #bfdbfe' }}>
-                                                📋
+
+                                    {/* Weight & Salan */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#334155', marginBottom: 10 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#d97706' }}>
+                                            <Weight size={14} /> {s.weight ? `${s.weight.toLocaleString('vi-VN')} tấn` : '0 tấn'}
+                                        </div>
+                                        {s.hasBarge && (
+                                            <span style={{
+                                                fontSize: 11, fontWeight: 700, padding: '2px 6px',
+                                                borderRadius: 6, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe'
+                                            }}>
+                                                🚢 Kèm {s.bargeCount || 1} xà lan (+{( (s.bargeCount || 1) * 200000 ).toLocaleString('vi-VN')}đ)
                                             </span>
                                         )}
                                     </div>
+
+                                    {/* Rating, Cafe, Tally Badges */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                                        {s.rating ? (
+                                            <span style={{
+                                                padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                                                background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
+                                                display: 'flex', alignItems: 'center', gap: 4
+                                            }}>
+                                                ⭐ {s.rating}/5 sao {s.ratingComment ? `(${s.ratingComment})` : ''}
+                                            </span>
+                                        ) : (
+                                            <span style={{ padding: '3px 8px', borderRadius: 6, fontSize: 10, color: '#94a3b8', background: '#f8fafc', border: '1px dashed #cbd5e1' }}>
+                                                Chưa đánh giá
+                                            </span>
+                                        )}
+
+                                        {s.hasCafeFee ? (
+                                            <span style={{
+                                                padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                                                background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+                                                display: 'flex', alignItems: 'center', gap: 4
+                                            }}>
+                                                ☕ Cafe: {formatVNCurrency(s.cafeFee || 0)}đ {s.cafeNote ? `(${s.cafeNote})` : ''}
+                                            </span>
+                                        ) : null}
+
+                                        {s.hasTally ? (
+                                            <span style={{
+                                                padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                                                background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe',
+                                                display: 'flex', alignItems: 'center', gap: 4
+                                            }}>
+                                                📋 Tally: {formatVNCurrency(s.tallyFee || 0)}đ {s.tallyNote ? `(${s.tallyNote})` : ''}
+                                            </span>
+                                        ) : null}
+                                    </div>
+
+                                    {/* Action Bar Footer */}
+                                    <div style={{
+                                        borderTop: '1px solid #f1f5f9', paddingTop: 8,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        fontSize: 12, color: '#059669', fontWeight: 700
+                                    }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <Edit3 size={13} /> Chạm để cập nhật thông tin
+                                        </span>
+                                        <span style={{ color: '#94a3b8', fontSize: 11 }}>Chi tiết →</span>
+                                    </div>
                                 </div>
-                            ))}
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* ── MODAL SHEET FOR EDIT / CREATE ── */}
+                {showModal && (
+                    <div
+                        onClick={() => setShowModal(false)}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 100,
+                            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
+                            display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
+                        }}
+                    >
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                width: '100%', maxWidth: 540, maxHeight: '92vh',
+                                background: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+                                padding: '20px 20px 30px 20px', overflowY: 'auto', boxSizing: 'border-box',
+                                animation: 'fadeUp 0.25s ease'
+                            }}
+                        >
+                            {/* Handle & Header */}
+                            <div style={{ width: 40, height: 4, borderRadius: 2, background: '#cbd5e1', margin: '0 auto 16px' }} />
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <ShipIcon size={20} color="#059669" />
+                                    </div>
+                                    <div>
+                                        <h2 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: '#0f172a' }}>
+                                            {editingShip ? `Cập Nhật: ${editingShip.name}` : 'Nhập Tàu Mới'}
+                                        </h2>
+                                        <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0 0' }}>
+                                            {editingShip ? 'Cập nhật đánh giá, tiền cafe, tally & thông số' : 'Điền đầy đủ thông tin chuyến tàu mới'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    <X size={18} color="#64748b" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSubmit}>
+                                {/* SECTION 1: Đánh giá tàu */}
+                                <div style={{ background: '#fffbeb', borderRadius: 16, padding: 14, border: '1px solid #fde68a', marginBottom: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                        <Star size={16} color="#d97706" />
+                                        <span style={{ fontSize: 13, fontWeight: 800, color: '#92400e' }}>1. Đánh giá chất lượng tàu</span>
+                                    </div>
+
+                                    {/* Stars */}
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '6px 0' }}>
+                                        {[1, 2, 3, 4, 5].map(starNum => {
+                                            const active = rating >= starNum;
+                                            return (
+                                                <button
+                                                    key={starNum}
+                                                    type="button"
+                                                    onClick={() => setRating(rating === starNum ? 0 : starNum)}
+                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}
+                                                >
+                                                    <Star
+                                                        size={32}
+                                                        fill={active ? '#f59e0b' : '#e2e8f0'}
+                                                        color={active ? '#d97706' : '#cbd5e1'}
+                                                        strokeWidth={1.5}
+                                                    />
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {rating > 0 && STAR_LABELS[rating] && (
+                                        <div style={{ textAlign: 'center', margin: '2px 0 8px 0', fontSize: 12, fontWeight: 700, color: STAR_LABELS[rating].color }}>
+                                            {rating} sao: {STAR_LABELS[rating].text}
+                                        </div>
+                                    )}
+
+                                    <textarea
+                                        value={ratingComment}
+                                        onChange={e => setRatingComment(e.target.value)}
+                                        placeholder="Nhận xét đánh giá (cẩu dỡ nhanh, hàng đẹp, thuận lợi...)"
+                                        rows={2}
+                                        style={{
+                                            width: '100%', padding: '8px 10px', borderRadius: 10,
+                                            border: '1px solid #fcd34d', background: '#ffffff',
+                                            fontSize: 12, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+                                        }}
+                                    />
+                                </div>
+
+                                {/* SECTION 2: Tiền Cafe Tàu */}
+                                <div style={{ background: hasCafeFee ? '#fff7ed' : '#f8fafc', borderRadius: 16, padding: 14, border: hasCafeFee ? '1px solid #fdba74' : '1px solid #e2e8f0', marginBottom: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <Coffee size={18} color="#ea580c" />
+                                            <div>
+                                                <span style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', display: 'block' }}>2. Tiền Cafe Tàu</span>
+                                                <span style={{ fontSize: 11, color: hasCafeFee ? '#c2410c' : '#64748b' }}>
+                                                    {hasCafeFee ? `${formatVNCurrency(cafeFee)}đ` : 'Không có tiền cafe'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <label style={{ position: 'relative', display: 'inline-block', width: 42, height: 24, cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={hasCafeFee}
+                                                onChange={e => {
+                                                    setHasCafeFee(e.target.checked);
+                                                    if (e.target.checked && (!cafeFee || cafeFee === 0)) setCafeFee(100000);
+                                                }}
+                                                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
+                                            />
+                                            <span style={{
+                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                backgroundColor: hasCafeFee ? '#ea580c' : '#cbd5e1',
+                                                transition: '.3s', borderRadius: 34, pointerEvents: 'none'
+                                            }}>
+                                                <span style={{
+                                                    position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
+                                                    backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                                    transform: hasCafeFee ? 'translateX(18px)' : 'translateX(0)'
+                                                }} />
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {hasCafeFee && (
+                                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #fed7aa' }}>
+                                            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                                                {QUICK_CAFE_AMOUNTS.map(amt => (
+                                                    <button
+                                                        key={amt}
+                                                        type="button"
+                                                        onClick={() => setCafeFee(amt)}
+                                                        style={{
+                                                            padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                            background: cafeFee === amt ? '#ea580c' : '#ffffff',
+                                                            color: cafeFee === amt ? '#ffffff' : '#9a3412',
+                                                            border: '1px solid #fdba74', cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        {formatVNCurrency(amt)}đ
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={cafeFee ? formatVNCurrency(cafeFee) : ''}
+                                                onChange={e => {
+                                                    const clean = e.target.value.replace(/\D/g, '');
+                                                    setCafeFee(clean ? parseInt(clean, 10) : 0);
+                                                }}
+                                                placeholder="Nhập số tiền cafe..."
+                                                style={{
+                                                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                                                    border: '1px solid #ea580c', background: '#ffffff',
+                                                    fontSize: 13, fontWeight: 700, outline: 'none', marginBottom: 6, boxSizing: 'border-box'
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={cafeNote}
+                                                onChange={e => setCafeNote(e.target.value)}
+                                                placeholder="Ghi chú tiền cafe (ai chi / ai nhận)..."
+                                                style={{
+                                                    width: '100%', padding: '7px 10px', borderRadius: 8,
+                                                    border: '1px solid #fed7aa', background: '#ffffff',
+                                                    fontSize: 12, outline: 'none', boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* SECTION 3: Tally Tàu */}
+                                <div style={{ background: hasTally ? '#eff6ff' : '#f8fafc', borderRadius: 16, padding: 14, border: hasTally ? '1px solid #93c5fd' : '1px solid #e2e8f0', marginBottom: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <ClipboardCheck size={18} color="#2563eb" />
+                                            <div>
+                                                <span style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', display: 'block' }}>3. Tally Tàu</span>
+                                                <span style={{ fontSize: 11, color: hasTally ? '#1d4ed8' : '#64748b' }}>
+                                                    {hasTally ? `Chi phí: ${formatVNCurrency(tallyFee)}đ` : 'Không có tally tàu'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <label style={{ position: 'relative', display: 'inline-block', width: 42, height: 24, cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={hasTally}
+                                                onChange={e => {
+                                                    setHasTally(e.target.checked);
+                                                    if (e.target.checked && (!tallyFee || tallyFee === 0)) setTallyFee(200000);
+                                                }}
+                                                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
+                                            />
+                                            <span style={{
+                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                backgroundColor: hasTally ? '#2563eb' : '#cbd5e1',
+                                                transition: '.3s', borderRadius: 34, pointerEvents: 'none'
+                                            }}>
+                                                <span style={{
+                                                    position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
+                                                    backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                                    transform: hasTally ? 'translateX(18px)' : 'translateX(0)'
+                                                }} />
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    {hasTally && (
+                                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #bfdbfe' }}>
+                                            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                                                {QUICK_TALLY_AMOUNTS.map(amt => (
+                                                    <button
+                                                        key={amt}
+                                                        type="button"
+                                                        onClick={() => setTallyFee(amt)}
+                                                        style={{
+                                                            padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                            background: tallyFee === amt ? '#2563eb' : '#ffffff',
+                                                            color: tallyFee === amt ? '#ffffff' : '#1e3a8a',
+                                                            border: '1px solid #bfdbfe', cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        {formatVNCurrency(amt)}đ
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={tallyFee ? formatVNCurrency(tallyFee) : ''}
+                                                onChange={e => {
+                                                    const clean = e.target.value.replace(/\D/g, '');
+                                                    setTallyFee(clean ? parseInt(clean, 10) : 0);
+                                                }}
+                                                placeholder="Nhập chi phí tally..."
+                                                style={{
+                                                    width: '100%', padding: '8px 10px', borderRadius: 8,
+                                                    border: '1px solid #2563eb', background: '#ffffff',
+                                                    fontSize: 13, fontWeight: 700, outline: 'none', marginBottom: 6, boxSizing: 'border-box'
+                                                }}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={tallyNote}
+                                                onChange={e => setTallyNote(e.target.value)}
+                                                placeholder="Người/đơn vị phụ trách tally hoặc ghi chú..."
+                                                style={{
+                                                    width: '100%', padding: '7px 10px', borderRadius: 8,
+                                                    border: '1px solid #bfdbfe', background: '#ffffff',
+                                                    fontSize: 12, outline: 'none', boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* SECTION 4: Thông tin chuyến tàu */}
+                                <div style={{ background: '#f8fafc', borderRadius: 16, padding: 14, border: '1px solid #e2e8f0', marginBottom: 18 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                                        <ShipIcon size={16} color="#059669" />
+                                        <span style={{ fontSize: 13, fontWeight: 800, color: '#1e293b' }}>4. Thông tin chuyến tàu</span>
+                                    </div>
+
+                                    {/* Tên tàu */}
+                                    <div style={{ marginBottom: 10 }}>
+                                        <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                            Tên tàu <span style={{ color: '#dc2626' }}>*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            placeholder="Nhập tên tàu..."
+                                            required
+                                            style={{
+                                                width: '100%', padding: '9px 12px', borderRadius: 10,
+                                                border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
+                                                background: '#ffffff', boxSizing: 'border-box'
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Trạng thái + Sản lượng */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                                        <div>
+                                            <label style={{ fontSize: 11, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                                Trạng thái
+                                            </label>
+                                            <select
+                                                value={status}
+                                                onChange={e => {
+                                                    const val = e.target.value as ShipStatus;
+                                                    setStatus(val);
+                                                    if (val === 'completed' && !completionDate) {
+                                                        setCompletionDate(new Date().toISOString().split('T')[0]);
+                                                    }
+                                                }}
+                                                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, background: '#ffffff', outline: 'none', boxSizing: 'border-box' }}
+                                            >
+                                                <option value="waiting">Đang neo</option>
+                                                <option value="entering">Đã cập</option>
+                                                <option value="working">Đang làm</option>
+                                                <option value="completed">Hoàn thành</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label style={{ fontSize: 11, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                                Sản lượng (tấn)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={weightInput}
+                                                onChange={e => setWeightInput(formatVNWeight(e.target.value))}
+                                                placeholder="0"
+                                                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, outline: 'none', background: '#ffffff', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Cảng + Khách hàng */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                                        <div>
+                                            <label style={{ fontSize: 11, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                                Cảng dỡ
+                                            </label>
+                                            <select
+                                                value={port}
+                                                onChange={e => {
+                                                    setPort(e.target.value);
+                                                    if (e.target.value !== 'Cảng Khác') setCustomPort('');
+                                                }}
+                                                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, background: '#ffffff', outline: 'none', boxSizing: 'border-box' }}
+                                            >
+                                                {STANDARD_PORTS.map(p => <option key={p} value={p}>{p}</option>)}
+                                            </select>
+                                            {port === 'Cảng Khác' && (
+                                                <input
+                                                    type="text"
+                                                    value={customPort}
+                                                    onChange={e => setCustomPort(e.target.value)}
+                                                    placeholder="Tên cảng khác..."
+                                                    style={{ width: '100%', marginTop: 4, padding: '6px 8px', borderRadius: 6, border: '1px solid #059669', fontSize: 11, outline: 'none', boxSizing: 'border-box' }}
+                                                />
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label style={{ fontSize: 11, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                                Khách hàng
+                                            </label>
+                                            <select
+                                                value={client}
+                                                onChange={e => {
+                                                    setClient(e.target.value);
+                                                    if (e.target.value !== 'Khác (Tự nhập)') setCustomClient('');
+                                                }}
+                                                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 12, background: '#ffffff', outline: 'none', boxSizing: 'border-box' }}
+                                            >
+                                                {STANDARD_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
+                                            {client === 'Khác (Tự nhập)' && (
+                                                <input
+                                                    type="text"
+                                                    value={customClient}
+                                                    onChange={e => setCustomClient(e.target.value)}
+                                                    placeholder="Tên khách..."
+                                                    style={{ width: '100%', marginTop: 4, padding: '6px 8px', borderRadius: 6, border: '1px solid #059669', fontSize: 11, outline: 'none', boxSizing: 'border-box' }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Xà lan */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#ffffff', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>
+                                            Kèm xà lan (Salan): {hasBarge ? `+${(bargeCount * 200000).toLocaleString('vi-VN')}đ` : 'Không'}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            {hasBarge && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <button type="button" onClick={() => setBargeCount(Math.max(1, bargeCount - 1))} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid #cbd5e1', background: '#f8fafc', cursor: 'pointer' }}>-</button>
+                                                    <span style={{ fontSize: 12, fontWeight: 800 }}>{bargeCount}</span>
+                                                    <button type="button" onClick={() => setBargeCount(bargeCount + 1)} style={{ width: 22, height: 22, borderRadius: 4, border: '1px solid #cbd5e1', background: '#f8fafc', cursor: 'pointer' }}>+</button>
+                                                </div>
+                                            )}
+                                            <input
+                                                type="checkbox"
+                                                checked={hasBarge}
+                                                onChange={e => {
+                                                    setHasBarge(e.target.checked);
+                                                    if (e.target.checked && (!bargeCount || bargeCount < 1)) setBargeCount(1);
+                                                }}
+                                                style={{ width: 16, height: 16 }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Submit Button */}
+                                <button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    style={{
+                                        width: '100%', padding: '16px 20px', borderRadius: 14,
+                                        background: isSaving ? '#94a3b8' : 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                                        color: '#ffffff', border: 'none', cursor: isSaving ? 'not-allowed' : 'pointer',
+                                        fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', gap: 8, boxShadow: '0 6px 20px rgba(16,185,129,0.3)'
+                                    }}
+                                >
+                                    <Save size={18} />
+                                    {isSaving ? 'Đang lưu...' : (editingShip ? 'Lưu Cập Nhật Tàu' : 'Lưu Chuyến Tàu Mới')}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 )}
