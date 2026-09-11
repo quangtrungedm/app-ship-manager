@@ -90,6 +90,10 @@ function serializeShip(ship: Partial<Ship>) {
     return {
         ...ship,
         documents: ship.documents || [],
+        hasBarge: ship.hasBarge === true,
+        bargeCount: ship.hasBarge ? (Number(ship.bargeCount) || 1) : 0,
+        employee: ship.employee || '',
+        division: ship.division || 'SAT_THEP',
     };
 }
 

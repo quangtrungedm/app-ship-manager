@@ -65,22 +65,34 @@ export function useShips(): UseShipsReturn {
         return () => window.removeEventListener('app:refresh', handleRefresh);
     }, [loadShips]);
 
-    const handleAdd = async (ship: Omit<Ship, 'id'>) => {
-        const shipPayload = { ...ship, division: division || undefined };
+    const cacheKey = `ship_manager_cache_${division || 'SAT_THEP'}`;
 
-        // Cập nhật UI ngay lập tức
+    const handleAdd = async (ship: Omit<Ship, 'id'>) => {
+        const shipPayload = { ...ship, division: division || 'SAT_THEP' };
         const tempId = (ship as any).id || `shp-${Date.now()}`;
         const newShip = { ...shipPayload, id: tempId } as Ship;
-        setShips(prev => [newShip, ...prev]);
+
+        // Cập nhật UI và localStorage ngay lập tức
+        setShips(prev => {
+            const next = [newShip, ...prev];
+            localStorage.setItem(cacheKey, JSON.stringify(next));
+            return next;
+        });
 
         if (isConfigured() && !(ship as any)._isBackgroundRealUpdate) {
             try {
                 const { id } = await api.addShip(shipPayload);
-                // Lặng lẽ thay thế ID thật mà không chớp nhoáng UI
-                setShips(prev => prev.map(s => s.id === tempId ? { ...s, id } : s));
+                setShips(prev => {
+                    const next = prev.map(s => s.id === tempId ? { ...s, id } : s);
+                    localStorage.setItem(cacheKey, JSON.stringify(next));
+                    return next;
+                });
             } catch (err) {
-                // Rollback nếu API lỗi
-                setShips(prev => prev.filter(s => s.id !== tempId));
+                setShips(prev => {
+                    const next = prev.filter(s => s.id !== tempId);
+                    localStorage.setItem(cacheKey, JSON.stringify(next));
+                    return next;
+                });
                 console.error("Lỗi khi thêm tàu:", err);
                 throw err;
             }
@@ -88,28 +100,38 @@ export function useShips(): UseShipsReturn {
     };
 
     const handleUpdate = async (ship: Ship) => {
-        // Cập nhật UI ngay lập tức
-        setShips(prev => prev.map(s => s.id === ship.id ? ship : s));
+        const updatedShip = { ...ship, division: ship.division || division || 'SAT_THEP' };
+        // Cập nhật UI và localStorage ngay lập tức
+        setShips(prev => {
+            const next = prev.map(s => s.id === updatedShip.id ? updatedShip : s);
+            localStorage.setItem(cacheKey, JSON.stringify(next));
+            return next;
+        });
 
         if (isConfigured()) {
             try {
-                await api.updateShip(ship);
+                await api.updateShip(updatedShip);
             } catch (err) {
                 console.error("Lỗi khi cập nhật tàu:", err);
-                // Có thể trigger fetch lại nếu thực sự khắt khe về data sync
+                throw err;
             }
         }
     };
 
     const handleDelete = async (id: string) => {
-        // Cập nhật UI ngay lập tức
-        setShips(prev => prev.filter(s => s.id !== id));
+        // Cập nhật UI và localStorage ngay lập tức
+        setShips(prev => {
+            const next = prev.filter(s => s.id !== id);
+            localStorage.setItem(cacheKey, JSON.stringify(next));
+            return next;
+        });
 
         if (isConfigured()) {
             try {
                 await api.deleteShip(id);
             } catch (err) {
                 console.error("Lỗi khi xóa tàu:", err);
+                throw err;
             }
         }
     };

@@ -340,70 +340,56 @@ export function StaffShips() {
         e.preventDefault();
         setSubmitting(true);
 
-        // 1. Xử lý ID & Dữ liệu cơ bản
-        const tempId = editing?.id || `shp-${Date.now()}`;
-        const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
-        const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
+        try {
+            const tempId = editing?.id || `shp-${Date.now()}`;
+            const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
 
-        const shipData: Ship = {
-            id: tempId,
-            name, arrivalDate: new Date(arrival).toISOString(),
-            completionDate: completion ? new Date(completion).toISOString() : undefined,
-            weight: parsedWeight, documents: [...docs], // Bốc luôn URL blob ảnh tạm ở Local để hiển thị
-            status: status,
-            division: division || undefined,
-            isPaid: division === 'SAT_THEP' ? isPaid : undefined,
-            port: division === 'SAT_THEP' ? finalPort : undefined,
-            client: division === 'SAT_THEP' ? client : undefined,
-            hasBarge: division === 'SAT_THEP' ? hasBarge : undefined,
-            bargeCount: (division === 'SAT_THEP' && hasBarge) ? Math.max(1, bargeCount) : undefined,
-        };
-
-        // 2. Cập nhật UI Tức thời (Optimistic Update)
-        if (editing) { updateShipApi(shipData); }
-        else { addShip(shipData); }
-
-        // Cất Form, giải phóng UI cho User làm việc khác
-        const currentPendingFiles = [...pendingFiles];
-        const currentDocs = [...docs];
-        setPendingFiles([]);
-        setShowForm(false);
-        setSubmitting(false);
-
-        // 3. Tiến trình chạy ngầm (Background Task)
-        if (!isConfigured()) return; // Nếu ko có API thì thôi
-
-        (async () => {
-            try {
-                let uploadedDocs = currentDocs.filter(d => !d.id.startsWith('doc-new-'));
-
-                // Nén ảnh & Tải lên Song song (Parallel Upload)
-                if (currentPendingFiles.length > 0) {
-                    const uploadPromises = currentPendingFiles.map(async (file) => {
-                        let fileToUpload = file;
-                        // Nén ảnh nếu là ảnh (giảm từ 5MB xuống ~300kb)
-                        if (file.type.startsWith('image/')) {
-                            const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
-                            try { fileToUpload = await imageCompression(file, options); }
-                            catch (e) { console.error('Lỗi nén ảnh:', e); }
-                        }
-                        return uploadFile(fileToUpload);
-                    });
-
-                    const newUploadedDocs = await Promise.all(uploadPromises);
-                    uploadedDocs = [...uploadedDocs, ...newUploadedDocs];
-                }
-
-                // Châm ngoi Lưu ngầm trên server
-                const finalShipData = { ...shipData, documents: uploadedDocs };
-                if (editing) { await updateShipApi({ ...finalShipData, _isBackgroundRealUpdate: true } as any); }
-                else { await updateShipApi({ ...finalShipData, _isBackgroundRealUpdate: true } as any); }
-                // Mẹo: addShip tạo 1 ID ảo. Trên Server sẽ cập nhật đúng ID ảo đấy, nên ta gọi updateShipApi thay cho gọi addShip để đồng bộ URL thật.
-
-            } catch (err) {
-                console.error('Lỗi lưu ngầm:', err);
+            let uploadedDocs = docs.filter(d => !d.id.startsWith('doc-new-'));
+            if (pendingFiles.length > 0 && isConfigured()) {
+                const uploadPromises = pendingFiles.map(async (file) => {
+                    let fileToUpload = file;
+                    if (file.type.startsWith('image/')) {
+                        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true };
+                        try { fileToUpload = await imageCompression(file, options); }
+                        catch (e) { console.error('Lỗi nén ảnh:', e); }
+                    }
+                    return uploadFile(fileToUpload);
+                });
+                const newUploadedDocs = await Promise.all(uploadPromises);
+                uploadedDocs = [...uploadedDocs, ...newUploadedDocs];
             }
-        })();
+
+            const shipData: Ship = {
+                id: tempId,
+                name: name.trim(),
+                arrivalDate: new Date(arrival).toISOString(),
+                completionDate: completion ? new Date(completion).toISOString() : undefined,
+                weight: parsedWeight,
+                documents: uploadedDocs,
+                status: status,
+                division: 'SAT_THEP',
+                isPaid: isPaid,
+                port: finalPort || 'Sowatco Long Bình',
+                client: client.trim(),
+                hasBarge: !!hasBarge,
+                bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
+            };
+
+            if (editing) {
+                await updateShipApi(shipData);
+            } else {
+                await addShip(shipData);
+            }
+
+            setPendingFiles([]);
+            setShowForm(false);
+        } catch (err: any) {
+            console.error('Lỗi khi lưu chuyến tàu:', err);
+            alert('Lỗi lưu dữ liệu: ' + (err.message || 'Không thể kết nối đến Google Sheets'));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleDelete = async () => {

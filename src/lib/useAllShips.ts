@@ -14,7 +14,6 @@ interface UseAllShipsReturn {
     refresh: () => Promise<void>;
 }
 
-const BOSS_DIVISION = 'BOSS_MANAGER';
 const CACHE_KEY = 'ship_manager_cache_BOSS';
 
 export function useAllShips(): UseAllShipsReturn {
@@ -37,7 +36,7 @@ export function useAllShips(): UseAllShipsReturn {
         setError(null);
         try {
             const data = await api.fetchShips();
-            const bossShips = data.filter((s: Ship) => s.division === BOSS_DIVISION);
+            const bossShips = data.filter((s: Ship) => s.division === 'SAT_THEP' || !s.division);
             setShips(bossShips);
             localStorage.setItem(CACHE_KEY, JSON.stringify(bossShips));
         } catch (err) {
@@ -58,31 +57,62 @@ export function useAllShips(): UseAllShipsReturn {
 
     const handleAdd = async (ship: Omit<Ship, 'id'>) => {
         const tempId = `shp-boss-${Date.now()}`;
-        const newShip = { ...ship, id: tempId, division: BOSS_DIVISION } as Ship;
-        setShips(prev => [newShip, ...prev]);
+        const newShip = { ...ship, id: tempId, division: 'SAT_THEP' } as Ship;
+        setShips(prev => {
+            const next = [newShip, ...prev];
+            localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+            return next;
+        });
 
         if (isConfigured()) {
             try {
-                const { id } = await api.addShip(ship);
-                setShips(prev => prev.map(s => s.id === tempId ? { ...s, id } : s));
+                const { id } = await api.addShip({ ...ship, division: 'SAT_THEP' });
+                setShips(prev => {
+                    const next = prev.map(s => s.id === tempId ? { ...s, id } : s);
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+                    return next;
+                });
             } catch (err) {
-                setShips(prev => prev.filter(s => s.id !== tempId));
+                setShips(prev => {
+                    const next = prev.filter(s => s.id !== tempId);
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+                    return next;
+                });
                 throw err;
             }
         }
     };
 
     const handleUpdate = async (ship: Ship) => {
-        setShips(prev => prev.map(s => s.id === ship.id ? ship : s));
+        const updatedShip = { ...ship, division: ship.division || 'SAT_THEP' };
+        setShips(prev => {
+            const next = prev.map(s => s.id === updatedShip.id ? updatedShip : s);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+            return next;
+        });
         if (isConfigured()) {
-            try { await api.updateShip(ship); } catch (err) { console.error('Lỗi cập nhật:', err); }
+            try {
+                await api.updateShip(updatedShip);
+            } catch (err) {
+                console.error('Lỗi cập nhật:', err);
+                throw err;
+            }
         }
     };
 
     const handleDelete = async (id: string) => {
-        setShips(prev => prev.filter(s => s.id !== id));
+        setShips(prev => {
+            const next = prev.filter(s => s.id !== id);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(next));
+            return next;
+        });
         if (isConfigured()) {
-            try { await api.deleteShip(id); } catch (err) { console.error('Lỗi xóa:', err); }
+            try {
+                await api.deleteShip(id);
+            } catch (err) {
+                console.error('Lỗi xóa:', err);
+                throw err;
+            }
         }
     };
 

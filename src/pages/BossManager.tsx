@@ -343,57 +343,57 @@ export function BossManager() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
-        const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
-        const tempId = editing?.id || `shp-boss-${Date.now()}`;
-        const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
 
-        const shipData: Ship = {
-            id: tempId,
-            name,
-            arrivalDate: new Date(arrival).toISOString(),
-            completionDate: completion ? new Date(completion).toISOString() : undefined,
-            weight: parsedWeight,
-            status,
-            employee: employee || undefined,
-            port: finalPort || undefined,
-            division: formDivision || editing?.division || 'SAT_THEP',
-            documents: [...docs],
-            isPaid: editing?.isPaid,
-            client: editing?.client,
-            hasBarge,
-            bargeCount: hasBarge ? Math.max(1, bargeCount) : undefined,
-        };
+        try {
+            const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            const tempId = editing?.id || `shp-boss-${Date.now()}`;
+            const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
 
-        if (editing) { updateShipApi(shipData); }
-        else { addShip(shipData); }
-
-        const currentPendingFiles = [...pendingFiles];
-        const currentDocs = [...docs];
-        setPendingFiles([]);
-        setShowForm(false);
-        setSubmitting(false);
-
-        if (!isConfigured()) return;
-        (async () => {
-            try {
-                let uploadedDocs = currentDocs.filter(d => !d.id.startsWith('doc-new-'));
-                if (currentPendingFiles.length > 0) {
-                    const uploadPromises = currentPendingFiles.map(async (file) => {
-                        let fileToUpload = file;
-                        if (file.type.startsWith('image/')) {
-                            try { fileToUpload = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true }); }
-                            catch { /* keep original */ }
-                        }
-                        return uploadFile(fileToUpload);
-                    });
-                    const newDocs = await Promise.all(uploadPromises);
-                    uploadedDocs = [...uploadedDocs, ...newDocs];
-                }
-                await updateShipApi({ ...shipData, documents: uploadedDocs } as any);
-            } catch (err) {
-                console.error('Lỗi lưu ngầm:', err);
+            let uploadedDocs = docs.filter(d => !d.id.startsWith('doc-new-'));
+            if (pendingFiles.length > 0 && isConfigured()) {
+                const uploadPromises = pendingFiles.map(async (file) => {
+                    let fileToUpload = file;
+                    if (file.type.startsWith('image/')) {
+                        try { fileToUpload = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true }); }
+                        catch { /* keep original */ }
+                    }
+                    return uploadFile(fileToUpload);
+                });
+                const newDocs = await Promise.all(uploadPromises);
+                uploadedDocs = [...uploadedDocs, ...newDocs];
             }
-        })();
+
+            const shipData: Ship = {
+                id: tempId,
+                name: name.trim(),
+                arrivalDate: new Date(arrival).toISOString(),
+                completionDate: completion ? new Date(completion).toISOString() : undefined,
+                weight: parsedWeight,
+                status,
+                employee: employee || undefined,
+                port: finalPort || 'Sowatco Long Bình',
+                division: 'SAT_THEP',
+                documents: uploadedDocs,
+                isPaid: editing?.isPaid,
+                client: editing?.client,
+                hasBarge,
+                bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
+            };
+
+            if (editing) {
+                await updateShipApi(shipData);
+            } else {
+                await addShip(shipData);
+            }
+
+            setPendingFiles([]);
+            setShowForm(false);
+        } catch (err: any) {
+            console.error('Lỗi lưu tàu:', err);
+            alert('Lỗi lưu dữ liệu: ' + (err.message || 'Không thể kết nối đến Google Sheets'));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleDelete = async () => {
