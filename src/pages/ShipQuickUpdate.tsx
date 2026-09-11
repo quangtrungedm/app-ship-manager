@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShips } from '../lib/useShips';
-import { Ship } from '../types';
+import { Ship, ShipStatus } from '../types';
+import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 import {
     ArrowLeft, Search, Star, Coffee, ClipboardCheck,
     Save, CheckCircle2, RotateCcw, Ship as ShipIcon,
-    Clock
+    Clock, PlusCircle
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -15,6 +16,23 @@ const removeAccents = (str: string) => {
 const formatVNCurrency = (val: number | string) => {
     const num = typeof val === 'string' ? parseFloat(val.replace(/\D/g, '')) || 0 : val;
     return num.toLocaleString('vi-VN');
+};
+
+const formatVNWeight = (value: string) => {
+    let cleaned = value.replace(/[^0-9.,]/g, '');
+    if (cleaned.endsWith('.') && !cleaned.slice(0, -1).includes(',')) {
+        cleaned = cleaned.slice(0, -1) + ',';
+    }
+    let normalized = cleaned.replace(/\./g, '');
+    const parts = normalized.split(',');
+    let intPart = parts[0];
+    let decPart = parts.length > 1 ? ',' + parts.slice(1).join('') : '';
+    if (intPart.length > 1 && intPart.startsWith('0')) {
+        intPart = intPart.replace(/^0+/, '');
+        if (intPart === '') intPart = '0';
+    }
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return intPart + decPart;
 };
 
 const STAR_LABELS: Record<number, { text: string; color: string; bg: string }> = {
@@ -32,13 +50,28 @@ export function ShipQuickUpdate() {
     const navigate = useNavigate();
     const { ships, updateShip, addShip } = useShips();
 
-    // Ship Search & Selection State
+    // Mode: 'create' (Nhập tàu mới) | 'update' (Tìm & cập nhật tàu có sẵn)
+    const [mode, setMode] = useState<'create' | 'update'>('create');
+
+    // Ship Search & Selection State (for 'update' mode)
     const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
 
-    // Form fields
+    // Form fields for ship details
     const [shipNameInput, setShipNameInput] = useState('');
+    const [status, setStatus] = useState<ShipStatus>('waiting');
+    const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().split('T')[0]);
+    const [completionDate, setCompletionDate] = useState('');
+    const [weightInput, setWeightInput] = useState('');
+    const [port, setPort] = useState<string>('Sowatco Long Bình');
+    const [customPort, setCustomPort] = useState('');
+    const [client, setClient] = useState<string>('Hoà Phát');
+    const [customClient, setCustomClient] = useState('');
+    const [hasBarge, setHasBarge] = useState(false);
+    const [bargeCount, setBargeCount] = useState(1);
+
+    // Evaluation & operational costs
     const [rating, setRating] = useState<number>(0);
     const [ratingComment, setRatingComment] = useState('');
     const [hasCafeFee, setHasCafeFee] = useState(false);
@@ -63,14 +96,54 @@ export function ShipQuickUpdate() {
         ).slice(0, 8);
     }, [ships, searchQuery]);
 
-    // Fill form when selecting a ship
+    // Fill form when selecting a ship in 'update' mode
     const handleSelectShip = (ship: Ship) => {
         setSelectedShip(ship);
         setShipNameInput(ship.name);
         setSearchQuery(ship.name);
         setIsDropdownOpen(false);
 
-        // Load existing fields if present
+        // Fill ship details
+        setStatus(ship.status || 'waiting');
+        setArrivalDate(ship.arrivalDate ? ship.arrivalDate.split('T')[0] : new Date().toISOString().split('T')[0]);
+        setCompletionDate(ship.completionDate ? ship.completionDate.split('T')[0] : '');
+        setWeightInput(ship.weight ? ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }) : '');
+
+        // Port
+        if (ship.port) {
+            const isPresetPort = (STANDARD_PORTS as readonly string[]).includes(ship.port) && ship.port !== 'Cảng Khác';
+            if (isPresetPort) {
+                setPort(ship.port);
+                setCustomPort('');
+            } else {
+                setPort('Cảng Khác');
+                setCustomPort(ship.port === 'Cảng Khác' ? '' : ship.port);
+            }
+        } else {
+            setPort('Sowatco Long Bình');
+            setCustomPort('');
+        }
+
+        // Client
+        if (ship.client) {
+            const isPresetClient = (STANDARD_CLIENTS as readonly string[]).includes(ship.client) && ship.client !== 'Khác (Tự nhập)';
+            if (isPresetClient) {
+                setClient(ship.client);
+                setCustomClient('');
+            } else {
+                setClient('Khác (Tự nhập)');
+                setCustomClient(ship.client === 'Khác (Tự nhập)' ? '' : ship.client);
+            }
+        } else {
+            setClient('Hoà Phát');
+            setCustomClient('');
+        }
+
+        // Barge
+        setHasBarge(!!ship.hasBarge);
+        setBargeCount(ship.bargeCount && ship.bargeCount > 0 ? ship.bargeCount : 1);
+
+        // Rating, Cafe, Tally
         setRating(ship.rating || 0);
         setRatingComment(ship.ratingComment || '');
         setHasCafeFee(!!ship.hasCafeFee);
@@ -81,10 +154,20 @@ export function ShipQuickUpdate() {
         setTallyNote(ship.tallyNote || '');
     };
 
-    const handleClearSelection = () => {
+    const handleClearForm = () => {
         setSelectedShip(null);
         setShipNameInput('');
         setSearchQuery('');
+        setStatus('waiting');
+        setArrivalDate(new Date().toISOString().split('T')[0]);
+        setCompletionDate('');
+        setWeightInput('');
+        setPort('Sowatco Long Bình');
+        setCustomPort('');
+        setClient('Hoà Phát');
+        setCustomClient('');
+        setHasBarge(false);
+        setBargeCount(1);
         setRating(0);
         setRatingComment('');
         setHasCafeFee(false);
@@ -97,19 +180,31 @@ export function ShipQuickUpdate() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalName = (selectedShip ? selectedShip.name : shipNameInput).trim();
+        const finalName = (mode === 'update' && selectedShip ? selectedShip.name : shipNameInput).trim();
         if (!finalName) {
-            alert('Vui lòng chọn hoặc nhập tên tàu!');
+            alert('Vui lòng nhập tên chuyến tàu!');
             return;
         }
 
+        const parsedWeight = parseFloat(weightInput.replace(/\./g, '').replace(/,/g, '.')) || 0;
+        const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
+        const finalClient = client === 'Khác (Tự nhập)' ? (customClient.trim() || 'Khác') : client;
+
         setIsSaving(true);
         try {
-            if (selectedShip) {
+            if (mode === 'update' && selectedShip) {
                 // Update existing ship
                 const updated: Ship = {
                     ...selectedShip,
                     name: finalName,
+                    status: status,
+                    arrivalDate: new Date(arrivalDate).toISOString(),
+                    completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
+                    weight: parsedWeight,
+                    port: finalPort,
+                    client: finalClient,
+                    hasBarge: !!hasBarge,
+                    bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
                     rating: rating > 0 ? rating : undefined,
                     ratingComment: ratingComment.trim() || undefined,
                     hasCafeFee: !!hasCafeFee,
@@ -120,12 +215,21 @@ export function ShipQuickUpdate() {
                     tallyNote: hasTally ? tallyNote.trim() : undefined,
                 };
                 await updateShip(updated);
+                setSaveSuccessMsg(`Đã cập nhật thông tin tàu "${finalName}" thành công!`);
             } else {
-                // Check if ship name already exists in database
+                // Create new ship or update if exact name exists
                 const existing = ships.find(s => s.name.toLowerCase().trim() === finalName.toLowerCase());
                 if (existing) {
                     const updated: Ship = {
                         ...existing,
+                        status: status,
+                        arrivalDate: new Date(arrivalDate).toISOString(),
+                        completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
+                        weight: parsedWeight,
+                        port: finalPort,
+                        client: finalClient,
+                        hasBarge: !!hasBarge,
+                        bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
                         rating: rating > 0 ? rating : undefined,
                         ratingComment: ratingComment.trim() || undefined,
                         hasCafeFee: !!hasCafeFee,
@@ -136,15 +240,20 @@ export function ShipQuickUpdate() {
                         tallyNote: hasTally ? tallyNote.trim() : undefined,
                     };
                     await updateShip(updated);
+                    setSaveSuccessMsg(`Đã cập nhật dữ liệu tàu "${finalName}" thành công!`);
                 } else {
-                    // Create minimal new ship record
                     const newShip: Ship = {
                         id: `shp-${Date.now()}`,
                         name: finalName,
-                        arrivalDate: new Date().toISOString(),
-                        weight: 0,
+                        arrivalDate: new Date(arrivalDate).toISOString(),
+                        completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
+                        weight: parsedWeight,
                         division: 'SAT_THEP',
-                        status: 'waiting',
+                        status: status,
+                        port: finalPort,
+                        client: finalClient,
+                        hasBarge: !!hasBarge,
+                        bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
                         documents: [],
                         rating: rating > 0 ? rating : undefined,
                         ratingComment: ratingComment.trim() || undefined,
@@ -156,11 +265,11 @@ export function ShipQuickUpdate() {
                         tallyNote: hasTally ? tallyNote.trim() : undefined,
                     };
                     await addShip(newShip);
+                    setSaveSuccessMsg(`Đã nhập chuyến tàu mới "${finalName}" thành công!`);
+                    handleClearForm();
                 }
             }
-
-            setSaveSuccessMsg(`Đã lưu thông tin cho tàu "${finalName}" thành công!`);
-            setTimeout(() => setSaveSuccessMsg(''), 4000);
+            setTimeout(() => setSaveSuccessMsg(''), 4500);
         } catch (err: any) {
             console.error('Lỗi khi lưu thông tin tàu:', err);
             alert('Lỗi: ' + (err.message || 'Không thể lưu dữ liệu'));
@@ -169,9 +278,9 @@ export function ShipQuickUpdate() {
         }
     };
 
-    // Recently updated ships with rating, cafe, or tally
-    const recentlyUpdatedShips = useMemo(() => {
-        return ships.filter(s => (s.rating && s.rating > 0) || s.hasCafeFee || s.hasTally)
+    // Recently updated/created ships
+    const recentShips = useMemo(() => {
+        return [...ships]
             .sort((a, b) => new Date(b.arrivalDate).getTime() - new Date(a.arrivalDate).getTime())
             .slice(0, 6);
     }, [ships]);
@@ -185,7 +294,7 @@ export function ShipQuickUpdate() {
         }}>
             <div style={{ maxWidth: 480, margin: '0 auto' }}>
                 {/* ── Top Header ── */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <button
                         onClick={() => navigate('/login')}
                         style={{
@@ -198,34 +307,72 @@ export function ShipQuickUpdate() {
                     >
                         <ArrowLeft size={16} /> Màn hình chính
                     </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#d1fae5', padding: '4px 8px', borderRadius: 8 }}>
-                            Cập nhật nhanh
-                        </span>
-                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#d1fae5', padding: '4px 8px', borderRadius: 8 }}>
+                        Sắt Thép
+                    </span>
                 </div>
 
                 {/* ── Title Banner ── */}
                 <div style={{
                     background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                    borderRadius: 20, padding: '20px 20px', color: '#fff',
-                    marginBottom: 20, boxShadow: '0 10px 25px -5px rgba(15,23,42,0.25)',
+                    borderRadius: 20, padding: '18px 20px', color: '#fff',
+                    marginBottom: 16, boxShadow: '0 10px 25px -5px rgba(15,23,42,0.25)',
                     position: 'relative', overflow: 'hidden'
                 }}>
                     <div style={{ position: 'absolute', right: -15, bottom: -15, opacity: 0.08, pointerEvents: 'none' }}>
                         <ShipIcon size={120} color="#fff" />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                         <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <ClipboardCheck size={20} color="#38bdf8" />
                         </div>
                         <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.2px' }}>
-                            Cập Nhật Tàu
+                            Cập Nhật Tàu & Nhập Tàu
                         </h1>
                     </div>
-                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.4 }}>
-                        Đánh giá chất lượng tàu, ghi nhận tiền cafe và chi phí tally
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: 0 }}>
+                        Nhập thông tin chuyến tàu, đánh giá chất lượng, tiền cafe và chi phí tally
                     </p>
+                </div>
+
+                {/* ── Mode Segmented Control ── */}
+                <div style={{
+                    display: 'flex', background: '#e2e8f0', borderRadius: 14,
+                    padding: 4, marginBottom: 18
+                }}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMode('create');
+                            setSelectedShip(null);
+                        }}
+                        style={{
+                            flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none',
+                            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                            background: mode === 'create' ? '#ffffff' : 'transparent',
+                            color: mode === 'create' ? '#059669' : '#64748b',
+                            boxShadow: mode === 'create' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        <PlusCircle size={16} /> Nhập tàu mới
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setMode('update')}
+                        style={{
+                            flex: 1, padding: '10px 14px', borderRadius: 10, border: 'none',
+                            fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                            background: mode === 'update' ? '#ffffff' : 'transparent',
+                            color: mode === 'update' ? '#059669' : '#64748b',
+                            boxShadow: mode === 'update' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        <Search size={16} /> Tìm & Cập nhật
+                    </button>
                 </div>
 
                 {/* ── Success Toast ── */}
@@ -244,23 +391,28 @@ export function ShipQuickUpdate() {
 
                 {/* ── Form Section ── */}
                 <form onSubmit={handleSave}>
-                    {/* Card 1: Chọn / Tìm kiếm tàu */}
+                    {/* Card 1: Thông tin tàu */}
                     <div style={{
                         background: '#ffffff', borderRadius: 18, padding: 18,
                         boxShadow: '0 4px 16px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0',
                         marginBottom: 16, position: 'relative'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                            <label style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Search size={16} color="#3b82f6" strokeWidth={2.5} /> Tìm kiếm & Chọn tên tàu
-                            </label>
-                            {selectedShip && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: 8, background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <ShipIcon size={16} color="#0284c7" />
+                                </div>
+                                <span style={{ fontSize: 14, fontWeight: 800, color: '#1e293b' }}>
+                                    {mode === 'create' ? 'Thông tin chuyến tàu mới' : 'Tìm & Chọn chuyến tàu'}
+                                </span>
+                            </div>
+                            {mode === 'update' && selectedShip && (
                                 <button
                                     type="button"
-                                    onClick={handleClearSelection}
+                                    onClick={handleClearForm}
                                     style={{
                                         border: 'none', background: '#fee2e2', color: '#b91c1c',
-                                        fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                                        fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 6,
                                         cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
                                     }}
                                 >
@@ -269,87 +421,299 @@ export function ShipQuickUpdate() {
                             )}
                         </div>
 
-                        {/* Search Input Box */}
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={e => {
-                                    setSearchQuery(e.target.value);
-                                    setShipNameInput(e.target.value);
-                                    setIsDropdownOpen(true);
-                                }}
-                                onFocus={() => setIsDropdownOpen(true)}
-                                placeholder="Gõ tên tàu để tìm kiếm hoặc nhập mới..."
-                                required
-                                style={{
-                                    width: '100%', padding: '12px 14px 12px 38px',
-                                    borderRadius: 12, border: selectedShip ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
-                                    background: selectedShip ? '#eff6ff' : '#ffffff',
-                                    fontSize: 14, fontWeight: selectedShip ? 700 : 500,
-                                    outline: 'none', boxSizing: 'border-box'
-                                }}
-                            />
-                            <div style={{ position: 'absolute', left: 12, top: 13, color: '#94a3b8' }}>
-                                <ShipIcon size={18} />
+                        {/* Search in 'update' mode */}
+                        {mode === 'update' && (
+                            <div style={{ position: 'relative', marginBottom: 12 }}>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => {
+                                        setSearchQuery(e.target.value);
+                                        setShipNameInput(e.target.value);
+                                        setIsDropdownOpen(true);
+                                    }}
+                                    onFocus={() => setIsDropdownOpen(true)}
+                                    placeholder="Gõ tên tàu để tìm kiếm..."
+                                    required
+                                    style={{
+                                        width: '100%', padding: '12px 14px 12px 38px',
+                                        borderRadius: 12, border: selectedShip ? '1.5px solid #059669' : '1px solid #cbd5e1',
+                                        background: selectedShip ? '#f0fdf4' : '#ffffff',
+                                        fontSize: 14, fontWeight: selectedShip ? 700 : 500,
+                                        outline: 'none', boxSizing: 'border-box'
+                                    }}
+                                />
+                                <div style={{ position: 'absolute', left: 12, top: 13, color: '#94a3b8' }}>
+                                    <Search size={18} />
+                                </div>
+
+                                {/* Autocomplete Dropdown */}
+                                {isDropdownOpen && suggestedShips.length > 0 && (
+                                    <div style={{
+                                        position: 'absolute', left: 0, right: 0, top: '100%', zIndex: 30,
+                                        background: '#ffffff', borderRadius: 14, marginTop: 6,
+                                        border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                                        maxHeight: 240, overflowY: 'auto'
+                                    }}>
+                                        <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
+                                            GỢI Ý TÀU CÓ SẴN ({suggestedShips.length})
+                                        </div>
+                                        {suggestedShips.map(s => (
+                                            <div
+                                                key={s.id}
+                                                onClick={() => handleSelectShip(s)}
+                                                style={{
+                                                    padding: '10px 14px', cursor: 'pointer',
+                                                    borderBottom: '1px solid #f8fafc',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                                onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
+                                            >
+                                                <div>
+                                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
+                                                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                                                        {new Date(s.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} • {s.port || 'Sowatco'} {s.client ? `• ${s.client}` : ''}
+                                                    </div>
+                                                </div>
+                                                {s.rating && (
+                                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>
+                                                        ⭐ {s.rating}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Ship Name input in 'create' mode */}
+                        {mode === 'create' && (
+                            <div style={{ marginBottom: 12 }}>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Tên tàu <span style={{ color: '#dc2626' }}>*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={shipNameInput}
+                                    onChange={e => setShipNameInput(e.target.value)}
+                                    placeholder="VD: Hải An 01, Ever Given..."
+                                    required
+                                    style={{
+                                        width: '100%', padding: '10px 12px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 14, outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Trạng thái + Sản lượng */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Trạng thái
+                                </label>
+                                <select
+                                    value={status}
+                                    onChange={e => {
+                                        const val = e.target.value as ShipStatus;
+                                        setStatus(val);
+                                        if (val === 'completed' && !completionDate) {
+                                            setCompletionDate(new Date().toISOString().split('T')[0]);
+                                        }
+                                    }}
+                                    style={{
+                                        width: '100%', padding: '10px 12px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
+                                        outline: 'none', boxSizing: 'border-box'
+                                    }}
+                                >
+                                    <option value="waiting">Đang neo (Chờ slot)</option>
+                                    <option value="entering">Đã cập bến</option>
+                                    <option value="working">Đang làm hàng</option>
+                                    <option value="completed">Đã hoàn thành</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Sản lượng (tấn)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={weightInput}
+                                    onChange={e => setWeightInput(formatVNWeight(e.target.value))}
+                                    placeholder="VD: 5.000"
+                                    inputMode="decimal"
+                                    style={{
+                                        width: '100%', padding: '10px 12px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
                             </div>
                         </div>
 
-                        {/* Autocomplete Dropdown */}
-                        {isDropdownOpen && suggestedShips.length > 0 && (
-                            <div style={{
-                                position: 'absolute', left: 18, right: 18, top: '100%', zIndex: 30,
-                                background: '#ffffff', borderRadius: 14, marginTop: 6,
-                                border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
-                                maxHeight: 240, overflowY: 'auto'
-                            }}>
-                                <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
-                                    GỢI Ý TÀU CÓ SẴN ({suggestedShips.length})
-                                </div>
-                                {suggestedShips.map(s => {
-                                    const arrDate = new Date(s.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                                    return (
-                                        <div
-                                            key={s.id}
-                                            onClick={() => handleSelectShip(s)}
-                                            style={{
-                                                padding: '10px 14px', cursor: 'pointer',
-                                                borderBottom: '1px solid #f8fafc',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                transition: 'background 0.15s'
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
-                                        >
-                                            <div>
-                                                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
-                                                <div style={{ fontSize: 11, color: '#64748b' }}>
-                                                    {arrDate} • {s.port || 'Sowatco'} • {s.weight ? `${s.weight.toLocaleString('vi-VN')}t` : ''} {s.client ? `• ${s.client}` : ''}
-                                                </div>
-                                            </div>
-                                            {s.rating && (
-                                                <span style={{ fontSize: 11, fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    ⭐ {s.rating}
-                                                </span>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                        {/* Ngày vào + Ngày xong */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Ngày vào cảng
+                                </label>
+                                <input
+                                    type="date"
+                                    value={arrivalDate}
+                                    onChange={e => setArrivalDate(e.target.value)}
+                                    required
+                                    style={{
+                                        width: '100%', padding: '9px 10px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 12, outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
                             </div>
-                        )}
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Ngày hoàn thành
+                                </label>
+                                <input
+                                    type="date"
+                                    value={completionDate}
+                                    onChange={e => setCompletionDate(e.target.value)}
+                                    style={{
+                                        width: '100%', padding: '9px 10px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 12, outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+                        </div>
 
-                        {/* Selected Ship Detail Badge */}
-                        {selectedShip && (
-                            <div style={{
-                                marginTop: 10, padding: '8px 12px', borderRadius: 10,
-                                background: '#dbeafe', border: '1px solid #bfdbfe',
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                fontSize: 12, color: '#1e40af'
-                            }}>
-                                <span>Đang cập nhật cho tàu: <strong>{selectedShip.name}</strong></span>
-                                <span style={{ fontWeight: 600 }}>{selectedShip.port || 'Cảng'}</span>
+                        {/* Cảng dỡ + Khách hàng */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Cảng dỡ
+                                </label>
+                                <select
+                                    value={port}
+                                    onChange={e => {
+                                        setPort(e.target.value);
+                                        if (e.target.value !== 'Cảng Khác') setCustomPort('');
+                                    }}
+                                    style={{
+                                        width: '100%', padding: '10px 10px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
+                                        outline: 'none', boxSizing: 'border-box'
+                                    }}
+                                >
+                                    {STANDARD_PORTS.map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                                {port === 'Cảng Khác' && (
+                                    <input
+                                        type="text"
+                                        value={customPort}
+                                        onChange={e => setCustomPort(e.target.value)}
+                                        placeholder="Nhập tên cảng khác..."
+                                        style={{
+                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 8,
+                                            border: '1px solid #0284c7', background: '#f8fafc',
+                                            fontSize: 12, outline: 'none', boxSizing: 'border-box'
+                                        }}
+                                    />
+                                )}
                             </div>
-                        )}
+
+                            <div>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: '#334155', display: 'block', marginBottom: 4 }}>
+                                    Khách hàng (Hàng)
+                                </label>
+                                <select
+                                    value={client}
+                                    onChange={e => {
+                                        setClient(e.target.value);
+                                        if (e.target.value !== 'Khác (Tự nhập)') setCustomClient('');
+                                    }}
+                                    style={{
+                                        width: '100%', padding: '10px 10px', borderRadius: 10,
+                                        border: '1px solid #cbd5e1', fontSize: 13, background: '#ffffff',
+                                        outline: 'none', boxSizing: 'border-box'
+                                    }}
+                                >
+                                    {STANDARD_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                {client === 'Khác (Tự nhập)' && (
+                                    <input
+                                        type="text"
+                                        value={customClient}
+                                        onChange={e => setCustomClient(e.target.value)}
+                                        placeholder="Nhập tên khách hàng..."
+                                        style={{
+                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 8,
+                                            border: '1px solid #0284c7', background: '#f8fafc',
+                                            fontSize: 12, outline: 'none', boxSizing: 'border-box'
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Xà lan (Salan) Switch */}
+                        <div style={{
+                            background: hasBarge ? '#eff6ff' : '#f8fafc',
+                            border: hasBarge ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+                            borderRadius: 12, padding: '10px 12px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b' }}>
+                                    Kèm xà lan (Salan)
+                                    <span style={{ display: 'block', fontSize: 11, color: hasBarge ? '#2563eb' : '#64748b', fontWeight: 500 }}>
+                                        {hasBarge ? `+${(bargeCount * 200000).toLocaleString('vi-VN')}đ (+200k/salan)` : 'Không có xà lan'}
+                                    </span>
+                                </div>
+                                <label style={{ position: 'relative', display: 'inline-block', width: 40, height: 22, cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={hasBarge}
+                                        onChange={e => {
+                                            setHasBarge(e.target.checked);
+                                            if (e.target.checked && (!bargeCount || bargeCount < 1)) setBargeCount(1);
+                                        }}
+                                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
+                                    />
+                                    <span style={{
+                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                        backgroundColor: hasBarge ? '#2563eb' : '#cbd5e1',
+                                        transition: '.3s', borderRadius: 34, pointerEvents: 'none'
+                                    }}>
+                                        <span style={{
+                                            position: 'absolute', height: 16, width: 16, left: 3, bottom: 3,
+                                            backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                            transform: hasBarge ? 'translateX(18px)' : 'translateX(0)'
+                                        }} />
+                                    </span>
+                                </label>
+                            </div>
+                            {hasBarge && (
+                                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af' }}>Số lượng xà lan:</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBargeCount(Math.max(1, bargeCount - 1))}
+                                            style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                                        >-</button>
+                                        <span style={{ fontSize: 13, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{bargeCount}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBargeCount(bargeCount + 1)}
+                                            style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontWeight: 700 }}
+                                        >+</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Card 2: Đánh giá tàu */}
@@ -358,7 +722,7 @@ export function ShipQuickUpdate() {
                         boxShadow: '0 4px 16px rgba(0,0,0,0.04)', border: '1px solid #e2e8f0',
                         marginBottom: 16
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                             <div style={{ width: 28, height: 28, borderRadius: 8, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Star size={16} color="#d97706" />
                             </div>
@@ -366,7 +730,7 @@ export function ShipQuickUpdate() {
                         </div>
 
                         {/* Interactive Stars */}
-                        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '10px 0' }}>
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 0' }}>
                             {[1, 2, 3, 4, 5].map(starNum => {
                                 const active = rating >= starNum;
                                 return (
@@ -374,12 +738,7 @@ export function ShipQuickUpdate() {
                                         key={starNum}
                                         type="button"
                                         onClick={() => setRating(rating === starNum ? 0 : starNum)}
-                                        style={{
-                                            border: 'none', background: 'none', cursor: 'pointer',
-                                            padding: 4, transition: 'transform 0.15s ease'
-                                        }}
-                                        onMouseDown={e => e.currentTarget.style.transform = 'scale(1.2)'}
-                                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                                        style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}
                                     >
                                         <Star
                                             size={36}
@@ -392,10 +751,9 @@ export function ShipQuickUpdate() {
                             })}
                         </div>
 
-                        {/* Rating Text Preview */}
                         {rating > 0 && STAR_LABELS[rating] && (
                             <div style={{
-                                textAlign: 'center', margin: '4px 0 12px 0',
+                                textAlign: 'center', margin: '4px 0 10px 0',
                                 padding: '6px 10px', borderRadius: 8,
                                 background: STAR_LABELS[rating].bg,
                                 color: STAR_LABELS[rating].color,
@@ -405,20 +763,17 @@ export function ShipQuickUpdate() {
                             </div>
                         )}
 
-                        {/* Rating Comment */}
-                        <div style={{ marginTop: 8 }}>
-                            <textarea
-                                value={ratingComment}
-                                onChange={e => setRatingComment(e.target.value)}
-                                placeholder="Ghi chú đánh giá (VD: làm hàng nhanh, cẩu trục tốt, cẩn thận...)"
-                                rows={2}
-                                style={{
-                                    width: '100%', padding: '10px 12px', borderRadius: 12,
-                                    border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
-                                    fontFamily: 'inherit', boxSizing: 'border-box'
-                                }}
-                            />
-                        </div>
+                        <textarea
+                            value={ratingComment}
+                            onChange={e => setRatingComment(e.target.value)}
+                            placeholder="Ghi chú đánh giá (VD: cẩu bốc dỡ nhanh, hàng cuộn đẹp, thuận lợi...)"
+                            rows={2}
+                            style={{
+                                width: '100%', padding: '10px 12px', borderRadius: 10,
+                                border: '1px solid #cbd5e1', fontSize: 13, outline: 'none',
+                                fontFamily: 'inherit', boxSizing: 'border-box'
+                            }}
+                        />
                     </div>
 
                     {/* Card 3: Tiền Cafe Tàu */}
@@ -429,7 +784,6 @@ export function ShipQuickUpdate() {
                         boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
                         marginBottom: 16, transition: 'all 0.2s ease'
                     }}>
-                        {/* Header with Switch */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{
@@ -456,11 +810,9 @@ export function ShipQuickUpdate() {
                                     checked={hasCafeFee}
                                     onChange={e => {
                                         setHasCafeFee(e.target.checked);
-                                        if (e.target.checked && (!cafeFee || cafeFee === 0)) {
-                                            setCafeFee(100000);
-                                        }
+                                        if (e.target.checked && (!cafeFee || cafeFee === 0)) setCafeFee(100000);
                                     }}
-                                    style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }}
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
                                 />
                                 <span style={{
                                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -468,7 +820,7 @@ export function ShipQuickUpdate() {
                                     transition: '.3s', borderRadius: 34, pointerEvents: 'none'
                                 }}>
                                     <span style={{
-                                        position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                        position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
                                         backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
                                         transform: hasCafeFee ? 'translateX(20px)' : 'translateX(0)'
                                     }} />
@@ -476,14 +828,11 @@ export function ShipQuickUpdate() {
                             </label>
                         </div>
 
-                        {/* Extended details when ON */}
                         {hasCafeFee && (
                             <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed #fcd34d' }}>
                                 <label style={{ fontSize: 12, fontWeight: 700, color: '#92400e', display: 'block', marginBottom: 6 }}>
                                     Số tiền cafe (VNĐ):
                                 </label>
-
-                                {/* Quick chips */}
                                 <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                                     {QUICK_CAFE_AMOUNTS.map(amt => (
                                         <button
@@ -501,7 +850,6 @@ export function ShipQuickUpdate() {
                                         </button>
                                     ))}
                                 </div>
-
                                 <input
                                     type="text"
                                     value={cafeFee ? formatVNCurrency(cafeFee) : ''}
@@ -509,7 +857,7 @@ export function ShipQuickUpdate() {
                                         const clean = e.target.value.replace(/\D/g, '');
                                         setCafeFee(clean ? parseInt(clean, 10) : 0);
                                     }}
-                                    placeholder="Nhập số tiền khác..."
+                                    placeholder="Nhập số tiền..."
                                     style={{
                                         width: '100%', padding: '10px 12px', borderRadius: 10,
                                         border: '1px solid #d97706', background: '#ffffff',
@@ -517,7 +865,6 @@ export function ShipQuickUpdate() {
                                         marginBottom: 8, boxSizing: 'border-box'
                                     }}
                                 />
-
                                 <input
                                     type="text"
                                     value={cafeNote}
@@ -541,7 +888,6 @@ export function ShipQuickUpdate() {
                         boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
                         marginBottom: 20, transition: 'all 0.2s ease'
                     }}>
-                        {/* Header with Switch */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <div style={{
@@ -568,11 +914,9 @@ export function ShipQuickUpdate() {
                                     checked={hasTally}
                                     onChange={e => {
                                         setHasTally(e.target.checked);
-                                        if (e.target.checked && (!tallyFee || tallyFee === 0)) {
-                                            setTallyFee(200000);
-                                        }
+                                        if (e.target.checked && (!tallyFee || tallyFee === 0)) setTallyFee(200000);
                                     }}
-                                    style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }}
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', margin: 0 }}
                                 />
                                 <span style={{
                                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -580,7 +924,7 @@ export function ShipQuickUpdate() {
                                     transition: '.3s', borderRadius: 34, pointerEvents: 'none'
                                 }}>
                                     <span style={{
-                                        position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                        position: 'absolute', height: 18, width: 18, left: 3, bottom: 3,
                                         backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
                                         transform: hasTally ? 'translateX(20px)' : 'translateX(0)'
                                     }} />
@@ -588,14 +932,11 @@ export function ShipQuickUpdate() {
                             </label>
                         </div>
 
-                        {/* Extended details when ON */}
                         {hasTally && (
                             <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed #bfdbfe' }}>
                                 <label style={{ fontSize: 12, fontWeight: 700, color: '#1e40af', display: 'block', marginBottom: 6 }}>
                                     Chi phí tally (VNĐ):
                                 </label>
-
-                                {/* Quick chips */}
                                 <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                                     {QUICK_TALLY_AMOUNTS.map(amt => (
                                         <button
@@ -613,7 +954,6 @@ export function ShipQuickUpdate() {
                                         </button>
                                     ))}
                                 </div>
-
                                 <input
                                     type="text"
                                     value={tallyFee ? formatVNCurrency(tallyFee) : ''}
@@ -629,7 +969,6 @@ export function ShipQuickUpdate() {
                                         marginBottom: 8, boxSizing: 'border-box'
                                     }}
                                 />
-
                                 <input
                                     type="text"
                                     value={tallyNote}
@@ -662,25 +1001,28 @@ export function ShipQuickUpdate() {
                         }}
                     >
                         <Save size={20} />
-                        {isSaving ? 'Đang lưu dữ liệu...' : 'Lưu Cập Nhật Tàu'}
+                        {isSaving ? 'Đang lưu dữ liệu...' : (mode === 'create' ? 'Lưu Chuyến Tàu Mới' : 'Lưu Cập Nhật Tàu')}
                     </button>
                 </form>
 
-                {/* ── Recent Updated Ships Section ── */}
-                {recentlyUpdatedShips.length > 0 && (
-                    <div style={{ marginTop: 32 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                {/* ── Recent Ships Section ── */}
+                {recentShips.length > 0 && (
+                    <div style={{ marginTop: 28 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                             <Clock size={16} color="#64748b" />
                             <span style={{ fontSize: 13, fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                                Tàu vừa cập nhật đánh giá / cafe / tally
+                                Các tàu gần đây
                             </span>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {recentlyUpdatedShips.map(s => (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {recentShips.map(s => (
                                 <div
                                     key={s.id}
-                                    onClick={() => handleSelectShip(s)}
+                                    onClick={() => {
+                                        setMode('update');
+                                        handleSelectShip(s);
+                                    }}
                                     style={{
                                         background: '#ffffff', borderRadius: 14, padding: '12px 14px',
                                         border: '1px solid #e2e8f0', cursor: 'pointer',
@@ -691,7 +1033,7 @@ export function ShipQuickUpdate() {
                                     <div>
                                         <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{s.name}</div>
                                         <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
-                                            {s.port || 'Sowatco'} • {s.client || 'Thép'}
+                                            {new Date(s.arrivalDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} • {s.port || 'Sowatco'} • {s.weight ? `${s.weight.toLocaleString('vi-VN')}t` : '0t'}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -702,12 +1044,12 @@ export function ShipQuickUpdate() {
                                         )}
                                         {s.hasCafeFee && (
                                             <span style={{ fontSize: 11, fontWeight: 700, color: '#92400e', background: '#fffbeb', padding: '3px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>
-                                                ☕ {formatVNCurrency(s.cafeFee || 0)}đ
+                                                ☕
                                             </span>
                                         )}
                                         {s.hasTally && (
                                             <span style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', background: '#eff6ff', padding: '3px 6px', borderRadius: 6, border: '1px solid #bfdbfe' }}>
-                                                📋 Tally
+                                                📋
                                             </span>
                                         )}
                                     </div>
