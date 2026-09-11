@@ -590,6 +590,7 @@ export function StaffStats() {
                                                                 <div style={{ fontSize: 11, color: '#64748b', display: 'flex', gap: 8 }}>
                                                                     <span>{arrDate}</span>
                                                                     <span>• {s.port || 'Sowatco Long Bình'}</span>
+                                                                    {s.client && <span>• {s.client}</span>}
                                                                     <span>• {s.weight.toLocaleString('vi-VN')}t</span>
                                                                 </div>
                                                             </div>

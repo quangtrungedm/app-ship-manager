@@ -15,7 +15,7 @@ import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
 
 import { calcShipSalary, calcBargeBonus } from '../lib/salary';
-import { STANDARD_PORTS } from '../lib/constants';
+import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 
 const MONTH_NAMES = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 const GRID_MONTHS = ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
@@ -124,6 +124,9 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                     }
                     <InfoItem icon={<Weight size={13} color="#f59e0b" strokeWidth={2.5} />} label="Sản lượng" value={`${ship.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn`} />
                     <InfoItem icon={<MapPin size={13} color="#ef4444" strokeWidth={2.5} />} label="Cảng" value={ship.port || '—'} />
+                    {ship.client && (
+                        <InfoItem icon={<User size={13} color="#059669" strokeWidth={2.5} />} label="Khách hàng" value={ship.client} />
+                    )}
                     {ship.employee && (
                         <InfoItem icon={<User size={13} color="#8b5cf6" strokeWidth={2.5} />} label="Nhân viên" value={ship.employee} />
                     )}
@@ -217,6 +220,8 @@ export function BossManager() {
     const [formDivision, setFormDivision] = useState('');
     const [port, setPort] = useState('');
     const [customPort, setCustomPort] = useState('');
+    const [client, setClient] = useState('');
+    const [customClient, setCustomClient] = useState('');
     const [hasBarge, setHasBarge] = useState(false);
     const [bargeCount, setBargeCount] = useState(1);
     const [docs, setDocs] = useState<ShipDoc[]>([]);
@@ -292,7 +297,7 @@ export function BossManager() {
     const openNew = () => {
         setEditing(null); setName(''); setStatus('waiting'); setArrival('');
         setCompletion(''); setWeight(''); setEmployee(''); setFormDivision('');
-        setPort(''); setCustomPort(''); setHasBarge(false); setBargeCount(1); setDocs([]);
+        setPort(''); setCustomPort(''); setClient(''); setCustomClient(''); setHasBarge(false); setBargeCount(1); setDocs([]);
         setPendingFiles([]);
         setShowForm(true);
     };
@@ -317,6 +322,22 @@ export function BossManager() {
             setPort('');
             setCustomPort('');
         }
+
+        // Xác định khách hàng
+        if (s.client) {
+            const isPreset = (STANDARD_CLIENTS as readonly string[]).includes(s.client) && s.client !== 'Khác (Tự nhập)';
+            if (isPreset) {
+                setClient(s.client);
+                setCustomClient('');
+            } else {
+                setClient('Khác (Tự nhập)');
+                setCustomClient(s.client === 'Khác (Tự nhập)' ? '' : s.client);
+            }
+        } else {
+            setClient('');
+            setCustomClient('');
+        }
+
         setHasBarge(s.hasBarge || false);
         setBargeCount(s.bargeCount && s.bargeCount > 0 ? s.bargeCount : 1);
         setDocs([...s.documents]);
@@ -348,6 +369,13 @@ export function BossManager() {
             const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
             const tempId = editing?.id || `shp-boss-${Date.now()}`;
             const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
+            const finalClient = client === 'Khác (Tự nhập)' ? (customClient.trim() || 'Khác') : client.trim();
+
+            if (client === 'Khác (Tự nhập)' && !customClient.trim()) {
+                alert('Vui lòng nhập tên khách hàng');
+                setSubmitting(false);
+                return;
+            }
 
             let uploadedDocs = docs.filter(d => !d.id.startsWith('doc-new-'));
             if (pendingFiles.length > 0 && isConfigured()) {
@@ -375,7 +403,7 @@ export function BossManager() {
                 division: 'SAT_THEP',
                 documents: uploadedDocs,
                 isPaid: editing?.isPaid,
-                client: editing?.client,
+                client: finalClient || undefined,
                 hasBarge,
                 bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
             };
@@ -950,6 +978,36 @@ export function BossManager() {
                                         />
                                     )}
                                 </div>
+                            </div>
+
+                            {/* Khách hàng (Hàng) */}
+                            <div className="field" style={{ marginBottom: 12 }}>
+                                <label>Khách hàng (Hàng)</label>
+                                <select
+                                    value={client}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setClient(val);
+                                        if (val !== 'Khác (Tự nhập)') setCustomClient('');
+                                    }}
+                                    style={{ padding: '10px 12px', border: '1px solid var(--c-border)', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', background: '#fff', outline: 'none', width: '100%' }}
+                                >
+                                    <option value="">— Chọn khách hàng —</option>
+                                    {STANDARD_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                {client === 'Khác (Tự nhập)' && (
+                                    <input
+                                        type="text"
+                                        value={customClient}
+                                        onChange={e => setCustomClient(e.target.value)}
+                                        placeholder="Nhập tên khách hàng..."
+                                        style={{
+                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 10,
+                                            border: '1px solid var(--c-primary)', background: '#f8fafc',
+                                            fontFamily: 'inherit', fontSize: 12, outline: 'none'
+                                        }}
+                                    />
+                                )}
                             </div>
 
                             {/* Tuỳ chọn Xà lan (Salan) */}

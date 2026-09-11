@@ -9,3 +9,13 @@ export const STANDARD_PORTS = [
 ] as const;
 
 export type PortName = (typeof STANDARD_PORTS)[number] | string;
+
+export const STANDARD_CLIENTS = [
+    'Hoà Phát',
+    'VAS Thép',
+    'VAS Phôi',
+    'Khác (Tự nhập)',
+] as const;
+
+export type ClientName = (typeof STANDARD_CLIENTS)[number] | string;
+

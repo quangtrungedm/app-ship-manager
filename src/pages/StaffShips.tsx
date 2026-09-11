@@ -10,7 +10,7 @@ import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, 
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
 import { calcShipSalary, calcBargeBonus } from '../lib/salary';
-import { STANDARD_PORTS } from '../lib/constants';
+import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -282,12 +282,13 @@ export function StaffShips() {
     const [hasBarge, setHasBarge] = useState(false);
     const [bargeCount, setBargeCount] = useState(1);
     const [client, setClient] = useState('');
+    const [customClient, setCustomClient] = useState('');
     const [docs, setDocs] = useState<ShipDoc[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openNew = () => {
         setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false);
-        setPort(''); setCustomPort(''); setHasBarge(false); setBargeCount(1); setClient(''); setDocs([]);
+        setPort(''); setCustomPort(''); setHasBarge(false); setBargeCount(1); setClient(''); setCustomClient(''); setDocs([]);
         setShowForm(true);
     };
     const openEdit = (s: Ship) => {
@@ -310,9 +311,23 @@ export function StaffShips() {
             setCustomPort('');
         }
 
+        // Xác định khách hàng
+        if (s.client) {
+            const isPreset = (STANDARD_CLIENTS as readonly string[]).includes(s.client) && s.client !== 'Khác (Tự nhập)';
+            if (isPreset) {
+                setClient(s.client);
+                setCustomClient('');
+            } else {
+                setClient('Khác (Tự nhập)');
+                setCustomClient(s.client === 'Khác (Tự nhập)' ? '' : s.client);
+            }
+        } else {
+            setClient('');
+            setCustomClient('');
+        }
+
         setHasBarge(s.hasBarge || false);
         setBargeCount(s.bargeCount && s.bargeCount > 0 ? s.bargeCount : 1);
-        setClient(s.client || '');
         setDocs([...s.documents]);
         setShowForm(true);
     };
@@ -344,6 +359,13 @@ export function StaffShips() {
             const tempId = editing?.id || `shp-${Date.now()}`;
             const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
             const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
+            const finalClient = client === 'Khác (Tự nhập)' ? (customClient.trim() || 'Khác') : client.trim();
+
+            if (client === 'Khác (Tự nhập)' && !customClient.trim()) {
+                alert('Vui lòng nhập tên khách hàng');
+                setSubmitting(false);
+                return;
+            }
 
             let uploadedDocs = docs.filter(d => !d.id.startsWith('doc-new-'));
             if (pendingFiles.length > 0 && isConfigured()) {
@@ -371,7 +393,7 @@ export function StaffShips() {
                 division: 'SAT_THEP',
                 isPaid: isPaid,
                 port: finalPort || 'Sowatco Long Bình',
-                client: client.trim(),
+                client: finalClient,
                 hasBarge: !!hasBarge,
                 bargeCount: hasBarge ? Math.max(1, bargeCount) : 0,
             };
@@ -671,15 +693,39 @@ export function StaffShips() {
                                             </div>
                                             <div className="field">
                                                 <label>Khách hàng (Hàng)</label>
-                                                <select value={client} onChange={e => setClient(e.target.value)} required style={{
-                                                    width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--c-border)',
-                                                    background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
-                                                }}>
+                                                <select
+                                                    value={client}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        setClient(val);
+                                                        if (val !== 'Khác (Tự nhập)') setCustomClient('');
+                                                    }}
+                                                    required
+                                                    style={{
+                                                        width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--c-border)',
+                                                        background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
+                                                    }}
+                                                >
                                                     <option value="" disabled>Chọn đơn vị</option>
-                                                    <option value="Hoà Phát">Hoà Phát</option>
-                                                    <option value="VAS Thép">VAS Thép</option>
-                                                    <option value="VAS Phôi">VAS Phôi</option>
+                                                    {STANDARD_CLIENTS.map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
                                                 </select>
+                                                {client === 'Khác (Tự nhập)' && (
+                                                    <input
+                                                        type="text"
+                                                        value={customClient}
+                                                        onChange={e => setCustomClient(e.target.value)}
+                                                        placeholder="Nhập tên khách hàng..."
+                                                        required
+                                                        autoFocus
+                                                        style={{
+                                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 10,
+                                                            border: '1px solid var(--c-primary)', background: '#f8fafc',
+                                                            fontFamily: 'inherit', fontSize: 12, outline: 'none'
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </div>
 
