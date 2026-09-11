@@ -6,7 +6,8 @@ import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 import {
     ArrowLeft, Search, Star, Coffee, ClipboardCheck,
     Save, CheckCircle2, Ship as ShipIcon,
-    Plus, X, Edit3, RefreshCw
+    Plus, X, Edit3, RefreshCw,
+    Calendar, MapPin, Building2, Weight
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -488,54 +489,103 @@ export function ShipQuickUpdate() {
                                         overflow: 'hidden', position: 'relative'
                                     }}
                                 >
-                                    {/* 1. Header Row: Tên tàu + Trạng thái + Nút Sửa */}
+                                    {/* 1. Header: Tên tàu + Trạng thái & Nút Sửa + Box thông tin chi tiết */}
                                     <div style={{
                                         padding: '14px 16px 12px 16px',
                                         background: '#ffffff',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                         borderBottom: '1px solid #f1f5f9'
                                     }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <div style={{
-                                                width: 38, height: 38, borderRadius: 10,
-                                                background: '#f0fdf4', border: '1px solid #bbf7d0',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: '#15803d', flexShrink: 0
-                                            }}>
-                                                <ShipIcon size={20} />
-                                            </div>
-                                            <div>
-                                                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                                                    {s.name}
-                                                </h3>
-                                                <div style={{ fontSize: 11, color: '#64748b', display: 'flex', gap: 6, marginTop: 2 }}>
-                                                    <span>{arrDate}</span>
-                                                    <span>• {s.port || 'Sowatco Long Bình'}</span>
-                                                    {s.client && <span style={{ color: '#047857', fontWeight: 600 }}>• {s.client}</span>}
-                                                    <span>• {s.weight ? `${s.weight.toLocaleString('vi-VN')} tấn` : '0t'}</span>
+                                        {/* Dòng 1: Tên tàu (trái) + Trạng thái & Nút Sửa (phải) */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                                <div style={{
+                                                    width: 38, height: 38, borderRadius: 10,
+                                                    background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: '#15803d', flexShrink: 0
+                                                }}>
+                                                    <ShipIcon size={20} />
                                                 </div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <h3 style={{
+                                                        fontSize: 16, fontWeight: 800, color: '#0f172a',
+                                                        margin: 0, lineHeight: 1.3,
+                                                        wordBreak: 'break-word'
+                                                    }}>
+                                                        {s.name}
+                                                    </h3>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                                <span style={{
+                                                    padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                    background: statusCfg.bg, color: statusCfg.color, whiteSpace: 'nowrap'
+                                                }}>
+                                                    {statusCfg.label}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleOpenEdit(s)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: 4,
+                                                        padding: '5px 10px', borderRadius: 8,
+                                                        background: '#ecfdf5', border: '1px solid #a7f3d0',
+                                                        color: '#047857', fontSize: 12, fontWeight: 700,
+                                                        cursor: 'pointer', whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    <Edit3 size={13} /> Sửa
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span style={{
-                                                padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                                                background: statusCfg.bg, color: statusCfg.color
-                                            }}>
-                                                {statusCfg.label}
-                                            </span>
-                                            <button
-                                                onClick={() => handleOpenEdit(s)}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: 4,
-                                                    padding: '6px 10px', borderRadius: 8,
-                                                    background: '#ecfdf5', border: '1px solid #a7f3d0',
-                                                    color: '#047857', fontSize: 12, fontWeight: 700,
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <Edit3 size={13} /> Sửa
-                                            </button>
+                                        {/* Dòng 2: Khung 4 thông số chi tiết dưới tên tàu - Rõ ràng, không bị ngắt dòng ngang/dọc */}
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: '8px 10px',
+                                            padding: '9px 12px',
+                                            background: '#f8fafc',
+                                            borderRadius: 12,
+                                            border: '1px solid #e2e8f0'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                                                <Calendar size={14} color="#64748b" style={{ flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Ngày vào</span>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{arrDate}</span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                                                <MapPin size={14} color="#0284c7" style={{ flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Cảng dỡ</span>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0369a1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', lineHeight: 1.3 }}>
+                                                        {s.port || 'Sowatco Long Bình'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                                                <Building2 size={14} color="#059669" style={{ flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Khách hàng / Hàng</span>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#047857', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', lineHeight: 1.3 }}>
+                                                        {s.client || '—'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                                                <Weight size={14} color="#d97706" style={{ flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Sản lượng</span>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                                                        {s.weight ? `${s.weight.toLocaleString('vi-VN')} tấn` : '0 tấn'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 

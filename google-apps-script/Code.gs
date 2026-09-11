@@ -8,6 +8,15 @@ const SHEET_ID = '16M9IIpzIRei3H-X8bmeC80ZnmS60cftPkTzWWrulND8';
 const DRIVE_FOLDER_ID = '14X50UtWECuw_K8xYzidwksYWQS0hs64u';
 const SHEET_NAME = 'ships';
 
+// ── Danh sách các cột đầy đủ (Gộp chung trên cùng Sheet 'ships') ──
+const REQUIRED_HEADERS = [
+  'id', 'name', 'arrivalDate', 'completionDate', 'weight',
+  'division', 'documents', 'createdAt', 'status', 'isPaid',
+  'port', 'client', 'hasBarge', 'bargeCount', 'employee',
+  'rating', 'ratingComment', 'hasCafeFee', 'cafeFee', 'cafeNote',
+  'hasTally', 'tallyFee', 'tallyNote'
+];
+
 // ── CORS + Response helpers ──
 function createResponse(data) {
   return ContentService
@@ -15,26 +24,30 @@ function createResponse(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ── Tự động bổ sung tiêu đề cột nếu chưa có ──
+// ── Tự động bổ sung tiêu đề cột nếu sheet chưa có ──
 function ensureHeaders(sheet) {
-  const headers = [
-    'id', 'name', 'arrivalDate', 'completionDate', 'weight',
-    'division', 'documents', 'createdAt', 'status', 'isPaid',
-    'port', 'client', 'hasBarge', 'bargeCount', 'employee',
-    'rating', 'ratingComment', 'hasCafeFee', 'cafeFee', 'cafeNote',
-    'hasTally', 'tallyFee', 'tallyNote'
-  ];
   const lastCol = sheet.getLastColumn();
   if (lastCol === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, REQUIRED_HEADERS.length).setValues([REQUIRED_HEADERS]);
     return;
   }
-  const currentHeaders = sheet.getRange(1, 1, 1, Math.max(headers.length, lastCol)).getValues()[0];
-  for (let i = 0; i < headers.length; i++) {
-    if (!currentHeaders[i]) {
-      sheet.getRange(1, i + 1).setValue(headers[i]);
-    }
+  const currentHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const missing = REQUIRED_HEADERS.filter(h => !currentHeaders.includes(h));
+  if (missing.length > 0) {
+    sheet.getRange(1, lastCol + 1, 1, missing.length).setValues([missing]);
   }
+}
+
+// ── Lấy map vị trí cột động theo tên cột ──
+function getHeaderMap(sheet) {
+  ensureHeaders(sheet);
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const map = {};
+  headers.forEach((h, idx) => {
+    if (h) map[h] = idx;
+  });
+  return { headers, map };
 }
 
 // ── GET: Đọc danh sách tàu ──
@@ -42,46 +55,55 @@ function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const sheet = ss.getSheetByName(SHEET_NAME);
-    const data = sheet.getDataRange().getValues();
+    if (!sheet) return createResponse({ success: false, error: 'Sheet not found: ' + SHEET_NAME });
 
+    const { map } = getHeaderMap(sheet);
+    const data = sheet.getDataRange().getValues();
     if (data.length <= 1) return createResponse({ success: true, ships: [] });
 
+    const idIdx = map['id'] !== undefined ? map['id'] : 0;
     const ships = data.slice(1).map(row => {
-      const obj = {};
-      // Rigid column mapping:
-      // 0: id, 1: name, 2: arrivalDate, 3: completionDate, 4: weight, 
-      // 5: division, 6: documents, 7: createdAt, 8: status, 9: isPaid,
-      // 10: port, 11: client, 12: hasBarge, 13: bargeCount, 14: employee,
-      // 15: rating, 16: ratingComment, 17: hasCafeFee, 18: cafeFee, 19: cafeNote,
-      // 20: hasTally, 21: tallyFee, 22: tallyNote
-      obj.id = row[0];
-      obj.name = row[1];
-      obj.arrivalDate = row[2];
-      obj.completionDate = row[3];
-      obj.weight = row[4];
-      obj.division = row[5];
-      
-      try { obj.documents = JSON.parse(row[6] || '[]'); } catch { obj.documents = []; }
-      
-      obj.createdAt = row[7];
-      obj.status = row[8];
-      obj.isPaid = row[9] === true || row[9] === 'true';
-      obj.port = row[10];
-      obj.client = row[11];
-      obj.hasBarge = row[12] === true || row[12] === 'true';
-      obj.bargeCount = row[13] ? Number(row[13]) : 0;
-      obj.employee = row[14] ? String(row[14]) : undefined;
-      obj.rating = row[15] ? Number(row[15]) : undefined;
-      obj.ratingComment = row[16] ? String(row[16]) : undefined;
-      obj.hasCafeFee = row[17] === true || row[17] === 'true';
-      obj.cafeFee = row[18] ? Number(row[18]) : undefined;
-      obj.cafeNote = row[19] ? String(row[19]) : undefined;
-      obj.hasTally = row[20] === true || row[20] === 'true';
-      obj.tallyFee = row[21] ? Number(row[21]) : undefined;
-      obj.tallyNote = row[22] ? String(row[22]) : undefined;
-      
+      const id = row[idIdx];
+      if (!id) return null;
+
+      const getVal = (col) => {
+        const idx = map[col];
+        return (idx !== undefined && idx < row.length) ? row[idx] : undefined;
+      };
+
+      const obj = {
+        id: String(id),
+        name: String(getVal('name') || ''),
+        arrivalDate: getVal('arrivalDate') || '',
+        completionDate: getVal('completionDate') || '',
+        weight: Number(getVal('weight')) || 0,
+        division: getVal('division') || 'SAT_THEP',
+        status: getVal('status') || 'waiting',
+        isPaid: getVal('isPaid') === true || String(getVal('isPaid')).toLowerCase() === 'true',
+        port: getVal('port') || '',
+        client: getVal('client') || '',
+        hasBarge: getVal('hasBarge') === true || String(getVal('hasBarge')).toLowerCase() === 'true',
+        bargeCount: Number(getVal('bargeCount')) || 0,
+        employee: getVal('employee') ? String(getVal('employee')) : undefined,
+        rating: getVal('rating') ? Number(getVal('rating')) : undefined,
+        ratingComment: getVal('ratingComment') ? String(getVal('ratingComment')) : undefined,
+        hasCafeFee: getVal('hasCafeFee') === true || String(getVal('hasCafeFee')).toLowerCase() === 'true',
+        cafeFee: getVal('cafeFee') ? Number(getVal('cafeFee')) : 0,
+        cafeNote: getVal('cafeNote') ? String(getVal('cafeNote')) : undefined,
+        hasTally: getVal('hasTally') === true || String(getVal('hasTally')).toLowerCase() === 'true',
+        tallyFee: getVal('tallyFee') ? Number(getVal('tallyFee')) : 0,
+        tallyNote: getVal('tallyNote') ? String(getVal('tallyNote')) : undefined,
+      };
+
+      try {
+        const docs = getVal('documents');
+        obj.documents = docs ? JSON.parse(docs) : [];
+      } catch {
+        obj.documents = [];
+      }
+
       return obj;
-    }).filter(s => s.id); // skip empty rows
+    }).filter(Boolean);
 
     return createResponse({ success: true, ships });
   } catch (err) {
@@ -110,36 +132,40 @@ function doPost(e) {
 function addShip(ship) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAME);
-  ensureHeaders(sheet);
+  const { headers, map } = getHeaderMap(sheet);
   const id = Utilities.getUuid();
   const now = new Date().toISOString();
 
-  sheet.appendRow([
-    id,
-    ship.name,
-    ship.arrivalDate,
-    ship.completionDate || '',
-    ship.weight,
-    ship.division || 'SAT_THEP',
-    JSON.stringify(ship.documents || []),
-    now,
-    ship.status || 'waiting',
-    ship.isPaid === true ? 'true' : 'false',
-    ship.port || '',
-    ship.client || '',
-    ship.hasBarge === true ? 'true' : 'false',
-    ship.bargeCount || 0,
-    ship.employee || '',
-    ship.rating || '',
-    ship.ratingComment || '',
-    ship.hasCafeFee === true ? 'true' : 'false',
-    ship.cafeFee || 0,
-    ship.cafeNote || '',
-    ship.hasTally === true ? 'true' : 'false',
-    ship.tallyFee || 0,
-    ship.tallyNote || ''
-  ]);
+  const newRow = new Array(headers.length).fill('');
+  const setVal = (col, val) => {
+    if (map[col] !== undefined) newRow[map[col]] = val;
+  };
 
+  setVal('id', id);
+  setVal('name', ship.name);
+  setVal('arrivalDate', ship.arrivalDate);
+  setVal('completionDate', ship.completionDate || '');
+  setVal('weight', ship.weight);
+  setVal('division', ship.division || 'SAT_THEP');
+  setVal('documents', JSON.stringify(ship.documents || []));
+  setVal('createdAt', now);
+  setVal('status', ship.status || 'waiting');
+  setVal('isPaid', ship.isPaid === true ? 'true' : 'false');
+  setVal('port', ship.port || '');
+  setVal('client', ship.client || '');
+  setVal('hasBarge', ship.hasBarge === true ? 'true' : 'false');
+  setVal('bargeCount', ship.bargeCount || 0);
+  setVal('employee', ship.employee || '');
+  setVal('rating', ship.rating || '');
+  setVal('ratingComment', ship.ratingComment || '');
+  setVal('hasCafeFee', ship.hasCafeFee === true ? 'true' : 'false');
+  setVal('cafeFee', ship.cafeFee || 0);
+  setVal('cafeNote', ship.cafeNote || '');
+  setVal('hasTally', ship.hasTally === true ? 'true' : 'false');
+  setVal('tallyFee', ship.tallyFee || 0);
+  setVal('tallyNote', ship.tallyNote || '');
+
+  sheet.appendRow(newRow);
   return createResponse({ success: true, id, createdAt: now });
 }
 
@@ -147,32 +173,43 @@ function addShip(ship) {
 function updateShip(ship) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAME);
-  ensureHeaders(sheet);
+  const { headers, map } = getHeaderMap(sheet);
   const data = sheet.getDataRange().getValues();
+  const idCol = map['id'] !== undefined ? map['id'] : 0;
 
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === ship.id) {
-      sheet.getRange(i + 1, 2).setValue(ship.name);
-      sheet.getRange(i + 1, 3).setValue(ship.arrivalDate);
-      sheet.getRange(i + 1, 4).setValue(ship.completionDate || '');
-      sheet.getRange(i + 1, 5).setValue(ship.weight);
-      sheet.getRange(i + 1, 6).setValue(ship.division || 'SAT_THEP');
-      sheet.getRange(i + 1, 7).setValue(JSON.stringify(ship.documents || []));
-      sheet.getRange(i + 1, 9).setValue(ship.status || 'waiting');
-      sheet.getRange(i + 1, 10).setValue(ship.isPaid === true ? 'true' : 'false');
-      sheet.getRange(i + 1, 11).setValue(ship.port || '');
-      sheet.getRange(i + 1, 12).setValue(ship.client || '');
-      sheet.getRange(i + 1, 13).setValue(ship.hasBarge === true ? 'true' : 'false');
-      sheet.getRange(i + 1, 14).setValue(ship.bargeCount || 0);
-      sheet.getRange(i + 1, 15).setValue(ship.employee || '');
-      sheet.getRange(i + 1, 16).setValue(ship.rating || '');
-      sheet.getRange(i + 1, 17).setValue(ship.ratingComment || '');
-      sheet.getRange(i + 1, 18).setValue(ship.hasCafeFee === true ? 'true' : 'false');
-      sheet.getRange(i + 1, 19).setValue(ship.cafeFee || 0);
-      sheet.getRange(i + 1, 20).setValue(ship.cafeNote || '');
-      sheet.getRange(i + 1, 21).setValue(ship.hasTally === true ? 'true' : 'false');
-      sheet.getRange(i + 1, 22).setValue(ship.tallyFee || 0);
-      sheet.getRange(i + 1, 23).setValue(ship.tallyNote || '');
+    if (String(data[i][idCol]) === String(ship.id)) {
+      const row = [...data[i]];
+      while (row.length < headers.length) row.push('');
+
+      const setVal = (col, val) => {
+        if (map[col] !== undefined) row[map[col]] = val;
+      };
+
+      setVal('name', ship.name);
+      setVal('arrivalDate', ship.arrivalDate);
+      setVal('completionDate', ship.completionDate || '');
+      setVal('weight', ship.weight);
+      setVal('division', ship.division || 'SAT_THEP');
+      setVal('documents', JSON.stringify(ship.documents || []));
+      setVal('status', ship.status || 'waiting');
+      setVal('isPaid', ship.isPaid === true ? 'true' : 'false');
+      setVal('port', ship.port || '');
+      setVal('client', ship.client || '');
+      setVal('hasBarge', ship.hasBarge === true ? 'true' : 'false');
+      setVal('bargeCount', ship.bargeCount || 0);
+      setVal('employee', ship.employee || '');
+      setVal('rating', ship.rating || '');
+      setVal('ratingComment', ship.ratingComment || '');
+      setVal('hasCafeFee', ship.hasCafeFee === true ? 'true' : 'false');
+      setVal('cafeFee', ship.cafeFee || 0);
+      setVal('cafeNote', ship.cafeNote || '');
+      setVal('hasTally', ship.hasTally === true ? 'true' : 'false');
+      setVal('tallyFee', ship.tallyFee || 0);
+      setVal('tallyNote', ship.tallyNote || '');
+
+      // Ghi nguyên 1 dòng trong 1 RPC call duy nhất
+      sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
       return createResponse({ success: true });
     }
   }
@@ -183,10 +220,12 @@ function updateShip(ship) {
 function deleteShip(id) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAME);
+  const { map } = getHeaderMap(sheet);
   const data = sheet.getDataRange().getValues();
+  const idCol = map['id'] !== undefined ? map['id'] : 0;
 
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === id) {
+    if (String(data[i][idCol]) === String(id)) {
       sheet.deleteRow(i + 1);
       return createResponse({ success: true });
     }
