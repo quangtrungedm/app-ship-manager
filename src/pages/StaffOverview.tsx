@@ -42,6 +42,7 @@ export function StaffOverview() {
     const totalSalary = completedSelectedShips.reduce((a, s) => a + calcShipSalary(s), 0);
     const paidSalary = completedSelectedShips.filter(s => s.isPaid).reduce((a, s) => a + calcShipSalary(s), 0);
     const unpaidSalary = totalSalary - paidSalary;
+    const totalBarges = completedSelectedShips.filter(s => s.hasBarge).reduce((a, s) => a + (s.bargeCount || 1), 0);
 
     const globalUnpaidShips = useMemo(() => ships.filter(s => s.isPaid === false && (s.status === 'completed' || !!s.completionDate)), [ships]);
     const globalUnpaidCount = globalUnpaidShips.length;
@@ -203,6 +204,11 @@ export function StaffOverview() {
                                 </p>
                                 <span style={{ fontSize: 14, color: '#64748b', fontWeight: 800 }}>đ</span>
                             </div>
+                            {totalBarges > 0 && (
+                                <p style={{ fontSize: 11, color: '#2563eb', fontWeight: 700, margin: '6px 0 0 0' }}>
+                                    • Đã gồm {totalBarges} xà lan (+{(totalBarges * 200000).toLocaleString('vi-VN')}đ)
+                                </p>
+                            )}
                         </div>
 
                         {/* Grid for Paid / Unpaid */}

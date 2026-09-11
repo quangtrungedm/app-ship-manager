@@ -3,6 +3,7 @@ import { Ship, ShipStatus } from '../types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Upload } from 'lucide-react';
+import { STANDARD_PORTS } from '../lib/constants';
 
 interface ShipFormProps {
     initialData?: Ship;
@@ -12,6 +13,9 @@ interface ShipFormProps {
 
 export function ShipForm({ initialData, onSubmit, onCancel }: ShipFormProps) {
     const [name, setName] = useState(initialData?.name || '');
+    const [port, setPort] = useState(initialData?.port || STANDARD_PORTS[0]);
+    const [hasBarge, setHasBarge] = useState(initialData?.hasBarge ?? false);
+    const [bargeCount, setBargeCount] = useState(initialData?.bargeCount ?? 1);
     const [arrivalDate, setArrivalDate] = useState(
         initialData?.arrivalDate ? new Date(initialData.arrivalDate).toISOString().slice(0, 16) : ''
     );
@@ -28,6 +32,9 @@ export function ShipForm({ initialData, onSubmit, onCancel }: ShipFormProps) {
         e.preventDefault();
         onSubmit({
             name,
+            port,
+            hasBarge,
+            bargeCount: hasBarge ? Number(bargeCount) || 1 : 0,
             arrivalDate: new Date(arrivalDate).toISOString(),
             completionDate: completionDate ? new Date(completionDate).toISOString() : undefined,
             status,
@@ -57,6 +64,46 @@ export function ShipForm({ initialData, onSubmit, onCancel }: ShipFormProps) {
                 required
                 placeholder="Nhập tên tàu (VD: Ever Given)"
             />
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="input-group">
+                    <label className="input-label">Cảng dỡ</label>
+                    <select
+                        className="input-field"
+                        value={port}
+                        onChange={(e) => setPort(e.target.value)}
+                    >
+                        {STANDARD_PORTS.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="input-label block mb-1">Xà lan (+200k/salan)</label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <input
+                            type="checkbox"
+                            id="hasBargeForm"
+                            checked={hasBarge}
+                            onChange={(e) => setHasBarge(e.target.checked)}
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="hasBargeForm" className="text-sm font-medium text-slate-700 select-none">
+                            Có xà lan
+                        </label>
+                        {hasBarge && (
+                            <input
+                                type="number"
+                                min="1"
+                                value={bargeCount}
+                                onChange={(e) => setBargeCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                className="w-16 ml-2 px-2 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder="SL"
+                            />
+                        )}
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <Input

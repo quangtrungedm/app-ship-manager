@@ -234,7 +234,11 @@ export function BossShips() {
         // 1. Filter by Search Query (Global Search)
         if (searchQuery.trim() !== '') {
             const q = removeAccents(searchQuery.toLowerCase());
-            result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
+            result = result.filter(s =>
+                removeAccents(s.name.toLowerCase()).includes(q)
+                || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
+                || (s.client && removeAccents(s.client.toLowerCase()).includes(q))
+            );
         } else {
             // 2. Filter by Tab & Month (Only if no search query)
             if (activeTab === 'unpaid') {
@@ -261,16 +265,25 @@ export function BossShips() {
 
     const handleExportExcel = () => {
         // Build CSV data
-        const headers = ['Tên tàu', 'Ngày vào', 'Ngày xong', 'Sản lượng (tấn)', 'Trạng thái', 'Số lượng tài liệu'];
+        const headers = ['Tên tàu', 'Ngày vào', 'Ngày xong', 'Cảng dỡ', 'Khách hàng', 'Sản lượng (tấn)', 'Xà lan', 'Phụ cấp xà lan (đ)', 'Tổng lương (đ)', 'Thanh toán', 'Số lượng tài liệu'];
         const rows = filteredShips.map(s => {
             const arrDate = new Date(s.arrivalDate).toLocaleDateString('vi-VN');
             const compDate = s.completionDate ? new Date(s.completionDate).toLocaleDateString('vi-VN') : '';
+            const bargeText = s.hasBarge ? `${s.bargeCount || 1} xà lan` : 'Không';
+            const bargeBonus = calcBargeBonus(s.hasBarge, s.bargeCount);
+            const totalSal = calcShipSalary(s);
+            const isPaidText = s.isPaid ? 'Đã thanh toán' : 'Chưa thanh toán';
             return [
-                `"${s.name.replace(/"/g, '""')}"`, // escape quotes
+                `"${s.name.replace(/"/g, '""')}"`,
                 arrDate,
                 compDate,
+                `"${(s.port || '').replace(/"/g, '""')}"`,
+                `"${(s.client || '').replace(/"/g, '""')}"`,
                 s.weight.toString(),
-                s.completionDate ? 'Đã hoàn thành' : 'Đang xử lý',
+                `"${bargeText}"`,
+                bargeBonus.toString(),
+                totalSal.toString(),
+                `"${isPaidText}"`,
                 s.documents.length.toString()
             ].join(',');
         });
@@ -349,7 +362,7 @@ export function BossShips() {
                     <Search size={16} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                     <input
                         type="text"
-                        placeholder="Tìm tên tàu..."
+                        placeholder="Tìm tàu, cảng, khách hàng..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         style={{

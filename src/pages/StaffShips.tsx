@@ -241,7 +241,11 @@ export function StaffShips() {
         // 1. Filter by Search Query (Global Search)
         if (searchQuery.trim() !== '') {
             const q = removeAccents(searchQuery.toLowerCase());
-            result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q));
+            result = result.filter(s =>
+                removeAccents(s.name.toLowerCase()).includes(q)
+                || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
+                || (s.client && removeAccents(s.client.toLowerCase()).includes(q))
+            );
         } else {
             // 2. Filter by Tab & Month (Only if no search query)
             if (activeTab === 'unpaid') {
@@ -463,7 +467,7 @@ export function StaffShips() {
                         <Search size={16} color="var(--c-text-secondary)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                         <input
                             type="text"
-                            placeholder="Tìm tên tàu..."
+                            placeholder="Tìm tàu, cảng, khách hàng..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             style={{

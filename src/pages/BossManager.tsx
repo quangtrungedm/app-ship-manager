@@ -130,6 +130,10 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                     {ship.division && (
                         <InfoItem icon={<ShipIcon size={13} color="#64748b" strokeWidth={2.5} />} label="Mảng" value={ship.division === 'SAT_THEP' ? 'Sắt Thép' : ship.division} />
                     )}
+                    {ship.hasBarge && (
+                        <InfoItem icon={<ShipIcon size={13} color="#2563eb" strokeWidth={2.5} />} label="Xà lan" value={`${ship.bargeCount || 1} xà lan (+${calcBargeBonus(ship.hasBarge, ship.bargeCount).toLocaleString('vi-VN')}đ)`} />
+                    )}
+                    <InfoItem icon={<Wallet size={13} color="#15803d" strokeWidth={2.5} />} label="Lương tàu" value={`${calcShipSalary(ship).toLocaleString('vi-VN')}đ`} />
                 </div>
             </div>
 
@@ -263,6 +267,7 @@ export function BossManager() {
             result = result.filter(s => removeAccents(s.name.toLowerCase()).includes(q)
                 || (s.employee && removeAccents(s.employee.toLowerCase()).includes(q))
                 || (s.port && removeAccents(s.port.toLowerCase()).includes(q))
+                || (s.client && removeAccents(s.client.toLowerCase()).includes(q))
             );
         } else {
             if (selectedMonth !== 'all') {
@@ -674,7 +679,7 @@ export function BossManager() {
                         {/* ── SALARY VIEW ── */}
                         {bottomView === 'salary' && (
                             <div>
-                                <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>Lương = Sản lượng × 500đ &nbsp;·&nbsp; {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}</p>
+                                <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>Lương = (Sản lượng × 500đ) + (Xà lan × 200.000đ) &nbsp;·&nbsp; {selectedMonth === 'all' ? 'Tất cả tháng' : formatMonthLabel(selectedMonth)}</p>
                                 {salaryData.map(({ name, empShips, totalWeight, salary }) => (
                                     <div key={name} style={{ background: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>

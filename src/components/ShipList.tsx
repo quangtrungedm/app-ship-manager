@@ -47,9 +47,18 @@ export function ShipList({ ships, onShipClick }: ShipListProps) {
                                 <Badge variant={statusMap[ship.status || 'waiting'].variant}>
                                     {statusMap[ship.status || 'waiting'].label}
                                 </Badge>
+                                {ship.hasBarge && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        🚢 {ship.bargeCount && ship.bargeCount > 1 ? `${ship.bargeCount} xà lan` : 'Có xà lan'}
+                                    </span>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 sm:flex sm:gap-6 text-sm text-slate-500 mt-2">
+                                <div>
+                                    <span className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-0.5">Cảng dỡ</span>
+                                    <span className="font-semibold text-blue-700">{ship.port || 'Sowatco Long Bình'}</span>
+                                </div>
                                 <div>
                                     <span className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-0.5">Ngày vào</span>
                                     <span>{format(new Date(ship.arrivalDate), 'dd/MM/yyyy HH:mm', { locale: vi })}</span>
