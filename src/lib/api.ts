@@ -83,6 +83,14 @@ function parseShip(raw: Record<string, unknown>): Ship {
         documents: Array.isArray(raw.documents) ? raw.documents : [],
         hasBarge: raw.hasBarge === true || raw.hasBarge === 'true',
         bargeCount: raw.bargeCount ? Number(raw.bargeCount) : undefined,
+        rating: raw.rating ? Number(raw.rating) : undefined,
+        ratingComment: raw.ratingComment ? String(raw.ratingComment) : undefined,
+        hasCafeFee: raw.hasCafeFee === true || raw.hasCafeFee === 'true',
+        cafeFee: raw.cafeFee ? Number(raw.cafeFee) : undefined,
+        cafeNote: raw.cafeNote ? String(raw.cafeNote) : undefined,
+        hasTally: raw.hasTally === true || raw.hasTally === 'true',
+        tallyFee: raw.tallyFee ? Number(raw.tallyFee) : undefined,
+        tallyNote: raw.tallyNote ? String(raw.tallyNote) : undefined,
     };
 }
 
@@ -94,6 +102,14 @@ function serializeShip(ship: Partial<Ship>) {
         bargeCount: ship.hasBarge ? (Number(ship.bargeCount) || 1) : 0,
         employee: ship.employee || '',
         division: ship.division || 'SAT_THEP',
+        rating: ship.rating ? Number(ship.rating) : '',
+        ratingComment: ship.ratingComment || '',
+        hasCafeFee: ship.hasCafeFee === true,
+        cafeFee: ship.hasCafeFee ? (Number(ship.cafeFee) || 0) : 0,
+        cafeNote: ship.cafeNote || '',
+        hasTally: ship.hasTally === true,
+        tallyFee: ship.hasTally ? (Number(ship.tallyFee) || 0) : 0,
+        tallyNote: ship.tallyNote || '',
     };
 }
 

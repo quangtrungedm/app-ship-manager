@@ -20,7 +20,9 @@ function ensureHeaders(sheet) {
   const headers = [
     'id', 'name', 'arrivalDate', 'completionDate', 'weight',
     'division', 'documents', 'createdAt', 'status', 'isPaid',
-    'port', 'client', 'hasBarge', 'bargeCount', 'employee'
+    'port', 'client', 'hasBarge', 'bargeCount', 'employee',
+    'rating', 'ratingComment', 'hasCafeFee', 'cafeFee', 'cafeNote',
+    'hasTally', 'tallyFee', 'tallyNote'
   ];
   const lastCol = sheet.getLastColumn();
   if (lastCol === 0) {
@@ -49,7 +51,9 @@ function doGet(e) {
       // Rigid column mapping:
       // 0: id, 1: name, 2: arrivalDate, 3: completionDate, 4: weight, 
       // 5: division, 6: documents, 7: createdAt, 8: status, 9: isPaid,
-      // 10: port, 11: client, 12: hasBarge, 13: bargeCount, 14: employee
+      // 10: port, 11: client, 12: hasBarge, 13: bargeCount, 14: employee,
+      // 15: rating, 16: ratingComment, 17: hasCafeFee, 18: cafeFee, 19: cafeNote,
+      // 20: hasTally, 21: tallyFee, 22: tallyNote
       obj.id = row[0];
       obj.name = row[1];
       obj.arrivalDate = row[2];
@@ -67,6 +71,14 @@ function doGet(e) {
       obj.hasBarge = row[12] === true || row[12] === 'true';
       obj.bargeCount = row[13] ? Number(row[13]) : 0;
       obj.employee = row[14] ? String(row[14]) : undefined;
+      obj.rating = row[15] ? Number(row[15]) : undefined;
+      obj.ratingComment = row[16] ? String(row[16]) : undefined;
+      obj.hasCafeFee = row[17] === true || row[17] === 'true';
+      obj.cafeFee = row[18] ? Number(row[18]) : undefined;
+      obj.cafeNote = row[19] ? String(row[19]) : undefined;
+      obj.hasTally = row[20] === true || row[20] === 'true';
+      obj.tallyFee = row[21] ? Number(row[21]) : undefined;
+      obj.tallyNote = row[22] ? String(row[22]) : undefined;
       
       return obj;
     }).filter(s => s.id); // skip empty rows
@@ -117,7 +129,15 @@ function addShip(ship) {
     ship.client || '',
     ship.hasBarge === true ? 'true' : 'false',
     ship.bargeCount || 0,
-    ship.employee || ''
+    ship.employee || '',
+    ship.rating || '',
+    ship.ratingComment || '',
+    ship.hasCafeFee === true ? 'true' : 'false',
+    ship.cafeFee || 0,
+    ship.cafeNote || '',
+    ship.hasTally === true ? 'true' : 'false',
+    ship.tallyFee || 0,
+    ship.tallyNote || ''
   ]);
 
   return createResponse({ success: true, id, createdAt: now });
@@ -145,6 +165,14 @@ function updateShip(ship) {
       sheet.getRange(i + 1, 13).setValue(ship.hasBarge === true ? 'true' : 'false');
       sheet.getRange(i + 1, 14).setValue(ship.bargeCount || 0);
       sheet.getRange(i + 1, 15).setValue(ship.employee || '');
+      sheet.getRange(i + 1, 16).setValue(ship.rating || '');
+      sheet.getRange(i + 1, 17).setValue(ship.ratingComment || '');
+      sheet.getRange(i + 1, 18).setValue(ship.hasCafeFee === true ? 'true' : 'false');
+      sheet.getRange(i + 1, 19).setValue(ship.cafeFee || 0);
+      sheet.getRange(i + 1, 20).setValue(ship.cafeNote || '');
+      sheet.getRange(i + 1, 21).setValue(ship.hasTally === true ? 'true' : 'false');
+      sheet.getRange(i + 1, 22).setValue(ship.tallyFee || 0);
+      sheet.getRange(i + 1, 23).setValue(ship.tallyNote || '');
       return createResponse({ success: true });
     }
   }

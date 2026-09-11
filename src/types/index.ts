@@ -16,6 +16,15 @@ export interface Ship {
     bossNotes?: string;
     hasBarge?: boolean;
     bargeCount?: number;
+    // Đánh giá, tiền cafe & tally
+    rating?: number;
+    ratingComment?: string;
+    hasCafeFee?: boolean;
+    cafeFee?: number;
+    cafeNote?: string;
+    hasTally?: boolean;
+    tallyFee?: number;
+    tallyNote?: string;
 }
 
 export interface Document {

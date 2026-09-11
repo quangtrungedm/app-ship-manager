@@ -177,6 +177,39 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                         <span>Kèm {ship.bargeCount || 1} xà lan (+{bargeBonus.toLocaleString('vi-VN')}đ)</span>
                     </div>
                 )}
+
+                {/* Đánh giá, Cafe & Tally badges */}
+                {(ship.rating || ship.hasCafeFee || ship.hasTally) && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                        {ship.rating && (
+                            <span style={{
+                                padding: '4px 8px', background: '#fef3c7', border: '1px solid #fde68a',
+                                borderRadius: 6, fontSize: 11, fontWeight: 700, color: '#b45309',
+                                display: 'inline-flex', alignItems: 'center', gap: 4
+                            }}>
+                                ⭐ {ship.rating}/5 sao {ship.ratingComment ? `(${ship.ratingComment})` : ''}
+                            </span>
+                        )}
+                        {ship.hasCafeFee && (
+                            <span style={{
+                                padding: '4px 8px', background: '#fffbeb', border: '1px solid #fde68a',
+                                borderRadius: 6, fontSize: 11, fontWeight: 700, color: '#92400e',
+                                display: 'inline-flex', alignItems: 'center', gap: 4
+                            }}>
+                                ☕ Cafe: {(ship.cafeFee || 0).toLocaleString('vi-VN')}đ
+                            </span>
+                        )}
+                        {ship.hasTally && (
+                            <span style={{
+                                padding: '4px 8px', background: '#eff6ff', border: '1px solid #bfdbfe',
+                                borderRadius: 6, fontSize: 11, fontWeight: 700, color: '#1d4ed8',
+                                display: 'inline-flex', alignItems: 'center', gap: 4
+                            }}>
+                                📋 Tally{ship.tallyFee ? `: ${ship.tallyFee.toLocaleString('vi-VN')}đ` : ''}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
             {isSatThep && (

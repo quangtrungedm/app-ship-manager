@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
-import { Ship, BarChart3, Hammer, LayoutList } from 'lucide-react';
+import { Ship, BarChart3, Hammer, LayoutList, ClipboardCheck } from 'lucide-react';
 
 export function Login() {
     const { login } = useAuth();
@@ -86,13 +86,37 @@ export function Login() {
                 </button>
             </div>
 
-            {/* Direct access to BossManager */}
-            <div style={{ width: '100%', maxWidth: 340, marginTop: 20 }} className="fade-up fade-up-d3">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            {/* Direct access / Quick links */}
+            <div style={{ width: '100%', maxWidth: 340, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }} className="fade-up fade-up-d3">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
                     <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
-                    <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, whiteSpace: 'nowrap' }}>hoặc truy cập nhanh</span>
+                    <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, whiteSpace: 'nowrap' }}>tiện ích & truy cập nhanh</span>
                     <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
                 </div>
+
+                <button
+                    onClick={() => navigate('/ship-update')}
+                    style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '16px 20px', border: 'none', borderRadius: 'var(--radius)',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        background: 'linear-gradient(135deg, #059669, #10b981)',
+                        boxShadow: '0 8px 24px rgba(16,185,129,0.25)',
+                        transition: 'transform .15s, box-shadow .15s',
+                        WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <ClipboardCheck size={22} color="#fff" strokeWidth={2.2} />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#fff' }}>Cập Nhật Tàu</p>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', margin: 0, marginTop: 2 }}>Đánh giá, tiền cafe & tally tàu</p>
+                    </div>
+                </button>
                 <button
                     onClick={() => navigate('/boss/manager')}
                     style={{

@@ -8,6 +8,7 @@ import { BossOverview } from './pages/BossOverview';
 import { BossShips } from './pages/BossShips';
 import { BossManager } from './pages/BossManager';
 import { StaffStats } from './pages/StaffStats';
+import { ShipQuickUpdate } from './pages/ShipQuickUpdate';
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/ship-update" element={<ShipQuickUpdate />} />
 
                     {/* Staff Routes */}
                     <Route path="/staff" element={
