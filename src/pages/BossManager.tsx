@@ -14,6 +14,9 @@ import {
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
 
+import { calcShipSalary, calcBargeBonus } from '../lib/salary';
+import { STANDARD_PORTS } from '../lib/constants';
+
 const MONTH_NAMES = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 const GRID_MONTHS = ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
 
@@ -22,7 +25,7 @@ function formatMonthLabel(ym: string) {
     return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
 }
 
-const PORTS = ['Sowatco Long Bình', 'Vĩnh Tân'];
+const PORTS = STANDARD_PORTS;
 
 const EMPLOYEES: { name: string; division: string }[] = [
     { name: 'Quang Trung', division: 'SAT_THEP' },
@@ -209,6 +212,9 @@ export function BossManager() {
     const [employee, setEmployee] = useState('');
     const [formDivision, setFormDivision] = useState('');
     const [port, setPort] = useState('');
+    const [customPort, setCustomPort] = useState('');
+    const [hasBarge, setHasBarge] = useState(false);
+    const [bargeCount, setBargeCount] = useState(1);
     const [docs, setDocs] = useState<ShipDoc[]>([]);
 
     // Stats
@@ -229,7 +235,7 @@ export function BossManager() {
     }, [ships, selectedMonth]);
 
     const divStats = useMemo(() => {
-        const satThepShips = monthShips;
+        const satThepShips = monthShips.filter(s => s.division === 'SAT_THEP' || !s.division);
         const calc = (arr: Ship[]) => ({
             total: arr.length,
             totalWeight: arr.reduce((sum, s) => sum + s.weight, 0),
@@ -245,7 +251,8 @@ export function BossManager() {
         ['Quang Trung', 'Hoàng Thái'].map(name => {
             const empShips = monthShips.filter(s => s.employee === name);
             const totalWeight = empShips.reduce((sum, s) => sum + s.weight, 0);
-            return { name, empShips, totalWeight, salary: totalWeight * 500 };
+            const salary = empShips.reduce((sum, s) => sum + calcShipSalary(s), 0);
+            return { name, empShips, totalWeight, salary };
         })
     , [monthShips]);
 
@@ -279,7 +286,8 @@ export function BossManager() {
 
     const openNew = () => {
         setEditing(null); setName(''); setStatus('waiting'); setArrival('');
-        setCompletion(''); setWeight(''); setEmployee(''); setFormDivision(''); setPort(''); setDocs([]);
+        setCompletion(''); setWeight(''); setEmployee(''); setFormDivision('');
+        setPort(''); setCustomPort(''); setHasBarge(false); setBargeCount(1); setDocs([]);
         setPendingFiles([]);
         setShowForm(true);
     };
@@ -291,7 +299,21 @@ export function BossManager() {
         setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
         setEmployee(s.employee || '');
         setFormDivision(s.division || '');
-        setPort(s.port || '');
+        if (s.port) {
+            const isPreset = (STANDARD_PORTS as readonly string[]).includes(s.port) && s.port !== 'Cảng Khác';
+            if (isPreset) {
+                setPort(s.port);
+                setCustomPort('');
+            } else {
+                setPort('Cảng Khác');
+                setCustomPort(s.port === 'Cảng Khác' ? '' : s.port);
+            }
+        } else {
+            setPort('');
+            setCustomPort('');
+        }
+        setHasBarge(s.hasBarge || false);
+        setBargeCount(s.bargeCount && s.bargeCount > 0 ? s.bargeCount : 1);
         setDocs([...s.documents]);
         setPendingFiles([]);
         setShowForm(true);
@@ -318,6 +340,7 @@ export function BossManager() {
         setSubmitting(true);
         const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
         const tempId = editing?.id || `shp-boss-${Date.now()}`;
+        const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
 
         const shipData: Ship = {
             id: tempId,
@@ -327,11 +350,13 @@ export function BossManager() {
             weight: parsedWeight,
             status,
             employee: employee || undefined,
-            port: port || undefined,
-            division: 'BOSS_MANAGER',
+            port: finalPort || undefined,
+            division: formDivision || editing?.division || 'SAT_THEP',
             documents: [...docs],
             isPaid: editing?.isPaid,
             client: editing?.client,
+            hasBarge,
+            bargeCount: hasBarge ? Math.max(1, bargeCount) : undefined,
         };
 
         if (editing) { updateShipApi(shipData); }
@@ -679,7 +704,10 @@ export function BossManager() {
                                                         <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{s.name}</span>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <p style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', margin: 0 }}>{s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tấn</p>
-                                                            <p style={{ fontSize: 11, fontWeight: 600, color: '#15803d', margin: '1px 0 0' }}>{(s.weight * 500).toLocaleString('vi-VN')}đ</p>
+                                                            <p style={{ fontSize: 11, fontWeight: 600, color: '#15803d', margin: '1px 0 0' }}>
+                                                                {calcShipSalary(s).toLocaleString('vi-VN')}đ
+                                                                {s.hasBarge ? ` (+${calcBargeBonus(s.hasBarge, s.bargeCount).toLocaleString('vi-VN')}đ salan)` : ''}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -903,6 +931,135 @@ export function BossManager() {
                                         <option value="">— Chọn cảng —</option>
                                         {PORTS.map(p => <option key={p} value={p}>{p}</option>)}
                                     </select>
+                                    {port === 'Cảng Khác' && (
+                                        <input
+                                            type="text"
+                                            value={customPort}
+                                            onChange={e => setCustomPort(e.target.value)}
+                                            placeholder="Nhập tên cảng khác..."
+                                            style={{
+                                                width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 10,
+                                                border: '1px solid var(--c-primary)', background: '#f8fafc',
+                                                fontFamily: 'inherit', fontSize: 12, outline: 'none'
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tuỳ chọn Xà lan (Salan) */}
+                            <div style={{
+                                background: hasBarge ? '#eff6ff' : 'var(--c-surface)',
+                                border: hasBarge ? '1.5px solid #93c5fd' : '1px solid var(--c-border)',
+                                borderRadius: 12,
+                                padding: '12px 14px',
+                                marginBottom: 12,
+                                transition: 'all 0.2s ease',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{
+                                            width: 34, height: 34, borderRadius: 8,
+                                            background: hasBarge ? '#dbeafe' : 'var(--c-bg)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: hasBarge ? '#1d4ed8' : 'var(--c-text-secondary)',
+                                        }}>
+                                            <ShipIcon size={18} />
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'block' }}>Kèm xà lan (Salan)</span>
+                                            <span style={{ fontSize: 11, color: hasBarge ? '#2563eb' : 'var(--c-text-secondary)', fontWeight: hasBarge ? 700 : 500 }}>
+                                                {hasBarge ? `+${(bargeCount * 200000).toLocaleString('vi-VN')}đ (+200k/salan)` : '+200.000đ / 1 xà lan'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={hasBarge}
+                                            onChange={e => {
+                                                setHasBarge(e.target.checked);
+                                                if (e.target.checked && (!bargeCount || bargeCount < 1)) setBargeCount(1);
+                                            }}
+                                            style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 10 }}
+                                        />
+                                        <span style={{
+                                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                            backgroundColor: hasBarge ? '#2563eb' : '#ccc', transition: '.3s', borderRadius: 34, pointerEvents: 'none'
+                                        }}>
+                                            <span style={{
+                                                position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                                backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                                transform: hasBarge ? 'translateX(20px)' : 'translateX(0)'
+                                            }} />
+                                        </span>
+                                    </label>
+                                </div>
+
+                                {hasBarge && (
+                                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af' }}>Số lượng xà lan:</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBargeCount(prev => Math.max(1, prev - 1))}
+                                                style={{
+                                                    width: 28, height: 28, borderRadius: 6, border: '1px solid #cbd5e1',
+                                                    background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: 16, fontWeight: 700, color: '#334155'
+                                                }}
+                                            >-</button>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="50"
+                                                value={bargeCount}
+                                                onChange={e => setBargeCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                                style={{
+                                                    width: 42, height: 28, textAlign: 'center', borderRadius: 6,
+                                                    border: '1px solid #cbd5e1', background: '#fff', fontSize: 13, fontWeight: 700, outline: 'none'
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setBargeCount(prev => prev + 1)}
+                                                style={{
+                                                    width: 28, height: 28, borderRadius: 6, border: '1px solid #cbd5e1',
+                                                    background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: 16, fontWeight: 700, color: '#334155'
+                                                }}
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Preview Lương Dự Tính */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                                borderRadius: 12,
+                                padding: '12px 14px',
+                                marginBottom: 12,
+                                border: '1px solid #e2e8f0',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <div>
+                                    <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Dự tính lương tàu</div>
+                                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                                        {parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) > 0
+                                            ? `${(parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) * 500).toLocaleString('vi-VN')}đ`
+                                            : '0đ'}
+                                        {hasBarge ? ` + ${(bargeCount * 200000).toLocaleString('vi-VN')}đ (${bargeCount} salan)` : ''}
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                                    {calcShipSalary({
+                                        weight: parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0,
+                                        hasBarge,
+                                        bargeCount
+                                    }).toLocaleString('vi-VN')} đ
                                 </div>
                             </div>
 

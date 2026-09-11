@@ -4,8 +4,9 @@ import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { useAuth } from '../lib/AuthContext';
 import { Ship, ShipStatus } from '../types';
-import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor } from 'lucide-react';
+import { FileText, Calendar, Weight, Download, ChevronDown, ChevronUp, CheckCircle, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor, Ship as ShipIcon } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
+import { calcShipSalary, calcBargeBonus } from '../lib/salary';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -45,7 +46,8 @@ function BossShipCard({ ship }: { ship: Ship }) {
     const [filesOpen, setFilesOpen] = useState(false);
     const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const isSatThep = ship.division === 'SAT_THEP';
-    const salary = ship.weight * 500;
+    const salary = calcShipSalary(ship);
+    const bargeBonus = calcBargeBonus(ship.hasBarge, ship.bargeCount);
 
     let statusColor = 'var(--c-text-secondary)';
     if (ship.status === 'entering') statusColor = 'var(--c-warning)';
@@ -128,6 +130,26 @@ function BossShipCard({ ship }: { ship: Ship }) {
                         </div>
                     )}
                 </div>
+
+                {/* Xà lan badge nếu có */}
+                {isSatThep && ship.hasBarge && (
+                    <div style={{
+                        marginTop: 10,
+                        padding: '6px 12px',
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: 8,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#1d4ed8',
+                    }}>
+                        <ShipIcon size={14} color="#2563eb" />
+                        <span>Kèm {ship.bargeCount || 1} xà lan (+{bargeBonus.toLocaleString('vi-VN')}đ)</span>
+                    </div>
+                )}
             </div>
 
             {isSatThep && (
@@ -137,8 +159,13 @@ function BossShipCard({ ship }: { ship: Ship }) {
                     borderTop: '1px solid rgba(0,0,0,0.04)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ color: 'var(--c-text-secondary)', fontSize: 12, fontWeight: 600 }}>TỔNG LƯƠNG</span>
+                        {ship.hasBarge && (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: '#dbeafe', color: '#1d4ed8' }}>
+                                +{bargeBonus.toLocaleString('vi-VN')}đ salan
+                            </span>
+                        )}
                     </div>
                     <span style={{ fontWeight: 800, color: ship.isPaid ? 'var(--c-success)' : 'var(--c-danger)', fontSize: 16, letterSpacing: '-0.5px' }}>
                         {salary.toLocaleString('vi-VN')} đ

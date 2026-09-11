@@ -44,6 +44,8 @@ function doGet(e) {
       obj.isPaid = row[9];
       obj.port = row[10];
       obj.client = row[11];
+      obj.hasBarge = row[12] === true || row[12] === 'true';
+      obj.bargeCount = row[13] ? Number(row[13]) : 0;
       
       return obj;
     }).filter(s => s.id); // skip empty rows
@@ -90,7 +92,9 @@ function addShip(ship) {
     ship.status || 'waiting',
     ship.isPaid === true ? 'true' : 'false',
     ship.port || '',
-    ship.client || ''
+    ship.client || '',
+    ship.hasBarge === true ? 'true' : 'false',
+    ship.bargeCount || 0
   ]);
 
   return createResponse({ success: true, id, createdAt: now });
@@ -114,6 +118,8 @@ function updateShip(ship) {
       sheet.getRange(i + 1, 10).setValue(ship.isPaid === true ? 'true' : 'false');
       sheet.getRange(i + 1, 11).setValue(ship.port || '');
       sheet.getRange(i + 1, 12).setValue(ship.client || '');
+      sheet.getRange(i + 1, 13).setValue(ship.hasBarge === true ? 'true' : 'false');
+      sheet.getRange(i + 1, 14).setValue(ship.bargeCount || 0);
       return createResponse({ success: true });
     }
   }

@@ -81,6 +81,8 @@ function parseShip(raw: Record<string, unknown>): Ship {
         client: raw.client ? String(raw.client) : undefined,
         employee: raw.employee ? String(raw.employee) : undefined,
         documents: Array.isArray(raw.documents) ? raw.documents : [],
+        hasBarge: raw.hasBarge === true || raw.hasBarge === 'true',
+        bargeCount: raw.bargeCount ? Number(raw.bargeCount) : undefined,
     };
 }
 

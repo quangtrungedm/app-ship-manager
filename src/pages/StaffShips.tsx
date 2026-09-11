@@ -9,6 +9,8 @@ import { Ship, Document as ShipDoc, ShipStatus } from '../types';
 import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
+import { calcShipSalary, calcBargeBonus } from '../lib/salary';
+import { STANDARD_PORTS } from '../lib/constants';
 
 function formatMonthLabel(ym: string) {
     const [y, m] = ym.split('-');
@@ -64,7 +66,8 @@ function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStat
 function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
     const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const isSatThep = ship.division === 'SAT_THEP';
-    const salary = ship.weight * 500;
+    const salary = calcShipSalary(ship);
+    const bargeBonus = calcBargeBonus(ship.hasBarge, ship.bargeCount);
 
     let statusColor = 'var(--c-text-secondary)';
     if (ship.status === 'entering') statusColor = 'var(--c-warning)';
@@ -154,6 +157,26 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                         </div>
                     )}
                 </div>
+
+                {/* Xà lan badge nếu có */}
+                {isSatThep && ship.hasBarge && (
+                    <div style={{
+                        marginTop: 10,
+                        padding: '6px 12px',
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: 8,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#1d4ed8',
+                    }}>
+                        <ShipIcon size={14} color="#2563eb" />
+                        <span>Kèm {ship.bargeCount || 1} xà lan (+{bargeBonus.toLocaleString('vi-VN')}đ)</span>
+                    </div>
+                )}
             </div>
 
             {isSatThep && (
@@ -163,8 +186,13 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                     borderTop: '1px solid rgba(0,0,0,0.04)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ color: 'var(--c-text-secondary)', fontSize: 12, fontWeight: 600 }}>TỔNG LƯƠNG</span>
+                        {ship.hasBarge && (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: '#dbeafe', color: '#1d4ed8' }}>
+                                +{bargeBonus.toLocaleString('vi-VN')}đ salan
+                            </span>
+                        )}
                         {ship.documents.length > 0 && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700, color: 'var(--c-text-secondary)' }}>
                                 <FileText size={12} /> {ship.documents.length}
@@ -246,19 +274,40 @@ export function StaffShips() {
     const [weight, setWeight] = useState('');
     const [isPaid, setIsPaid] = useState(false);
     const [port, setPort] = useState('');
+    const [customPort, setCustomPort] = useState('');
+    const [hasBarge, setHasBarge] = useState(false);
+    const [bargeCount, setBargeCount] = useState(1);
     const [client, setClient] = useState('');
     const [docs, setDocs] = useState<ShipDoc[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const openNew = () => {
-        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false); setPort(''); setClient(''); setDocs([]);
+        setEditing(null); setName(''); setStatus('waiting'); setArrival(''); setCompletion(''); setWeight(''); setIsPaid(false);
+        setPort(''); setCustomPort(''); setHasBarge(false); setBargeCount(1); setClient(''); setDocs([]);
         setShowForm(true);
     };
     const openEdit = (s: Ship) => {
         setEditing(s); setName(s.name); setStatus(s.status || 'waiting'); setArrival(s.arrivalDate.split('T')[0]);
         setCompletion(s.completionDate?.split('T')[0] || ''); setWeight(s.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 }));
         setIsPaid(s.isPaid || false);
-        setPort(s.port || '');
+        
+        // Xác định cảng dỡ
+        if (s.port) {
+            const isPreset = (STANDARD_PORTS as readonly string[]).includes(s.port) && s.port !== 'Cảng Khác';
+            if (isPreset) {
+                setPort(s.port);
+                setCustomPort('');
+            } else {
+                setPort('Cảng Khác');
+                setCustomPort(s.port === 'Cảng Khác' ? '' : s.port);
+            }
+        } else {
+            setPort('');
+            setCustomPort('');
+        }
+
+        setHasBarge(s.hasBarge || false);
+        setBargeCount(s.bargeCount && s.bargeCount > 0 ? s.bargeCount : 1);
         setClient(s.client || '');
         setDocs([...s.documents]);
         setShowForm(true);
@@ -290,6 +339,7 @@ export function StaffShips() {
         // 1. Xử lý ID & Dữ liệu cơ bản
         const tempId = editing?.id || `shp-${Date.now()}`;
         const parsedWeight = parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0;
+        const finalPort = port === 'Cảng Khác' ? (customPort.trim() || 'Cảng Khác') : port;
 
         const shipData: Ship = {
             id: tempId,
@@ -299,8 +349,10 @@ export function StaffShips() {
             status: status,
             division: division || undefined,
             isPaid: division === 'SAT_THEP' ? isPaid : undefined,
-            port: division === 'SAT_THEP' ? port : undefined,
+            port: division === 'SAT_THEP' ? finalPort : undefined,
             client: division === 'SAT_THEP' ? client : undefined,
+            hasBarge: division === 'SAT_THEP' ? hasBarge : undefined,
+            bargeCount: (division === 'SAT_THEP' && hasBarge) ? Math.max(1, bargeCount) : undefined,
         };
 
         // 2. Cập nhật UI Tức thời (Optimistic Update)
@@ -609,11 +661,23 @@ export function StaffShips() {
                                                     background: 'var(--c-surface)', fontFamily: 'inherit', fontSize: 13, outline: 'none'
                                                 }}>
                                                     <option value="" disabled>Chọn cảng dỡ</option>
-                                                    <option value="Sowatco Long Bình">Sowatco Long Bình</option>
-                                                    <option value="Vĩnh Tân">Vĩnh Tân</option>
-                                                    <option value="Cẩm Nguyên">Cẩm Nguyên</option>
-                                                    <option value="Bourbon">Bourbon</option>
+                                                    {STANDARD_PORTS.map(p => (
+                                                        <option key={p} value={p}>{p}</option>
+                                                    ))}
                                                 </select>
+                                                {port === 'Cảng Khác' && (
+                                                    <input
+                                                        type="text"
+                                                        value={customPort}
+                                                        onChange={e => setCustomPort(e.target.value)}
+                                                        placeholder="Nhập tên cảng khác..."
+                                                        style={{
+                                                            width: '100%', marginTop: 6, padding: '8px 10px', borderRadius: 10,
+                                                            border: '1px solid var(--c-primary)', background: '#f8fafc',
+                                                            fontFamily: 'inherit', fontSize: 12, outline: 'none'
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                             <div className="field">
                                                 <label>Khách hàng (Hàng)</label>
@@ -626,6 +690,122 @@ export function StaffShips() {
                                                     <option value="VAS Thép">VAS Thép</option>
                                                     <option value="VAS Phôi">VAS Phôi</option>
                                                 </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Tuỳ chọn Xà lan (Salan) */}
+                                        <div style={{
+                                            background: hasBarge ? '#eff6ff' : 'var(--c-surface)',
+                                            border: hasBarge ? '1.5px solid #93c5fd' : '1px solid var(--c-border)',
+                                            borderRadius: 12,
+                                            padding: '12px 14px',
+                                            marginBottom: 12,
+                                            transition: 'all 0.2s ease',
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <div style={{
+                                                        width: 34, height: 34, borderRadius: 8,
+                                                        background: hasBarge ? '#dbeafe' : 'var(--c-bg)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: hasBarge ? '#1d4ed8' : 'var(--c-text-secondary)',
+                                                    }}>
+                                                        <ShipIcon size={18} />
+                                                    </div>
+                                                    <div>
+                                                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', display: 'block' }}>Kèm xà lan (Salan)</span>
+                                                        <span style={{ fontSize: 11, color: hasBarge ? '#2563eb' : 'var(--c-text-secondary)', fontWeight: hasBarge ? 700 : 500 }}>
+                                                            {hasBarge ? `+${(bargeCount * 200000).toLocaleString('vi-VN')}đ (+200k/salan)` : '+200.000đ / 1 xà lan'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={hasBarge}
+                                                        onChange={e => {
+                                                            setHasBarge(e.target.checked);
+                                                            if (e.target.checked && (!bargeCount || bargeCount < 1)) setBargeCount(1);
+                                                        }}
+                                                        style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 10 }}
+                                                    />
+                                                    <span style={{
+                                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                        backgroundColor: hasBarge ? '#2563eb' : '#ccc', transition: '.3s', borderRadius: 34, pointerEvents: 'none'
+                                                    }}>
+                                                        <span style={{
+                                                            position: 'absolute', content: '""', height: 18, width: 18, left: 3, bottom: 3,
+                                                            backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                                            transform: hasBarge ? 'translateX(20px)' : 'translateX(0)'
+                                                        }} />
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            {hasBarge && (
+                                                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af' }}>Số lượng xà lan:</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setBargeCount(prev => Math.max(1, prev - 1))}
+                                                            style={{
+                                                                width: 28, height: 28, borderRadius: 6, border: '1px solid #cbd5e1',
+                                                                background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                fontSize: 16, fontWeight: 700, color: '#334155'
+                                                            }}
+                                                        >-</button>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max="50"
+                                                            value={bargeCount}
+                                                            onChange={e => setBargeCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                                            style={{
+                                                                width: 42, height: 28, textAlign: 'center', borderRadius: 6,
+                                                                border: '1px solid #cbd5e1', background: '#fff', fontSize: 13, fontWeight: 700, outline: 'none'
+                                                            }}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setBargeCount(prev => prev + 1)}
+                                                            style={{
+                                                                width: 28, height: 28, borderRadius: 6, border: '1px solid #cbd5e1',
+                                                                background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                fontSize: 16, fontWeight: 700, color: '#334155'
+                                                            }}
+                                                        >+</button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Preview Lương Dự Tính */}
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                                            borderRadius: 12,
+                                            padding: '12px 14px',
+                                            marginBottom: 12,
+                                            border: '1px solid #e2e8f0',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}>
+                                            <div>
+                                                <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Dự tính lương tàu</div>
+                                                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                                                    {parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) > 0
+                                                        ? `${(parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) * 500).toLocaleString('vi-VN')}đ`
+                                                        : '0đ'}
+                                                    {hasBarge ? ` + ${(bargeCount * 200000).toLocaleString('vi-VN')}đ (${bargeCount} salan)` : ''}
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                                                {calcShipSalary({
+                                                    weight: parseFloat(weight.replace(/\./g, '').replace(/,/g, '.')) || 0,
+                                                    hasBarge,
+                                                    bargeCount
+                                                }).toLocaleString('vi-VN')} đ
                                             </div>
                                         </div>
 

@@ -148,6 +148,8 @@ export const MOCK_SHIPS: Ship[] = [
         division: 'SAT_THEP',
         port: 'Sowatco Long Bình',
         client: 'Hoà Phát',
+        hasBarge: true,
+        bargeCount: 2,
         documents: [],
     },
     {
@@ -158,8 +160,10 @@ export const MOCK_SHIPS: Ship[] = [
         weight: 9800.5,
         isPaid: false,
         division: 'SAT_THEP',
-        port: 'Bourbon',
+        port: 'Gò Dầu',
         client: 'VAS Thép',
+        hasBarge: true,
+        bargeCount: 1,
         documents: [],
     },
     {
@@ -173,6 +177,21 @@ export const MOCK_SHIPS: Ship[] = [
         division: 'SAT_THEP',
         port: 'Vĩnh Tân',
         client: 'VAS Phôi',
+        documents: [],
+    },
+    {
+        id: 'shp-sat-04',
+        name: 'Đại Hưng 68',
+        arrivalDate: '2026-03-08T07:30:00Z',
+        completionDate: '2026-03-10T15:00:00Z',
+        status: 'completed',
+        weight: 8650,
+        isPaid: false,
+        division: 'SAT_THEP',
+        port: 'Long Bình Tân',
+        client: 'Hoà Phát',
+        hasBarge: true,
+        bargeCount: 1,
         documents: [],
     }
 ];

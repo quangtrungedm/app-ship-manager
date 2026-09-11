@@ -14,6 +14,8 @@ export interface Ship {
     employee?: string;
     documents: Document[];
     bossNotes?: string;
+    hasBarge?: boolean;
+    bargeCount?: number;
 }
 
 export interface Document {

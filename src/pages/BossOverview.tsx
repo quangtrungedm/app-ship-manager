@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
 import { TrendingUp, Anchor, Calendar, Wallet, CheckCircle, Clock, ArrowRight, LayoutList, Ship as ShipIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { calcShipSalary } from '../lib/salary';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
@@ -36,16 +37,15 @@ export function BossOverview() {
         , [selectedShips]);
 
     const selectedWeight = completedSelectedShips.reduce((a, s) => a + s.weight, 0);
-    const selectedPaidWeight = completedSelectedShips.filter(s => s.isPaid).reduce((a, s) => a + s.weight, 0);
 
-    // Sat Thep calculations (500 VND/ton)
-    const totalSalary = selectedWeight * 500;
-    const paidSalary = selectedPaidWeight * 500;
+    // Sat Thep calculations (500 VND/ton + 200k/salan)
+    const totalSalary = completedSelectedShips.reduce((a, s) => a + calcShipSalary(s), 0);
+    const paidSalary = completedSelectedShips.filter(s => s.isPaid).reduce((a, s) => a + calcShipSalary(s), 0);
     const unpaidSalary = totalSalary - paidSalary;
 
     const globalUnpaidShips = useMemo(() => ships.filter(s => s.isPaid === false && (s.status === 'completed' || !!s.completionDate)), [ships]);
     const globalUnpaidCount = globalUnpaidShips.length;
-    const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + s.weight * 500, 0);
+    const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + calcShipSalary(s), 0);
 
     const handlePickMonth = (m: number) => {
         setSelMonth(m);
@@ -227,7 +227,7 @@ export function BossOverview() {
 
                         {/* Total Expected Box */}
                         <div style={{ background: '#f8fafc', borderRadius: 16, padding: '16px', marginBottom: 12, border: '1px solid rgba(0,0,0,0.03)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.01)' }}>
-                            <p style={{ fontSize: 11, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t)</p>
+                            <p style={{ fontSize: 11, color: '#64748b', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dự chi nhân công (500đ/t + Xà lan)</p>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                                 <p style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-1px', lineHeight: 1 }}>
                                     {totalSalary.toLocaleString('vi-VN')}
