@@ -1,6 +1,6 @@
 import { useAuth, DIVISION_LABELS } from '../lib/AuthContext';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Ship, LogOut, RefreshCw, LayoutList } from 'lucide-react';
+import { LayoutDashboard, Ship, LogOut, RefreshCw, LayoutList, BarChart3 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function MobileLayout({ children }: { children: React.ReactNode }) {
@@ -14,6 +14,7 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
     const baseTabs = [
         { label: 'Tổng quan', path: `${prefix}/overview`, icon: LayoutDashboard, color: '#3b82f6', bg: 'linear-gradient(135deg, rgba(59,130,246,.25), rgba(37,99,235,.15))' },
         { label: 'Tàu', path: `${prefix}/ships`, icon: Ship, color: '#10b981', bg: 'linear-gradient(135deg, rgba(16,185,129,.25), rgba(5,150,105,.15))' },
+        { label: 'Thống kê', path: `${prefix}/stats`, icon: BarChart3, color: '#f59e0b', bg: 'linear-gradient(135deg, rgba(245,158,11,.25), rgba(217,119,6,.15))' },
     ];
     const bossTabs = role === 'BOSS' ? [
         { label: 'QL Tổng', path: '/boss/manager', icon: LayoutList, color: '#8b5cf6', bg: 'linear-gradient(135deg, rgba(139,92,246,.25), rgba(109,40,217,.15))' },
@@ -185,7 +186,7 @@ export function MobileLayout({ children }: { children: React.ReactNode }) {
                     /* Use left + translateX for smooth interpolation */
                     left: collapsed ? 'calc(100% - 68px)' : '50%',
                     transform: collapsed ? 'translateX(0)' : 'translateX(-50%)',
-                    width: collapsed ? 52 : (tabs.length >= 3 ? 280 : 200),
+                    width: collapsed ? 52 : (tabs.length >= 4 ? 'min(360px, calc(100% - 24px))' : (tabs.length >= 3 ? 300 : 200)),
                     height: 52,
                     borderRadius: 26,
                     zIndex: 50,
