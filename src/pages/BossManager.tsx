@@ -22,17 +22,15 @@ function formatMonthLabel(ym: string) {
     return `${MONTH_NAMES[parseInt(m) - 1]} ${y}`;
 }
 
-const PORTS = ['Sowatco Long Bình', 'Vĩnh Tân', 'Cần Giờ'];
+const PORTS = ['Sowatco Long Bình', 'Vĩnh Tân'];
 
 const EMPLOYEES: { name: string; division: string }[] = [
     { name: 'Quang Trung', division: 'SAT_THEP' },
     { name: 'Hoàng Thái',  division: 'SAT_THEP' },
-    { name: 'NV Cần Giờ', division: 'VIN_CAN_GIO' },
 ];
 
 const DIVISION_LABELS: Record<string, string> = {
     SAT_THEP: 'Sắt Thép',
-    VIN_CAN_GIO: 'Vin Cần Giờ',
 };
 
 const STATUS_CONFIG: Record<ShipStatus, { label: string; color: string; bg: string; icon: any; bar: string }> = {
@@ -127,7 +125,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
                         <InfoItem icon={<User size={13} color="#8b5cf6" strokeWidth={2.5} />} label="Nhân viên" value={ship.employee} />
                     )}
                     {ship.division && (
-                        <InfoItem icon={<ShipIcon size={13} color="#64748b" strokeWidth={2.5} />} label="Mảng" value={ship.division === 'VIN_CAN_GIO' ? 'Vin Cần Giờ' : ship.division === 'SAT_THEP' ? 'Sắt Thép' : ship.division} />
+                        <InfoItem icon={<ShipIcon size={13} color="#64748b" strokeWidth={2.5} />} label="Mảng" value={ship.division === 'SAT_THEP' ? 'Sắt Thép' : ship.division} />
                     )}
                 </div>
             </div>
@@ -231,17 +229,16 @@ export function BossManager() {
     }, [ships, selectedMonth]);
 
     const divStats = useMemo(() => {
-        const satThepShips = monthShips.filter(s => s.employee === 'Quang Trung' || s.employee === 'Hoàng Thái');
-        const vinCanGioShips = monthShips.filter(s => s.employee === 'NV Cần Giờ');
+        const satThepShips = monthShips;
         const calc = (arr: Ship[]) => ({
             total: arr.length,
             totalWeight: arr.reduce((sum, s) => sum + s.weight, 0),
             waiting: arr.filter(s => (s.status || 'waiting') === 'waiting').length,
             entering: arr.filter(s => s.status === 'entering').length,
             working: arr.filter(s => s.status === 'working').length,
-            completed: arr.filter(s => s.status === 'completed').length,
+            completed: arr.filter(s => s.status === 'completed' || !!s.completionDate).length,
         });
-        return { satThep: calc(satThepShips), vinCanGio: calc(vinCanGioShips) };
+        return { satThep: calc(satThepShips) };
     }, [monthShips]);
 
     const salaryData = useMemo(() =>
@@ -554,9 +551,9 @@ export function BossManager() {
 
                         {/* ── STATS VIEW ── */}
                         {bottomView === 'stats' && (() => {
-                            const totalShips = divStats.satThep.total + divStats.vinCanGio.total;
-                            const totalWeight = divStats.satThep.totalWeight + divStats.vinCanGio.totalWeight;
-                            const totalCompleted = divStats.satThep.completed + divStats.vinCanGio.completed;
+                            const totalShips = divStats.satThep.total;
+                            const totalWeight = divStats.satThep.totalWeight;
+                            const totalCompleted = divStats.satThep.completed;
                             const completionPct = totalShips > 0 ? Math.round(totalCompleted / totalShips * 100) : 0;
                             return (
                                 <div>
@@ -568,10 +565,10 @@ export function BossManager() {
                                     </div>
 
                                     {/* Hero summary card */}
-                                    <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%)', borderRadius: 22, padding: '20px 18px 18px', marginBottom: 12, position: 'relative', overflow: 'hidden' }}>
+                                    <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #312e81 100%)', borderRadius: 22, padding: '20px 18px 18px', marginBottom: 14, position: 'relative', overflow: 'hidden' }}>
                                         <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: 60, background: 'rgba(139,92,246,0.18)', filter: 'blur(24px)', pointerEvents: 'none' }} />
                                         <div style={{ position: 'absolute', bottom: -20, left: -10, width: 80, height: 80, borderRadius: 40, background: 'rgba(59,130,246,0.12)', filter: 'blur(20px)', pointerEvents: 'none' }} />
-                                        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 14px' }}>Tổng hợp chung</p>
+                                        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 14px' }}>Tổng hợp mảng Sắt Thép</p>
                                         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 }}>
                                             <div>
                                                 <p style={{ fontSize: 52, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>{totalShips}</p>
@@ -593,26 +590,9 @@ export function BossManager() {
                                         </div>
                                     </div>
 
-                                    {/* Quick compare */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-                                        {[
-                                            { label: 'Sắt Thép', gradient: 'linear-gradient(135deg, #1e3a8a, #2563eb)', data: divStats.satThep },
-                                            { label: 'Vin Cần Giờ', gradient: 'linear-gradient(135deg, #064e3b, #059669)', data: divStats.vinCanGio },
-                                        ].map(item => (
-                                            <div key={item.label} style={{ background: item.gradient, borderRadius: 18, padding: '14px 16px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
-                                                <div style={{ position: 'absolute', bottom: -12, right: -12, width: 60, height: 60, borderRadius: 30, background: 'rgba(255,255,255,0.08)' }} />
-                                                <p style={{ fontSize: 10, fontWeight: 700, opacity: 0.65, textTransform: 'uppercase', margin: '0 0 8px', letterSpacing: '0.5px' }}>{item.label}</p>
-                                                <p style={{ fontSize: 36, fontWeight: 900, margin: '0 0 3px', letterSpacing: '-1.5px', lineHeight: 1 }}>{item.data.total}</p>
-                                                <p style={{ fontSize: 11, opacity: 0.75, margin: 0, fontWeight: 700 }}>{item.data.totalWeight.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} tấn</p>
-                                                <p style={{ fontSize: 10, opacity: 0.55, margin: '3px 0 0', fontWeight: 600 }}>{item.data.completed} hoàn thành</p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Division detail cards */}
+                                    {/* Division detail card */}
                                     {([
                                         { key: 'satThep',   label: 'Sắt Thép',   sub: 'Quang Trung · Hoàng Thái', gradient: 'linear-gradient(135deg, #1e3a8a, #2563eb)', accent: '#3b82f6', light: '#eff6ff', data: divStats.satThep },
-                                        { key: 'vinCanGio', label: 'Vin Cần Giờ', sub: 'NV Cần Giờ',              gradient: 'linear-gradient(135deg, #064e3b, #059669)', accent: '#10b981', light: '#f0fdf4', data: divStats.vinCanGio },
                                     ] as const).map(({ key, label, sub, gradient, accent, light, data }) => {
                                         const rows = [
                                             { label: 'Hoàn thành', value: data.completed, color: '#22c55e', track: '#dcfce7' },

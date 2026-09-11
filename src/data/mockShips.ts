@@ -89,11 +89,11 @@ export const MOCK_SHIPS: Ship[] = [
     // ── Tháng 2/2026 ── Tổng: 25,500 tấn (Chưa đạt KPI)
     {
         id: 'shp-005',
-        name: 'Cần Giờ 01',
+        name: 'Đông Hải 01',
         arrivalDate: '2026-02-05T06:00:00Z',
         completionDate: '2026-02-08T10:00:00Z',
         weight: 15000,
-        documents: [{ id: 'doc-9', name: 'Van_don_CG01.pdf', url: '#' }],
+        documents: [{ id: 'doc-9', name: 'Van_don_DH01.pdf', url: '#' }],
     },
     {
         id: 'shp-016',

@@ -2,10 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '../components/MobileLayout';
 import { useShips } from '../lib/useShips';
-import { useAuth } from '../lib/AuthContext';
-import { MONTHLY_KPI_TARGET } from '../data/mockShips';
-import { TrendingUp, Target, Anchor, BarChart3, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Trophy, ChevronDown, Calendar, Wallet, CheckCircle, Clock, ArrowRight, LayoutList, Ship as ShipIcon } from 'lucide-react';
-import { EmptyState } from '../components/EmptyState';
+import { TrendingUp, Anchor, Calendar, Wallet, CheckCircle, Clock, ArrowRight, LayoutList, Ship as ShipIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTH_NAMES = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 const SHORT_MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
@@ -23,7 +20,6 @@ const glassStyle = {
 export function BossOverview() {
     const navigate = useNavigate();
     const { ships } = useShips();
-    const { division } = useAuth();
     const now = new Date();
     const [selYear, setSelYear] = useState(now.getFullYear());
     const [selMonth, setSelMonth] = useState(now.getMonth());
@@ -43,40 +39,13 @@ export function BossOverview() {
     const selectedPaidWeight = completedSelectedShips.filter(s => s.isPaid).reduce((a, s) => a + s.weight, 0);
 
     // Sat Thep calculations (500 VND/ton)
-    const isSatThep = division === 'SAT_THEP';
     const totalSalary = selectedWeight * 500;
     const paidSalary = selectedPaidWeight * 500;
     const unpaidSalary = totalSalary - paidSalary;
 
-    const globalUnpaidShips = useMemo(() => ships.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && (s.status === 'completed' || !!s.completionDate)), [ships]);
+    const globalUnpaidShips = useMemo(() => ships.filter(s => s.isPaid === false && (s.status === 'completed' || !!s.completionDate)), [ships]);
     const globalUnpaidCount = globalUnpaidShips.length;
     const globalUnpaidSalary = globalUnpaidShips.reduce((a, s) => a + s.weight * 500, 0);
-
-    const kpiPercent = Math.min(100, Math.round((selectedWeight / MONTHLY_KPI_TARGET) * 100));
-    const kpiReached = selectedWeight >= MONTHLY_KPI_TARGET;
-
-    const yearMonthlyData = useMemo(() => {
-        const data = Array.from({ length: 12 }, (_, i) => ({
-            key: `${selYear}-${String(i + 1).padStart(2, '0')}`,
-            month: SHORT_MONTHS[i],
-            shipCount: 0,
-            weight: 0
-        }));
-
-        ships.forEach(s => {
-            const d = new Date(s.arrivalDate);
-            if (d.getFullYear() === selYear) {
-                const m = d.getMonth();
-                if (s.status === 'completed' || !!s.completionDate) {
-                    data[m].shipCount++;
-                    data[m].weight += s.weight;
-                }
-            }
-        });
-        return data;
-    }, [ships, selYear]);
-
-    const maxWeight = Math.max(...yearMonthlyData.map(d => d.weight), MONTHLY_KPI_TARGET * 1.1);
 
     const handlePickMonth = (m: number) => {
         setSelMonth(m);
@@ -195,10 +164,9 @@ export function BossOverview() {
                 </div>
             </div>
 
-            {/* ── Conditional Dashboard Content ── */}
-            {isSatThep ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-                    {/* GLOBAL UNPAID WARNING WIDGET */}
+            {/* ── Dashboard Content ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
+                {/* GLOBAL UNPAID WARNING WIDGET */}
                     {globalUnpaidCount > 0 && (
                         <div className="fade-up fade-up-d1" style={{
                             background: '#fff1f2',
@@ -298,160 +266,6 @@ export function BossOverview() {
                         </div>
                     </div>
                 </div>
-            ) : (
-                // --- VIN CAN GIO: KPI Analytics ---
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-
-                    {/* KPI Progress */}
-                    <div key={`kpi-${selMonth}`} className="fade-up fade-up-d2" style={{ ...glassStyle, padding: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <Target size={20} color="var(--c-primary)" strokeWidth={2.5} />
-                                <p style={{ fontSize: 16, fontWeight: 800, margin: 0, letterSpacing: '-0.3px', color: 'var(--c-text)' }}>KPI {MONTH_NAMES[selMonth]} {selYear}</p>
-                            </div>
-                            <span style={{ fontSize: 16, fontWeight: 800, color: kpiReached ? 'var(--c-success)' : 'var(--c-warning)' }}>{kpiPercent}%</span>
-                        </div>
-                        <div style={{ padding: '0 24px' }}>
-                            <div style={{ height: 12, background: 'rgba(0,0,0,0.05)', borderRadius: 99, overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)' }}>
-                                <div className="animate-fill" style={{ height: '100%', borderRadius: 99, width: `${kpiPercent}%`, background: kpiReached ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'linear-gradient(90deg,#f59e0b,#ea580c)', transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--c-text-secondary)', marginTop: 8, paddingBottom: 20, fontWeight: 600 }}>
-                                <span>0</span>
-                                <span>Mục tiêu: {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</span>
-                            </div>
-                        </div>
-                        {kpiReached ? (
-                            <div style={{ background: 'rgba(220, 252, 231, 0.4)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(187, 247, 208, 0.5)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}>
-                                        <Trophy size={20} color="#fff" strokeWidth={2.5} />
-                                    </div>
-                                    <div>
-                                        <p style={{ fontSize: 14, fontWeight: 800, color: '#15803d', margin: 0 }}>Vượt chỉ tiêu!</p>
-                                        <p style={{ fontSize: 12, color: '#16a34a', margin: 0, marginTop: 2, fontWeight: 600 }}>Đạt {selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} / {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</p>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-                                        <ArrowUpRight size={18} color="#16a34a" strokeWidth={3} />
-                                        <span style={{ fontSize: 24, fontWeight: 800, color: '#15803d', letterSpacing: '-1px' }}>+{(selectedWeight - MONTHLY_KPI_TARGET).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ background: 'rgba(254, 243, 199, 0.4)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(253, 230, 138, 0.5)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 40, height: 40, borderRadius: 12, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
-                                        <ArrowDownRight size={20} color="#fff" strokeWidth={2.5} />
-                                    </div>
-                                    <div>
-                                        <p style={{ fontSize: 14, fontWeight: 800, color: '#92400e', margin: 0 }}>Chưa đạt chỉ tiêu</p>
-                                        <p style={{ fontSize: 12, color: '#b45309', margin: 0, marginTop: 2, fontWeight: 600 }}>Đạt {selectedWeight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} / {MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn</p>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-                                        <ArrowDownRight size={18} color="#dc2626" strokeWidth={3} />
-                                        <span style={{ fontSize: 24, fontWeight: 800, color: '#dc2626', letterSpacing: '-1px' }}>-{(MONTHLY_KPI_TARGET - selectedWeight).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Visual Monthly Progress Bars */}
-                    <div className="fade-up fade-up-d3" style={{ ...glassStyle, padding: 0 }}>
-                        <div style={{ padding: '24px 24px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                <BarChart3 size={20} color="#f59e0b" strokeWidth={2.5} />
-                                <p style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--c-text)', letterSpacing: '-0.3px' }}>Sản Lượng Theo Tháng</p>
-                            </div>
-                            <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 600 }}>
-                                Mục tiêu huề vốn: <b style={{ color: 'var(--c-text)' }}>{MONTHLY_KPI_TARGET.toLocaleString('vi-VN', { maximumFractionDigits: 5 })} tấn/tháng</b>
-                            </p>
-                        </div>
-
-                        <div style={{ padding: '0 20px 20px' }}>
-                            {yearMonthlyData.map((d, i, arr) => {
-                                const pct = (d.weight / maxWeight) * 100;
-                                const reached = d.weight >= MONTHLY_KPI_TARGET;
-                                const diff = d.weight - MONTHLY_KPI_TARGET;
-                                const isSelectedMonth = d.key === `${selYear}-${String(selMonth + 1).padStart(2, '0')}`;
-
-                                return (
-                                    <div key={d.key} className="animate-slide-right" style={{
-                                        marginBottom: i < arr.length - 1 ? 14 : 0,
-                                        padding: isSelectedMonth ? '12px 14px' : '0 4px',
-                                        background: isSelectedMonth ? 'rgba(79, 70, 229, 0.05)' : 'transparent',
-                                        borderRadius: isSelectedMonth ? 16 : 0,
-                                        border: isSelectedMonth ? '1px solid rgba(79, 70, 229, 0.15)' : '1px solid transparent',
-                                        transition: 'all 0.3s ease',
-                                        animationDelay: `${i * 0.04}s`,
-                                        opacity: 0,
-                                        animationFillMode: 'forwards'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 13, fontWeight: 800, color: isSelectedMonth ? 'var(--c-primary)' : 'var(--c-text)', minWidth: 32 }}>{d.month}</span>
-                                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-secondary)', background: 'rgba(0,0,0,0.04)', padding: '2px 8px', borderRadius: 6 }}>{d.shipCount} tàu</span>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                <span style={{ fontSize: 14, fontWeight: 800, color: isSelectedMonth ? 'var(--c-primary)' : 'inherit', letterSpacing: '-0.3px' }}>{d.weight.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
-                                                <span style={{ fontSize: 11, color: 'var(--c-text-secondary)', fontWeight: 600 }}>tấn</span>
-                                                {d.weight > 0 && (
-                                                    <span style={{
-                                                        fontSize: 11, fontWeight: 800, marginLeft: 2,
-                                                        color: reached ? '#16a34a' : '#ef4444',
-                                                        background: reached ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.1)',
-                                                        padding: '2px 6px', borderRadius: 6,
-                                                    }}>{reached ? '+' : ''}{diff.toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div style={{ height: 26, background: isSelectedMonth ? 'rgba(79, 70, 229, 0.1)' : 'rgba(0,0,0,0.03)', borderRadius: 13, overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)' }}>
-                                            <div className="animate-fill" style={{
-                                                height: '100%', borderRadius: 13,
-                                                width: `${pct}%`,
-                                                background: isSelectedMonth
-                                                    ? 'linear-gradient(90deg, #4f46e5, #4338ca)'
-                                                    : (reached
-                                                        ? 'linear-gradient(90deg, #4ade80, #16a34a)'
-                                                        : 'linear-gradient(90deg, #fde68a, #f59e0b)'),
-                                                transition: 'width 1s cubic-bezier(.16,1,.3,1)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 10,
-                                                boxShadow: isSelectedMonth ? '0 2px 8px rgba(79,70,229,.4)' : (reached ? '0 2px 8px rgba(22,163,74,.3)' : '0 2px 8px rgba(245,158,11,.3)'),
-                                            }}>
-                                                {d.weight > 0 && (
-                                                    <span style={{ fontSize: 11, fontWeight: 800, color: (isSelectedMonth || reached) ? '#fff' : '#92400e', textShadow: (isSelectedMonth || reached) ? '0 1px 2px rgba(0,0,0,.2)' : 'none' }}>
-                                                        {Math.round((d.weight / MONTHLY_KPI_TARGET) * 100)}%
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {yearMonthlyData.length === 0 && <EmptyState title="Chưa có dữ liệu" description="Tháng bạn chọn không có chuyến tàu nào." />}
-                        </div>
-
-                        {/* Boss KPI Summary details */}
-                        <div style={{ display: 'flex', borderTop: '1px solid rgba(0,0,0,0.06)', background: 'rgba(248,250,252,0.4)' }}>
-                            <div style={{ flex: 1, padding: '16px', textAlign: 'center', borderRight: '1px solid rgba(0,0,0,0.04)' }}>
-                                <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Đạt KPI</p>
-                                <p style={{ fontSize: 24, fontWeight: 800, margin: 0, marginTop: 4, color: '#16a34a', letterSpacing: '-1px' }}>{yearMonthlyData.filter(d => d.weight >= MONTHLY_KPI_TARGET).length}<span style={{ fontSize: 14, fontWeight: 600, color: 'var(--c-text-secondary)' }}> / 12</span></p>
-                            </div>
-                            <div style={{ flex: 1, padding: '16px', textAlign: 'center', borderRight: '1px solid rgba(0,0,0,0.04)' }}>
-                                <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cao nhất</p>
-                                <p style={{ fontSize: 20, fontWeight: 800, margin: 0, marginTop: 6, letterSpacing: '-0.5px' }}>{Math.max(...yearMonthlyData.map(d => d.weight), 0).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
-                            </div>
-                            <div style={{ flex: 1, padding: '16px', textAlign: 'center' }}>
-                                <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>TB/tháng</p>
-                                <p style={{ fontSize: 20, fontWeight: 800, margin: 0, marginTop: 6, letterSpacing: '-0.5px' }}>{Math.round(yearMonthlyData.reduce((a, d) => a + d.weight, 0) / 12).toLocaleString('vi-VN', { maximumFractionDigits: 5 })}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
 
 

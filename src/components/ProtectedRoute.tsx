@@ -12,7 +12,6 @@ export function ProtectedRoute({ children, allowedRole }: { children: JSX.Elemen
         // If accessing staff page but boss, redirect to boss dashboard
         if (role === 'BOSS') return <Navigate to="/boss/overview" replace />;
         if (role === 'STAFF') return <Navigate to="/staff/overview" replace />;
-        if (role === 'DOC') return <Navigate to="/doc-entry" replace />;
     }
 
     return children;

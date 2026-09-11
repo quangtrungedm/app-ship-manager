@@ -7,7 +7,6 @@ import { StaffShips } from './pages/StaffShips';
 import { BossOverview } from './pages/BossOverview';
 import { BossShips } from './pages/BossShips';
 import { BossManager } from './pages/BossManager';
-import { DocumentEntry } from './pages/DocumentEntry';
 
 function App() {
     return (
@@ -51,12 +50,6 @@ function App() {
                     } />
                     <Route path="/boss/manager" element={<BossManager />} />
 
-                    {/* Document Entry Route */}
-                    <Route path="/doc-entry" element={
-                        <ProtectedRoute allowedRole="DOC">
-                            <DocumentEntry />
-                        </ProtectedRoute>
-                    } />
 
                     {/* Root redirect */}
                     <Route path="/" element={<Navigate to="/login" replace />} />

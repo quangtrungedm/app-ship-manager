@@ -1,28 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth, Division } from '../lib/AuthContext';
-import { Ship, BarChart3, Building2, Hammer, FileText, LayoutList } from 'lucide-react';
-import { useState } from 'react';
+import { useAuth } from '../lib/AuthContext';
+import { Ship, BarChart3, Hammer, LayoutList } from 'lucide-react';
 
 export function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [selectedDiv, setSelectedDiv] = useState<Division>(null);
 
-    const [comingSoon, setComingSoon] = useState(false);
-
-    const divisions: { key: Division; label: string; desc: string; icon: typeof Building2; color: string; bg: string; disabled?: boolean }[] = [
-        { key: 'VIN_CAN_GIO', label: 'Vin Cần Giờ', desc: 'Dự án cảng Vin', icon: Building2, color: '#4f46e5', bg: '#eef2ff' },
-        { key: 'SAT_THEP', label: 'Sắt Thép', desc: 'Mảng sắt thép', icon: Hammer, color: '#d97706', bg: '#fef3c7' },
-    ];
-
-    const enter = (role: 'STAFF' | 'BOSS' | 'DOC') => {
-        if (!selectedDiv) return;
-        login(role, selectedDiv);
-        if (role === 'DOC') {
-            navigate('/doc-entry');
-        } else {
-            navigate(role === 'STAFF' ? '/staff/overview' : '/boss/overview');
-        }
+    const enter = (role: 'STAFF' | 'BOSS') => {
+        login(role, 'SAT_THEP');
+        navigate(role === 'STAFF' ? '/staff/overview' : '/boss/overview');
     };
 
     return (
@@ -42,54 +28,25 @@ export function Login() {
 
             {/* Division Selector */}
             <div style={{ width: '100%', maxWidth: 340, marginBottom: 20 }} className="fade-up fade-up-d1">
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-secondary)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10 }}>Chọn mảng</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {divisions.map(d => {
-                        const active = selectedDiv === d.key;
-                        const Icon = d.icon;
-                        const isComingSoon = d.disabled && comingSoon;
-                        return (
-                            <button key={d.key} onClick={() => {
-                                if (d.disabled) { setComingSoon(true); setTimeout(() => setComingSoon(false), 2000); return; }
-                                setSelectedDiv(d.key);
-                            }} style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                                padding: '18px 12px', border: active ? `2px solid ${d.color}` : '2px solid transparent',
-                                borderRadius: 16, cursor: 'pointer', fontFamily: 'inherit',
-                                background: active ? d.bg : 'var(--c-surface)',
-                                boxShadow: active ? `0 4px 16px ${d.color}22` : 'var(--shadow-card)',
-                                transition: 'all .2s ease',
-                                transform: active ? 'scale(1.03)' : 'scale(1)',
-                                opacity: d.disabled ? 0.7 : 1,
-                                position: 'relative',
-                            }}>
-                                {isComingSoon && (
-                                    <div style={{
-                                        position: 'absolute', top: 8, right: 8,
-                                        background: d.color, color: '#fff', fontSize: 9, fontWeight: 700,
-                                        padding: '3px 8px', borderRadius: 8, letterSpacing: '.3px',
-                                    }}>Đang phát triển</div>
-                                )}
-                                <div style={{
-                                    width: 44, height: 44, borderRadius: 12,
-                                    background: active ? `${d.color}18` : d.bg,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}>
-                                    <Icon size={22} color={d.color} />
-                                </div>
-                                <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: active ? d.color : 'var(--c-text)' }}>{d.label}</p>
-                                <p style={{ fontSize: 11, color: 'var(--c-text-secondary)', margin: 0 }}>{d.desc}</p>
-                            </button>
-                        );
-                    })}
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-secondary)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10 }}>Mảng hoạt động</p>
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+                    background: '#fef3c7', border: '2px solid #d97706', borderRadius: 16,
+                    boxShadow: '0 4px 16px rgba(217,119,6,0.15)'
+                }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(217,119,6,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Hammer size={22} color="#d97706" />
+                    </div>
+                    <div>
+                        <p style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#92400e' }}>Sắt Thép</p>
+                        <p style={{ fontSize: 12, color: '#b45309', margin: 0, marginTop: 2 }}>Mảng vận chuyển sắt thép & dòng tiền</p>
+                    </div>
                 </div>
             </div>
 
             {/* Role Selector */}
             <div style={{
                 width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 12,
-                opacity: selectedDiv ? 1 : 0.4, pointerEvents: selectedDiv ? 'auto' : 'none',
-                transition: 'opacity .3s ease',
             }} className="fade-up fade-up-d2">
                 <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--c-text-secondary)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 2 }}>Chọn vai trò</p>
                 <button onClick={() => enter('STAFF')} style={{
@@ -110,7 +67,7 @@ export function Login() {
                     </div>
                 </button>
 
-                <button onClick={() => enter('DOC')} style={{
+                <button onClick={() => enter('BOSS')} style={{
                     display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px',
                     background: 'var(--c-surface)', border: 'none', borderRadius: 'var(--radius)',
                     cursor: 'pointer', fontFamily: 'inherit', boxShadow: 'var(--shadow-card)',
@@ -119,27 +76,12 @@ export function Login() {
                     onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
                     onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <FileText size={22} color="#0d9488" />
-                    </div>
-                    <div style={{ textAlign: 'left' }}>
-                        <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Hiện Trường</p>
-                        <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Nhập liệu giấy tờ</p>
-                    </div>
-                </button>
-
-                <button onClick={() => enter('BOSS')} style={{
-                    display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px',
-                    background: 'var(--c-surface)', border: 'none', borderRadius: 'var(--radius)',
-                    cursor: 'pointer', fontFamily: 'inherit', boxShadow: 'var(--shadow-card)',
-                    transition: 'transform .15s, box-shadow .15s',
-                }}>
                     <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <BarChart3 size={22} color="#d97706" />
                     </div>
                     <div style={{ textAlign: 'left' }}>
                         <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Quản lý</p>
-                        <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Xem báo cáo & tải giấy tờ</p>
+                        <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, marginTop: 2 }}>Xem báo cáo & thanh toán</p>
                     </div>
                 </button>
             </div>

@@ -31,8 +31,8 @@ export function useShips(): UseShipsReturn {
     const [error, setError] = useState<string | null>(null);
 
     const loadShips = useCallback(async () => {
-        // Ensure ships belong to the right division. Legacy ships without a division default to 'VIN_CAN_GIO'
-        const filterByDiv = (s: Ship) => s.division === division || (division === 'VIN_CAN_GIO' && !s.division);
+        // Ensure ships belong to the right division
+        const filterByDiv = (s: Ship) => s.division === division || !s.division;
 
         if (!isConfigured()) {
             setShips(MOCK_SHIPS.filter(filterByDiv));
