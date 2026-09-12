@@ -7,7 +7,7 @@ import {
     ArrowLeft, Search, Star, Coffee, ClipboardCheck,
     Save, CheckCircle2, Ship as ShipIcon,
     Plus, X, Edit3, RefreshCw,
-    Calendar, MapPin, Building2, Weight
+    Calendar, MapPin, Building2, Weight, MessageSquare
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -53,6 +53,14 @@ const STATUS_MAP: Record<ShipStatus, { label: string; color: string; bg: string 
 
 const QUICK_CAFE_AMOUNTS = [50000, 100000, 200000, 500000];
 const QUICK_TALLY_AMOUNTS = [100000, 200000, 300000, 500000];
+const QUICK_RATING_TAGS = [
+    '⚡ Bốc dỡ nhanh',
+    '🚢 Thuyền trưởng hỗ trợ tốt',
+    '⚓ Cập cầu thuận lợi',
+    '📦 Hàng sạch đẹp',
+    '⚠️ Cẩu yếu / Chậm',
+    '⏳ Chờ cầu lâu'
+];
 
 export function ShipQuickUpdate() {
     const navigate = useNavigate();
@@ -760,36 +768,95 @@ export function ShipQuickUpdate() {
                                             )}
                                         </div>
 
-                                        {/* ── MỤC 3: ĐÁNH GIÁ & NHẬN XÉT TÀU ── */}
-                                        <div style={{
-                                            background: s.rating ? '#fefce8' : '#f8fafc',
-                                            border: s.rating ? '1.5px solid #facc15' : '1px dashed #cbd5e1',
-                                            borderRadius: 14, padding: '12px 14px'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                                                <span style={{ fontSize: 12, fontWeight: 800, color: s.rating ? '#854d0e' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <Star size={16} color={s.rating ? '#d97706' : '#94a3b8'} /> Đánh giá tàu
-                                                </span>
-                                                {s.rating ? (
-                                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#b45309' }}>
-                                                        ⭐ {s.rating}/5 sao {STAR_LABELS[s.rating] ? `(${STAR_LABELS[s.rating].text})` : ''}
-                                                    </span>
-                                                ) : (
-                                                    <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>Chưa có đánh giá</span>
-                                                )}
-                                            </div>
+                                        {/* ── MỤC 3: ĐÁNH GIÁ TÀU (THIẾT KẾ TINH TẾ) ── */}
+                                        {s.rating || s.ratingComment ? (
                                             <div style={{
-                                                fontSize: 12, color: s.ratingComment ? '#1e293b' : '#94a3b8',
-                                                fontStyle: s.ratingComment ? 'normal' : 'italic',
-                                                fontWeight: s.ratingComment ? 600 : 400,
-                                                marginTop: 4, lineHeight: 1.4,
-                                                background: s.ratingComment ? 'rgba(255,255,255,0.7)' : 'transparent',
-                                                padding: s.ratingComment ? '6px 10px' : '0',
-                                                borderRadius: 8
+                                                background: 'linear-gradient(180deg, #ffffff 0%, #fffdf5 100%)',
+                                                border: '1px solid #fef08a',
+                                                borderRadius: 14, padding: '11px 13px',
+                                                boxShadow: '0 2px 8px rgba(245,158,11,0.06)'
                                             }}>
-                                                {s.ratingComment ? `💬 "${s.ratingComment}"` : 'Chưa có nội dung nhận xét chi tiết.'}
+                                                {/* Dãy sao vàng kim + Điểm số + Nhãn cảm xúc tinh tế */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                            {[1, 2, 3, 4, 5].map(num => {
+                                                                const filled = num <= (s.rating || 0);
+                                                                return (
+                                                                    <Star
+                                                                        key={num}
+                                                                        size={14}
+                                                                        fill={filled ? '#f59e0b' : 'none'}
+                                                                        color={filled ? '#d97706' : '#cbd5e1'}
+                                                                        strokeWidth={filled ? 1 : 1.5}
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {s.rating ? (
+                                                            <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
+                                                                {s.rating}.0
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+
+                                                    {s.rating && STAR_LABELS[s.rating] && (
+                                                        <span style={{
+                                                            fontSize: 11, fontWeight: 700,
+                                                            padding: '2px 8px', borderRadius: 99,
+                                                            background: STAR_LABELS[s.rating].bg,
+                                                            color: STAR_LABELS[s.rating].color,
+                                                            border: `1px solid ${STAR_LABELS[s.rating].color}30`
+                                                        }}>
+                                                            {STAR_LABELS[s.rating].text}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Nhận xét trích dẫn tinh tế với đường kẻ chỉ vàng bên trái */}
+                                                {s.ratingComment ? (
+                                                    <div style={{
+                                                        marginTop: 8,
+                                                        padding: '7px 10px',
+                                                        background: 'rgba(255,255,255,0.9)',
+                                                        borderLeft: '2.5px solid #f59e0b',
+                                                        borderRadius: '0 8px 8px 0',
+                                                        display: 'flex', alignItems: 'flex-start', gap: 6
+                                                    }}>
+                                                        <MessageSquare size={13} color="#d97706" style={{ flexShrink: 0, marginTop: 2 }} />
+                                                        <p style={{
+                                                            margin: 0, fontSize: 12, fontStyle: 'italic',
+                                                            color: '#334155', lineHeight: 1.45, fontWeight: 500
+                                                        }}>
+                                                            "{s.ratingComment}"
+                                                        </p>
+                                                    </div>
+                                                ) : null}
                                             </div>
-                                        </div>
+                                        ) : (
+                                            /* Khi chưa có đánh giá: Thanh tối giản, thanh lịch, không tốn diện tích */
+                                            <div
+                                                onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                    padding: '8px 12px', background: '#f8fafc',
+                                                    borderRadius: 12, border: '1px solid #f1f5f9',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                        {[1, 2, 3, 4, 5].map(num => (
+                                                            <Star key={num} size={13} fill="none" color="#cbd5e1" strokeWidth={1.5} />
+                                                        ))}
+                                                    </div>
+                                                    <span style={{ fontSize: 11.5, color: '#94a3b8', fontWeight: 600 }}>Chưa có đánh giá</span>
+                                                </div>
+                                                <span style={{ fontSize: 11.5, color: '#059669', fontWeight: 700 }}>
+                                                    + Thêm đánh giá
+                                                </span>
+                                            </div>
+                                        )}
 
                                         {/* Xà lan nếu có */}
                                         {s.hasBarge && (
@@ -881,15 +948,36 @@ export function ShipQuickUpdate() {
                                     />
                                 </div>
 
-                                {/* PHẦN 1: ĐÁNH GIÁ & NHẬN XÉT */}
-                                <div style={{ background: '#fffbeb', borderRadius: 16, padding: 14, border: '1px solid #fde68a', marginBottom: 14 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                                        <Star size={16} color="#d97706" />
-                                        <span style={{ fontSize: 13, fontWeight: 800, color: '#92400e' }}>1. Đánh giá chất lượng & nhận xét</span>
+                                {/* PHẦN 1: ĐÁNH GIÁ & NHẬN XÉT (THIẾT KẾ TINH TẾ) */}
+                                <div style={{
+                                    background: 'linear-gradient(180deg, #ffffff 0%, #fffdf5 100%)',
+                                    borderRadius: 16, padding: '14px 16px',
+                                    border: '1px solid #fef08a', marginBottom: 14,
+                                    boxShadow: '0 2px 8px rgba(245,158,11,0.06)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Star size={16} color="#d97706" fill="#f59e0b" />
+                                            <span style={{ fontSize: 13, fontWeight: 800, color: '#92400e' }}>1. Đánh giá chất lượng tàu</span>
+                                        </div>
+                                        {rating > 0 && STAR_LABELS[rating] && (
+                                            <span style={{
+                                                fontSize: 11, fontWeight: 700,
+                                                padding: '2px 8px', borderRadius: 99,
+                                                background: STAR_LABELS[rating].bg,
+                                                color: STAR_LABELS[rating].color,
+                                                border: `1px solid ${STAR_LABELS[rating].color}30`
+                                            }}>
+                                                {rating}⭐ {STAR_LABELS[rating].text}
+                                            </span>
+                                        )}
                                     </div>
 
-                                    {/* Stars */}
-                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '4px 0' }}>
+                                    {/* Stars Bar */}
+                                    <div style={{
+                                        display: 'flex', gap: 10, justifyContent: 'center',
+                                        alignItems: 'center', padding: '6px 0 10px 0'
+                                    }}>
                                         {[1, 2, 3, 4, 5].map(starNum => {
                                             const active = rating >= starNum;
                                             return (
@@ -897,34 +985,64 @@ export function ShipQuickUpdate() {
                                                     key={starNum}
                                                     type="button"
                                                     onClick={() => setRating(rating === starNum ? 0 : starNum)}
-                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2 }}
+                                                    style={{
+                                                        border: 'none', background: 'none', cursor: 'pointer',
+                                                        padding: 4, transition: 'transform .15s'
+                                                    }}
+                                                    onMouseDown={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                                                    onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                                                 >
                                                     <Star
-                                                        size={32}
-                                                        fill={active ? '#f59e0b' : '#e2e8f0'}
+                                                        size={30}
+                                                        fill={active ? '#f59e0b' : 'none'}
                                                         color={active ? '#d97706' : '#cbd5e1'}
-                                                        strokeWidth={1.5}
+                                                        strokeWidth={active ? 1 : 1.5}
                                                     />
                                                 </button>
                                             );
                                         })}
                                     </div>
 
-                                    {rating > 0 && STAR_LABELS[rating] && (
-                                        <div style={{ textAlign: 'center', margin: '2px 0 8px 0', fontSize: 12, fontWeight: 700, color: STAR_LABELS[rating].color }}>
-                                            {rating} sao: {STAR_LABELS[rating].text}
+                                    {/* Gợi ý nhận xét nhanh (Quick Tags) */}
+                                    <div style={{ marginBottom: 8 }}>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: '#b45309', display: 'block', marginBottom: 5 }}>
+                                            Gợi ý nhận xét nhanh (chạm để chọn):
+                                        </span>
+                                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                            {QUICK_RATING_TAGS.map(tag => (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const cleanTag = tag.replace(/^[^\w\s\u00C0-\u1EF9]+/u, '').trim();
+                                                        if (!ratingComment) {
+                                                            setRatingComment(cleanTag);
+                                                        } else if (!ratingComment.includes(cleanTag)) {
+                                                            setRatingComment(`${ratingComment}, ${cleanTag}`);
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                                        background: '#ffffff', color: '#78350f',
+                                                        border: '1px solid #fde68a', cursor: 'pointer',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                                                    }}
+                                                >
+                                                    {tag}
+                                                </button>
+                                            ))}
                                         </div>
-                                    )}
+                                    </div>
 
                                     <textarea
                                         value={ratingComment}
                                         onChange={e => setRatingComment(e.target.value)}
-                                        placeholder="Nhận xét tàu thế nào (VD: cẩu bốc dỡ nhanh, cuộn thép đẹp, hàng cẩn thận...)"
+                                        placeholder="Ghi chú nhận xét tàu (tình trạng hầm hàng, cẩu bốc dỡ, thuyền trưởng...)"
                                         rows={2}
                                         style={{
                                             width: '100%', padding: '8px 10px', borderRadius: 10,
-                                            border: '1px solid #fcd34d', background: '#ffffff',
-                                            fontSize: 12, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+                                            border: '1px solid #fde68a', background: '#ffffff',
+                                            fontSize: 12.5, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
                                         }}
                                     />
                                 </div>
