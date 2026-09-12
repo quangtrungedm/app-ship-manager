@@ -42,6 +42,13 @@ export async function updateShip(ship: Ship): Promise<void> {
     });
 }
 
+export async function batchUpdateShips(ships: Ship[]): Promise<void> {
+    await request('POST', {
+        action: 'batchUpdate',
+        ships: ships.map(serializeShip),
+    });
+}
+
 export async function deleteShip(id: string): Promise<void> {
     await request('POST', { action: 'delete', id });
 }

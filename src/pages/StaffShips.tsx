@@ -415,24 +415,27 @@ export function StaffShips() {
 
         const count = selectedShipIds.size;
         const totalFormatted = selectedTotalSalary.toLocaleString('vi-VN');
-        const confirmMsg = `Xác nhận chuyển ${count} chuyến tàu (Tổng tiền lương: ${totalFormatted} đ) sang trạng thái ĐÃ THANH TOÁN?`;
+        const confirmMsg = `Xác nhận chuyển ${count} chuyến tàu (Tổng tiền: ${totalFormatted} đ) sang trạng thái ĐÃ THANH TOÁN?\n\nHệ thống sẽ:\n1. Chuyển trạng thái lương: ĐÃ THANH TOÁN (isPaid = true)\n2. Chuyển trạng thái tàu: ĐÃ HOÀN THÀNH (status = completed)\n3. Lưu và đồng bộ trực tiếp lên Google Sheets`;
         if (!window.confirm(confirmMsg)) return;
 
         try {
             setBatchSubmitting(true);
+            const nowIso = new Date().toISOString();
             const shipsToUpdate = selectedShipsList.map(s => ({
                 ...s,
-                isPaid: true
+                isPaid: true,
+                status: 'completed' as ShipStatus,
+                completionDate: s.completionDate || nowIso,
             }));
 
             await batchUpdateShips(shipsToUpdate);
 
             setSelectedShipIds(new Set());
-            setShowSuccessToast(`Đã chuyển thành công ${count} chuyến tàu sang Đã thanh toán!`);
-            setTimeout(() => setShowSuccessToast(null), 4000);
+            setShowSuccessToast(`🎉 Đã chuyển thành công ${count} chuyến tàu sang ĐÃ THANH TOÁN và cập nhật lên Google Sheets!`);
+            setTimeout(() => setShowSuccessToast(null), 5000);
         } catch (err: any) {
             console.error('Lỗi khi thanh toán hàng loạt:', err);
-            alert('Lỗi cập nhật: ' + (err.message || 'Không thể lưu dữ liệu'));
+            alert('Lỗi cập nhật lên Google Sheets: ' + (err.message || 'Không thể lưu dữ liệu'));
         } finally {
             setBatchSubmitting(false);
         }
@@ -862,39 +865,57 @@ export function StaffShips() {
                             </div>
                         </div>
 
-                        {/* Nút hành động Chuyển Đã Thanh Toán nằm ngay dưới thông tin đã chọn */}
-                        {selectedShipIds.size > 0 && (
+                        {/* Nút hành động Chuyển Đã Thanh Toán luôn hiển thị rõ ràng vị trí xác nhận */}
+                        {selectedShipIds.size === 0 ? (
+                            <div style={{
+                                marginTop: 10,
+                                padding: '11px 14px',
+                                borderRadius: 12,
+                                background: '#fafafa',
+                                border: '1.5px dashed #cbd5e1',
+                                color: '#64748b',
+                                fontSize: 12.5,
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                textAlign: 'center'
+                            }}>
+                                <span>👇 Tích chọn các ô tàu bên dưới để bấm Xác nhận thanh toán</span>
+                            </div>
+                        ) : (
                             <button
                                 onClick={handleBatchPay}
                                 disabled={batchSubmitting}
                                 style={{
                                     width: '100%',
                                     marginTop: 10,
-                                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                                    background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
                                     color: '#ffffff',
                                     border: 'none',
                                     borderRadius: 12,
-                                    padding: '11px 16px',
+                                    padding: '12px 16px',
                                     fontSize: 13.5,
                                     fontWeight: 800,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: 8,
-                                    boxShadow: '0 3px 12px rgba(16,185,129,0.3)',
+                                    boxShadow: '0 4px 14px rgba(22,163,74,0.38)',
                                     cursor: batchSubmitting ? 'not-allowed' : 'pointer',
                                     transition: 'all 0.15s'
                                 }}
                             >
                                 {batchSubmitting ? (
                                     <>
-                                        <Loader2 size={16} className="spin" />
-                                        <span>Đang lưu chuyển trạng thái...</span>
+                                        <Loader2 size={17} className="spin" />
+                                        <span>Đang lưu và đồng bộ lên Google Sheets...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <CheckCircle2 size={17} strokeWidth={2.5} />
-                                        <span>Chuyển Đã Thanh Toán ({selectedShipIds.size} tàu • {selectedTotalSalary.toLocaleString('vi-VN')} đ)</span>
+                                        <CheckCircle2 size={18} strokeWidth={2.5} />
+                                        <span>BẤM VÀO ĐÂY ĐỂ XÁC NHẬN ({selectedShipIds.size} TÀU • {selectedTotalSalary.toLocaleString('vi-VN')} đ)</span>
                                     </>
                                 )}
                             </button>
@@ -903,24 +924,112 @@ export function StaffShips() {
                 )}
 
                 {filteredShips.length === 0 ? (
-                    <EmptyState
-                        title={activeTab === 'unpaid' ? 'Đã quyết toán hết lương!' : (searchQuery ? 'Không tìm thấy tàu' : 'Không có tàu')}
-                        description={activeTab === 'unpaid'
-                            ? 'Tuyệt vời! Hiện tại không còn chuyến tàu nào đang chờ thanh toán lương.'
-                            : (searchQuery ? `Không có kết quả nào cho "${searchQuery}"` : 'Không có tàu nào cập bến trong khoảng thời gian này.')}
-                    />
-                ) : (
-                    filteredShips.map(s => (
-                        <ShipCard
-                            key={s.id}
-                            ship={s}
-                            selectable={activeTab === 'unpaid'}
-                            selected={selectedShipIds.has(s.id)}
-                            onToggleSelect={() => handleToggleShip(s.id)}
-                            onClick={() => openEdit(s)}
-                            onEdit={() => openEdit(s)}
+                    activeTab === 'unpaid' ? (
+                        <div style={{
+                            background: '#f0fdf4',
+                            border: '1.5px dashed #86efac',
+                            borderRadius: 16,
+                            padding: '36px 20px',
+                            textAlign: 'center',
+                            marginTop: 16,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 12
+                        }}>
+                            <div style={{
+                                width: 56, height: 56, borderRadius: '50%',
+                                background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <CheckCircle2 size={30} color="#16a34a" strokeWidth={2.5} />
+                            </div>
+                            <div>
+                                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#166534', margin: '0 0 6px 0' }}>
+                                    Đã quyết toán hết lương!
+                                </h3>
+                                <p style={{ fontSize: 13, color: '#15803d', margin: 0, maxWidth: 300, lineHeight: 1.5 }}>
+                                    Hiện tại không còn chuyến tàu nào chưa thanh toán. Mọi dữ liệu đã được đồng bộ lên Google Sheets.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setActiveTab('all')}
+                                style={{
+                                    marginTop: 6,
+                                    padding: '10px 18px',
+                                    borderRadius: 10,
+                                    background: '#16a34a',
+                                    color: '#ffffff',
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    boxShadow: '0 2px 8px rgba(22,163,74,0.3)'
+                                }}
+                            >
+                                <span>Xem danh sách Tất cả tàu</span>
+                                <ArrowRight size={15} />
+                            </button>
+                        </div>
+                    ) : (
+                        <EmptyState
+                            title={searchQuery ? 'Không tìm thấy tàu' : 'Không có tàu'}
+                            description={searchQuery ? `Không có kết quả nào cho "${searchQuery}"` : 'Không có tàu nào cập bến trong khoảng thời gian này.'}
                         />
-                    ))
+                    )
+                ) : (
+                    <>
+                        {filteredShips.map(s => (
+                            <ShipCard
+                                key={s.id}
+                                ship={s}
+                                selectable={activeTab === 'unpaid'}
+                                selected={selectedShipIds.has(s.id)}
+                                onToggleSelect={() => handleToggleShip(s.id)}
+                                onClick={() => openEdit(s)}
+                                onEdit={() => openEdit(s)}
+                            />
+                        ))}
+
+                        {activeTab === 'unpaid' && selectedShipIds.size > 0 && (
+                            <div style={{ marginTop: 12, marginBottom: 20 }}>
+                                <button
+                                    onClick={handleBatchPay}
+                                    disabled={batchSubmitting}
+                                    style={{
+                                        width: '100%',
+                                        background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: 14,
+                                        padding: '13px 20px',
+                                        fontSize: 13.5,
+                                        fontWeight: 800,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 8,
+                                        boxShadow: '0 4px 14px rgba(22,163,74,0.35)',
+                                        cursor: batchSubmitting ? 'not-allowed' : 'pointer',
+                                    }}
+                                >
+                                    {batchSubmitting ? (
+                                        <>
+                                            <Loader2 size={17} className="spin" />
+                                            <span>Đang lưu và đồng bộ lên Google Sheets...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={18} strokeWidth={2.5} />
+                                            <span>XÁC NHẬN CHUYỂN {selectedShipIds.size} TÀU ĐÃ CHỌN SANG ĐÃ THANH TOÁN</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </MobileLayout >
 

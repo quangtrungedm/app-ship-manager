@@ -132,11 +132,18 @@ export function useShips(): UseShipsReturn {
 
         if (isConfigured()) {
             try {
-                await Promise.all(
-                    updatedShipsList.map(s => api.updateShip({ ...s, division: s.division || division || 'SAT_THEP' }))
-                );
+                try {
+                    // Thử gọi batchUpdate 1 lần duy nhất để tối ưu tốc độ
+                    await api.batchUpdateShips(updatedShipsList.map(s => ({ ...s, division: s.division || division || 'SAT_THEP' })));
+                } catch (batchErr) {
+                    console.warn("Script hiện tại chưa có action batchUpdate hoặc gặp lỗi, fallback sang cập nhật tuần tự từng tàu:", batchErr);
+                    // Cập nhật tuần tự từng tàu để Google Apps Script phiên bản hiện tại ghi nhận chính xác 100% không bị lock
+                    for (const ship of updatedShipsList) {
+                        await api.updateShip({ ...ship, division: ship.division || division || 'SAT_THEP' });
+                    }
+                }
             } catch (err) {
-                console.error("Lỗi khi cập nhật hàng loạt tàu:", err);
+                console.error("Lỗi khi cập nhật hàng loạt tàu lên Google Sheets:", err);
                 throw err;
             }
         }

@@ -119,6 +119,7 @@ function doPost(e) {
 
     if (action === 'add') return addShip(body.ship);
     if (action === 'update') return updateShip(body.ship);
+    if (action === 'batchUpdate') return batchUpdateShips(body.ships);
     if (action === 'delete') return deleteShip(body.id);
     if (action === 'upload') return uploadFile(body);
 
@@ -214,6 +215,61 @@ function updateShip(ship) {
     }
   }
   return createResponse({ success: false, error: 'Ship not found' });
+}
+
+// ── Cập nhật nhiều tàu hàng loạt ──
+function batchUpdateShips(shipsList) {
+  if (!shipsList || !shipsList.length) return createResponse({ success: true, count: 0 });
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  const { headers, map } = getHeaderMap(sheet);
+  const data = sheet.getDataRange().getValues();
+  const idCol = map['id'] !== undefined ? map['id'] : 0;
+
+  const shipMap = {};
+  for (var k = 0; k < shipsList.length; k++) {
+    shipMap[String(shipsList[k].id)] = shipsList[k];
+  }
+
+  var updatedCount = 0;
+  for (var i = 1; i < data.length; i++) {
+    var rowId = String(data[i][idCol]);
+    if (shipMap[rowId]) {
+      var ship = shipMap[rowId];
+      var row = data[i].slice(0);
+      while (row.length < headers.length) row.push('');
+
+      var setVal = function(col, val) {
+        if (map[col] !== undefined) row[map[col]] = val;
+      };
+
+      if (ship.name !== undefined) setVal('name', ship.name);
+      if (ship.arrivalDate !== undefined) setVal('arrivalDate', ship.arrivalDate);
+      if (ship.completionDate !== undefined) setVal('completionDate', ship.completionDate || '');
+      if (ship.weight !== undefined) setVal('weight', ship.weight);
+      if (ship.division !== undefined) setVal('division', ship.division || 'SAT_THEP');
+      if (ship.documents !== undefined) setVal('documents', JSON.stringify(ship.documents || []));
+      if (ship.status !== undefined) setVal('status', ship.status || 'completed');
+      if (ship.isPaid !== undefined) setVal('isPaid', ship.isPaid === true ? 'true' : 'false');
+      if (ship.port !== undefined) setVal('port', ship.port || '');
+      if (ship.client !== undefined) setVal('client', ship.client || '');
+      if (ship.hasBarge !== undefined) setVal('hasBarge', ship.hasBarge === true ? 'true' : 'false');
+      if (ship.bargeCount !== undefined) setVal('bargeCount', ship.bargeCount || 0);
+      if (ship.employee !== undefined) setVal('employee', ship.employee || '');
+      if (ship.rating !== undefined) setVal('rating', ship.rating || '');
+      if (ship.ratingComment !== undefined) setVal('ratingComment', ship.ratingComment || '');
+      if (ship.hasCafeFee !== undefined) setVal('hasCafeFee', ship.hasCafeFee === true ? 'true' : 'false');
+      if (ship.cafeFee !== undefined) setVal('cafeFee', ship.cafeFee || 0);
+      if (ship.cafeNote !== undefined) setVal('cafeNote', ship.cafeNote || '');
+      if (ship.hasTally !== undefined) setVal('hasTally', ship.hasTally === true ? 'true' : 'false');
+      if (ship.tallyFee !== undefined) setVal('tallyFee', ship.tallyFee || 0);
+      if (ship.tallyNote !== undefined) setVal('tallyNote', ship.tallyNote || '');
+
+      sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
+      updatedCount++;
+    }
+  }
+  return createResponse({ success: true, count: updatedCount });
 }
 
 // ── Xóa tàu ──
