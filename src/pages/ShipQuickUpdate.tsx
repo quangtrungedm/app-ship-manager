@@ -60,7 +60,7 @@ export function ShipQuickUpdate() {
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterTab, setFilterTab] = useState<'all' | 'has_info' | 'has_cafe' | 'has_tally'>('all');
+    const [filterTab, setFilterTab] = useState<'all' | 'has_info' | 'has_cafe' | 'no_cafe' | 'has_tally' | 'no_tally' | 'has_rating'>('all');
 
     // Modal state for editing or adding ship
     const [showModal, setShowModal] = useState(false);
@@ -268,8 +268,14 @@ export function ShipQuickUpdate() {
             list = list.filter(s => (s.rating && s.rating > 0) || s.hasCafeFee || s.hasTally || s.ratingComment);
         } else if (filterTab === 'has_cafe') {
             list = list.filter(s => s.hasCafeFee);
+        } else if (filterTab === 'no_cafe') {
+            list = list.filter(s => !s.hasCafeFee);
         } else if (filterTab === 'has_tally') {
             list = list.filter(s => s.hasTally);
+        } else if (filterTab === 'no_tally') {
+            list = list.filter(s => !s.hasTally);
+        } else if (filterTab === 'has_rating') {
+            list = list.filter(s => s.rating && s.rating > 0);
         }
 
         // Sort: newest arrival date first
@@ -281,7 +287,10 @@ export function ShipQuickUpdate() {
         all: ships.length,
         has_info: ships.filter(s => (s.rating && s.rating > 0) || s.hasCafeFee || s.hasTally || s.ratingComment).length,
         has_cafe: ships.filter(s => s.hasCafeFee).length,
+        no_cafe: ships.filter(s => !s.hasCafeFee).length,
         has_tally: ships.filter(s => s.hasTally).length,
+        no_tally: ships.filter(s => !s.hasTally).length,
+        has_rating: ships.filter(s => s.rating && s.rating > 0).length,
     }), [ships]);
 
     return (
@@ -409,52 +418,84 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('all')}
                         style={{
-                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            padding: '7px 12px', borderRadius: 10, border: 'none',
                             fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'all' ? '#0f172a' : '#ffffff',
                             color: filterTab === 'all' ? '#ffffff' : '#64748b',
                             boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                         }}
                     >
-                        Tất cả tàu ({counts.all})
-                    </button>
-                    <button
-                        onClick={() => setFilterTab('has_info')}
-                        style={{
-                            padding: '6px 12px', borderRadius: 10, border: 'none',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-                            background: filterTab === 'has_info' ? '#059669' : '#ffffff',
-                            color: filterTab === 'has_info' ? '#ffffff' : '#047857',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
-                        }}
-                    >
-                        Đã có thông tin ({counts.has_info})
+                        Tất cả ({counts.all})
                     </button>
                     <button
                         onClick={() => setFilterTab('has_cafe')}
                         style={{
-                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            padding: '7px 12px', borderRadius: 10,
+                            border: filterTab === 'has_cafe' ? 'none' : '1px solid #fde68a',
                             fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-                            background: filterTab === 'has_cafe' ? '#b45309' : '#ffffff',
-                            color: filterTab === 'has_cafe' ? '#ffffff' : '#78350f',
+                            background: filterTab === 'has_cafe' ? '#d97706' : '#fffbeb',
+                            color: filterTab === 'has_cafe' ? '#ffffff' : '#b45309',
                             boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
-                        ☕ Có tiền cafe ({counts.has_cafe})
+                        ☕ Có cafe ({counts.has_cafe})
+                    </button>
+                    <button
+                        onClick={() => setFilterTab('no_cafe')}
+                        style={{
+                            padding: '7px 12px', borderRadius: 10,
+                            border: filterTab === 'no_cafe' ? 'none' : '1px solid #fca5a5',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'no_cafe' ? '#dc2626' : '#fef2f2',
+                            color: filterTab === 'no_cafe' ? '#ffffff' : '#b91c1c',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        ☕ Chưa có cafe ({counts.no_cafe})
                     </button>
                     <button
                         onClick={() => setFilterTab('has_tally')}
                         style={{
-                            padding: '6px 12px', borderRadius: 10, border: 'none',
+                            padding: '7px 12px', borderRadius: 10,
+                            border: filterTab === 'has_tally' ? 'none' : '1px solid #bfdbfe',
                             fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-                            background: filterTab === 'has_tally' ? '#2563eb' : '#ffffff',
-                            color: filterTab === 'has_tally' ? '#ffffff' : '#1e3a8a',
+                            background: filterTab === 'has_tally' ? '#2563eb' : '#eff6ff',
+                            color: filterTab === 'has_tally' ? '#ffffff' : '#1d4ed8',
                             boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
                         📋 Có tally ({counts.has_tally})
+                    </button>
+                    <button
+                        onClick={() => setFilterTab('no_tally')}
+                        style={{
+                            padding: '7px 12px', borderRadius: 10,
+                            border: filterTab === 'no_tally' ? 'none' : '1px solid #fca5a5',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'no_tally' ? '#dc2626' : '#fef2f2',
+                            color: filterTab === 'no_tally' ? '#ffffff' : '#b91c1c',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        📋 Chưa có tally ({counts.no_tally})
+                    </button>
+                    <button
+                        onClick={() => setFilterTab('has_rating')}
+                        style={{
+                            padding: '7px 12px', borderRadius: 10,
+                            border: filterTab === 'has_rating' ? 'none' : '1px solid #fef08a',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            background: filterTab === 'has_rating' ? '#ca8a04' : '#ffffff',
+                            color: filterTab === 'has_rating' ? '#ffffff' : '#854d0e',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        ⭐ Có đánh giá ({counts.has_rating})
                     </button>
                 </div>
 
@@ -479,47 +520,101 @@ export function ShipQuickUpdate() {
                             const arrDate = new Date(s.arrivalDate).toLocaleDateString('vi-VN', {
                                 day: '2-digit', month: '2-digit', year: 'numeric'
                             });
+                            const hasBoth = s.hasCafeFee && s.hasTally;
+                            const hasEither = s.hasCafeFee || s.hasTally;
+                            const hasNeither = !s.hasCafeFee && !s.hasTally;
+                            const accentColor = hasBoth ? '#10b981' : (hasEither ? '#f59e0b' : '#ef4444');
 
                             return (
                                 <div
                                     key={s.id}
                                     style={{
-                                        background: '#ffffff', borderRadius: 18,
-                                        border: '1px solid #e2e8f0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
-                                        overflow: 'hidden', position: 'relative'
+                                        background: '#ffffff',
+                                        borderRadius: 18,
+                                        border: hasNeither ? '1.5px solid #fecaca' : (hasBoth ? '1.5px solid #a7f3d0' : '1.5px solid #fed7aa'),
+                                        boxShadow: hasNeither ? '0 4px 14px rgba(239,68,68,0.06)' : '0 4px 14px rgba(0,0,0,0.03)',
+                                        overflow: 'hidden',
+                                        position: 'relative'
                                     }}
                                 >
+                                    {/* Dải màu mép trái: Xanh = Đủ cả 2, Vàng = Có 1 trong 2, Đỏ = Chưa có cả 2 */}
+                                    <div style={{
+                                        position: 'absolute', left: 0, top: 0, bottom: 0, width: 5,
+                                        background: accentColor
+                                    }} />
+
                                     {/* 1. Header: Tên tàu + Trạng thái & Nút Sửa + Box thông tin chi tiết */}
                                     <div style={{
-                                        padding: '14px 16px 12px 16px',
+                                        padding: '14px 16px 12px 18px',
                                         background: '#ffffff',
                                         borderBottom: '1px solid #f1f5f9'
                                     }}>
                                         {/* Dòng 1: Tên tàu (trái) + Trạng thái & Nút Sửa (phải) */}
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: 1 }}>
                                                 <div style={{
-                                                    width: 38, height: 38, borderRadius: 10,
-                                                    background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                                    width: 40, height: 40, borderRadius: 12,
+                                                    background: hasBoth ? '#f0fdf4' : (hasNeither ? '#fef2f2' : '#fffbeb'),
+                                                    border: hasBoth ? '1px solid #bbf7d0' : (hasNeither ? '1px solid #fecaca' : '1px solid #fde68a'),
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: '#15803d', flexShrink: 0
+                                                    color: hasBoth ? '#15803d' : (hasNeither ? '#dc2626' : '#d97706'),
+                                                    flexShrink: 0
                                                 }}>
-                                                    <ShipIcon size={20} />
+                                                    <ShipIcon size={22} />
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
                                                     <h3 style={{
-                                                        fontSize: 16, fontWeight: 800, color: '#0f172a',
+                                                        fontSize: 17, fontWeight: 800, color: '#0f172a',
                                                         margin: 0, lineHeight: 1.3,
                                                         wordBreak: 'break-word'
                                                     }}>
                                                         {s.name}
                                                     </h3>
+
+                                                    {/* Nhãn tóm tắt nổi bật ngay dưới tên tàu */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 5 }}>
+                                                        {s.hasCafeFee ? (
+                                                            <span style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                                                                background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b'
+                                                            }}>
+                                                                ☕ CÓ CAFE ({formatVNCurrency(s.cafeFee || 0)}đ)
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                                                                background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5'
+                                                            }}>
+                                                                ☕ KHÔNG CÓ CAFE
+                                                            </span>
+                                                        )}
+
+                                                        {s.hasTally ? (
+                                                            <span style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                                                                background: '#dbeafe', color: '#1e40af', border: '1px solid #3b82f6'
+                                                            }}>
+                                                                📋 CÓ TALLY ({formatVNCurrency(s.tallyFee || 0)}đ)
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                                                                background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5'
+                                                            }}>
+                                                                📋 KHÔNG CÓ TALLY
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                                                 <span style={{
-                                                    padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                    padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
                                                     background: statusCfg.bg, color: statusCfg.color, whiteSpace: 'nowrap'
                                                 }}>
                                                     {statusCfg.label}
@@ -528,7 +623,7 @@ export function ShipQuickUpdate() {
                                                     onClick={() => handleOpenEdit(s)}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 4,
-                                                        padding: '5px 10px', borderRadius: 8,
+                                                        padding: '6px 10px', borderRadius: 8,
                                                         background: '#ecfdf5', border: '1px solid #a7f3d0',
                                                         color: '#047857', fontSize: 12, fontWeight: 700,
                                                         cursor: 'pointer', whiteSpace: 'nowrap'
@@ -591,84 +686,114 @@ export function ShipQuickUpdate() {
 
                                     {/* 2. Body Details: 3 MỤC RÕ RÀNG */}
                                     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {/* ── MỤC 1: ĐÁNH GIÁ & NHẬN XÉT TÀU ── */}
+                                        {/* ── MỤC 1: TIỀN CAFE TÀU (Nổi bật nếu CÓ, MÀU ĐỎ nếu KHÔNG) ── */}
+                                        <div style={{
+                                            background: s.hasCafeFee ? '#fffbeb' : '#fef2f2',
+                                            border: s.hasCafeFee ? '1.5px solid #f59e0b' : '1.5px solid #f87171',
+                                            borderRadius: 14, padding: '12px 14px',
+                                            boxShadow: s.hasCafeFee ? '0 2px 8px rgba(245,158,11,0.1)' : '0 2px 8px rgba(239,68,68,0.06)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{
+                                                    fontSize: 12, fontWeight: 800,
+                                                    color: s.hasCafeFee ? '#92400e' : '#991b1b',
+                                                    textTransform: 'uppercase', letterSpacing: '0.4px',
+                                                    display: 'flex', alignItems: 'center', gap: 6
+                                                }}>
+                                                    <Coffee size={16} color={s.hasCafeFee ? '#d97706' : '#dc2626'} /> Tiền cafe tàu
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 13, fontWeight: 800,
+                                                    color: s.hasCafeFee ? '#92400e' : '#b91c1c',
+                                                    background: s.hasCafeFee ? '#fef3c7' : '#fee2e2',
+                                                    border: s.hasCafeFee ? '1.5px solid #d97706' : '1.5px solid #ef4444',
+                                                    padding: '3px 10px', borderRadius: 8
+                                                }}>
+                                                    {s.hasCafeFee ? `✅ CÓ: ${formatVNCurrency(s.cafeFee || 0)} đ` : '❌ KHÔNG CÓ CAFE'}
+                                                </span>
+                                            </div>
+                                            {s.hasCafeFee && s.cafeNote && (
+                                                <div style={{
+                                                    fontSize: 12, fontWeight: 600, color: '#78350f',
+                                                    background: 'rgba(245,158,11,0.12)', padding: '6px 10px',
+                                                    borderRadius: 8, marginTop: 8
+                                                }}>
+                                                    📝 Ghi chú: {s.cafeNote}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* ── MỤC 2: TALLY TÀU (Nổi bật nếu CÓ, MÀU ĐỎ nếu KHÔNG) ── */}
+                                        <div style={{
+                                            background: s.hasTally ? '#eff6ff' : '#fef2f2',
+                                            border: s.hasTally ? '1.5px solid #3b82f6' : '1.5px solid #f87171',
+                                            borderRadius: 14, padding: '12px 14px',
+                                            boxShadow: s.hasTally ? '0 2px 8px rgba(59,130,246,0.1)' : '0 2px 8px rgba(239,68,68,0.06)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span style={{
+                                                    fontSize: 12, fontWeight: 800,
+                                                    color: s.hasTally ? '#1e40af' : '#991b1b',
+                                                    textTransform: 'uppercase', letterSpacing: '0.4px',
+                                                    display: 'flex', alignItems: 'center', gap: 6
+                                                }}>
+                                                    <ClipboardCheck size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} /> Tally tàu
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 13, fontWeight: 800,
+                                                    color: s.hasTally ? '#1e40af' : '#b91c1c',
+                                                    background: s.hasTally ? '#dbeafe' : '#fee2e2',
+                                                    border: s.hasTally ? '1.5px solid #2563eb' : '1.5px solid #ef4444',
+                                                    padding: '3px 10px', borderRadius: 8
+                                                }}>
+                                                    {s.hasTally ? `✅ CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)} đ` : '❌ KHÔNG CÓ TALLY'}
+                                                </span>
+                                            </div>
+                                            {s.hasTally && s.tallyNote && (
+                                                <div style={{
+                                                    fontSize: 12, fontWeight: 600, color: '#1e3a8a',
+                                                    background: 'rgba(59,130,246,0.1)', padding: '6px 10px',
+                                                    borderRadius: 8, marginTop: 8
+                                                }}>
+                                                    👤 Phụ trách / ghi chú: {s.tallyNote}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* ── MỤC 3: ĐÁNH GIÁ & NHẬN XÉT TÀU ── */}
                                         <div style={{
                                             background: s.rating ? '#fefce8' : '#f8fafc',
-                                            border: s.rating ? '1px solid #fef08a' : '1px dashed #cbd5e1',
-                                            borderRadius: 12, padding: '10px 12px'
+                                            border: s.rating ? '1.5px solid #facc15' : '1px dashed #cbd5e1',
+                                            borderRadius: 14, padding: '12px 14px'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                                                <span style={{ fontSize: 11, fontWeight: 800, color: s.rating ? '#854d0e' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <Star size={13} color={s.rating ? '#d97706' : '#94a3b8'} /> Đánh giá tàu
+                                                <span style={{ fontSize: 12, fontWeight: 800, color: s.rating ? '#854d0e' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <Star size={16} color={s.rating ? '#d97706' : '#94a3b8'} /> Đánh giá tàu
                                                 </span>
                                                 {s.rating ? (
-                                                    <span style={{ fontSize: 12, fontWeight: 800, color: '#b45309' }}>
+                                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#b45309' }}>
                                                         ⭐ {s.rating}/5 sao {STAR_LABELS[s.rating] ? `(${STAR_LABELS[s.rating].text})` : ''}
                                                     </span>
                                                 ) : (
                                                     <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>Chưa có đánh giá</span>
                                                 )}
                                             </div>
-                                            <div style={{ fontSize: 12, color: s.ratingComment ? '#1e293b' : '#94a3b8', fontStyle: s.ratingComment ? 'normal' : 'italic', marginTop: 2, lineHeight: 1.4 }}>
+                                            <div style={{
+                                                fontSize: 12, color: s.ratingComment ? '#1e293b' : '#94a3b8',
+                                                fontStyle: s.ratingComment ? 'normal' : 'italic',
+                                                fontWeight: s.ratingComment ? 600 : 400,
+                                                marginTop: 4, lineHeight: 1.4,
+                                                background: s.ratingComment ? 'rgba(255,255,255,0.7)' : 'transparent',
+                                                padding: s.ratingComment ? '6px 10px' : '0',
+                                                borderRadius: 8
+                                            }}>
                                                 {s.ratingComment ? `💬 "${s.ratingComment}"` : 'Chưa có nội dung nhận xét chi tiết.'}
                                             </div>
                                         </div>
 
-                                        {/* ── MỤC 2: TIỀN CAFE TÀU ── */}
-                                        <div style={{
-                                            background: s.hasCafeFee ? '#fffbeb' : '#f8fafc',
-                                            border: s.hasCafeFee ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                                            borderRadius: 12, padding: '10px 12px'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span style={{ fontSize: 11, fontWeight: 800, color: s.hasCafeFee ? '#92400e' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <Coffee size={13} color={s.hasCafeFee ? '#b45309' : '#94a3b8'} /> Tiền cafe tàu
-                                                </span>
-                                                <span style={{
-                                                    fontSize: 12, fontWeight: 800,
-                                                    color: s.hasCafeFee ? '#b45309' : '#64748b',
-                                                    background: s.hasCafeFee ? '#fef3c7' : '#f1f5f9',
-                                                    padding: '2px 8px', borderRadius: 6
-                                                }}>
-                                                    {s.hasCafeFee ? `CÓ: ${formatVNCurrency(s.cafeFee || 0)}đ` : 'KHÔNG CÓ CAFE'}
-                                                </span>
-                                            </div>
-                                            {s.hasCafeFee && s.cafeNote && (
-                                                <div style={{ fontSize: 12, color: '#78350f', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <span>📝 Ghi chú: {s.cafeNote}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* ── MỤC 3: TALLY TÀU ── */}
-                                        <div style={{
-                                            background: s.hasTally ? '#eff6ff' : '#f8fafc',
-                                            border: s.hasTally ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-                                            borderRadius: 12, padding: '10px 12px'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span style={{ fontSize: 11, fontWeight: 800, color: s.hasTally ? '#1e40af' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <ClipboardCheck size={13} color={s.hasTally ? '#1d4ed8' : '#94a3b8'} /> Tally tàu
-                                                </span>
-                                                <span style={{
-                                                    fontSize: 12, fontWeight: 800,
-                                                    color: s.hasTally ? '#1d4ed8' : '#64748b',
-                                                    background: s.hasTally ? '#dbeafe' : '#f1f5f9',
-                                                    padding: '2px 8px', borderRadius: 6
-                                                }}>
-                                                    {s.hasTally ? `CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)}đ` : 'KHÔNG CÓ TALLY'}
-                                                </span>
-                                            </div>
-                                            {s.hasTally && s.tallyNote && (
-                                                <div style={{ fontSize: 12, color: '#1e3a8a', marginTop: 4 }}>
-                                                    <span>👤 Phụ trách / ghi chú: {s.tallyNote}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
                                         {/* Xà lan nếu có */}
                                         {s.hasBarge && (
-                                            <div style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 700, padding: '4px 8px', background: '#eff6ff', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start' }}>
+                                            <div style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 700, padding: '6px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}>
                                                 🚢 Kèm {s.bargeCount || 1} xà lan (+{((s.bargeCount || 1) * 200000).toLocaleString('vi-VN')}đ)
                                             </div>
                                         )}
