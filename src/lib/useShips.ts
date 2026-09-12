@@ -11,6 +11,7 @@ interface UseShipsReturn {
     error: string | null;
     addShip: (ship: Omit<Ship, 'id'>) => Promise<void>;
     updateShip: (ship: Ship) => Promise<void>;
+    batchUpdateShips: (ships: Ship[]) => Promise<void>;
     deleteShip: (id: string) => Promise<void>;
     refresh: () => Promise<void>;
 }
@@ -118,6 +119,29 @@ export function useShips(): UseShipsReturn {
         }
     };
 
+    const handleBatchUpdate = async (updatedShipsList: Ship[]) => {
+        if (updatedShipsList.length === 0) return;
+        const map = new Map(updatedShipsList.map(s => [s.id, { ...s, division: s.division || division || 'SAT_THEP' }]));
+
+        // Cập nhật UI và localStorage ngay lập tức
+        setShips(prev => {
+            const next = prev.map(s => map.get(s.id) || s);
+            localStorage.setItem(cacheKey, JSON.stringify(next));
+            return next;
+        });
+
+        if (isConfigured()) {
+            try {
+                await Promise.all(
+                    updatedShipsList.map(s => api.updateShip({ ...s, division: s.division || division || 'SAT_THEP' }))
+                );
+            } catch (err) {
+                console.error("Lỗi khi cập nhật hàng loạt tàu:", err);
+                throw err;
+            }
+        }
+    };
+
     const handleDelete = async (id: string) => {
         // Cập nhật UI và localStorage ngay lập tức
         setShips(prev => {
@@ -142,6 +166,7 @@ export function useShips(): UseShipsReturn {
         error,
         addShip: handleAdd,
         updateShip: handleUpdate,
+        batchUpdateShips: handleBatchUpdate,
         deleteShip: handleDelete,
         refresh: loadShips,
     };

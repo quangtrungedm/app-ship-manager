@@ -6,7 +6,12 @@ import { useAuth } from '../lib/AuthContext';
 import { uploadFile } from '../lib/api';
 import { isConfigured } from '../lib/config';
 import { Ship, Document as ShipDoc, ShipStatus } from '../types';
-import { Plus, Calendar, Weight, X, Upload, FileText, Trash2, Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor } from 'lucide-react';
+import {
+    Plus, Calendar, Weight, X, Upload, FileText, Trash2,
+    Ship as ShipIcon, CheckCircle, ChevronDown, ChevronLeft, ChevronRight,
+    Loader2, Search, ArrowDownUp, Clock, ArrowRight, Anchor,
+    CheckCircle2, Check, Edit3, Wallet
+} from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import imageCompression from 'browser-image-compression';
 import { calcShipSalary, calcBargeBonus } from '../lib/salary';
@@ -63,7 +68,21 @@ function StatusBadge({ status = 'waiting', completionDate }: { status?: ShipStat
     );
 }
 
-function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
+function ShipCard({
+    ship,
+    onClick,
+    selectable = false,
+    selected = false,
+    onToggleSelect,
+    onEdit
+}: {
+    ship: Ship;
+    onClick: () => void;
+    selectable?: boolean;
+    selected?: boolean;
+    onToggleSelect?: () => void;
+    onEdit?: () => void;
+}) {
     const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const isSatThep = ship.division === 'SAT_THEP';
     const salary = calcShipSalary(ship);
@@ -73,37 +92,87 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
     if (ship.status === 'entering') statusColor = 'var(--c-warning)';
     if (ship.status === 'completed') statusColor = 'var(--c-success)';
     if (ship.status === 'waiting') statusColor = 'var(--c-danger)';
+    if (selectable && selected) statusColor = '#10b981';
+
+    const handleCardClick = () => {
+        if (selectable && onToggleSelect) {
+            onToggleSelect();
+        } else {
+            onClick();
+        }
+    };
 
     return (
-        <div className="card fade-up" onClick={onClick} style={{
-            cursor: 'pointer', padding: 0, marginBottom: 16,
-            background: 'var(--c-surface)',
-            border: '1px solid rgba(0,0,0,0.03)',
+        <div className="card fade-up" onClick={handleCardClick} style={{
+            cursor: 'pointer', padding: 0, marginBottom: 14,
+            background: selectable && selected ? '#f0fdf4' : 'var(--c-surface)',
+            border: selectable && selected ? '1.5px solid #10b981' : '1px solid rgba(0,0,0,0.04)',
             borderRadius: 'var(--radius-md)',
             overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
-            transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+            boxShadow: selectable && selected ? '0 4px 16px rgba(16,185,129,0.14)' : '0 4px 12px rgba(0,0,0,0.02)',
+            transition: 'all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
             transformOrigin: 'center center',
             WebkitTapHighlightColor: 'transparent',
             position: 'relative',
         }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
             onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            onTouchStart={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onTouchStart={e => e.currentTarget.style.transform = 'scale(0.98)'}
             onTouchEnd={e => e.currentTarget.style.transform = 'scale(1)'}
             onTouchCancel={e => e.currentTarget.style.transform = 'scale(1)'}
         >
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: statusColor }} />
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: selectable && selected ? 5 : 4, background: statusColor }} />
 
             <div style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                    <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--c-text)', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: 12, letterSpacing: '-0.3px' }}>
-                        {ship.name}
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-                        <StatusBadge status={ship.status} completionDate={ship.completionDate} />
-                        {isSatThep && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, marginRight: 10 }}>
+                        {selectable && (
+                            <div style={{
+                                width: 22, height: 22, borderRadius: 6,
+                                background: selected ? '#10b981' : '#ffffff',
+                                border: selected ? 'none' : '2px solid #cbd5e1',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                                boxShadow: selected ? '0 2px 6px rgba(16,185,129,0.3)' : 'none',
+                                transition: 'all 0.15s'
+                            }}>
+                                {selected && <Check size={14} color="#ffffff" strokeWidth={3} />}
+                            </div>
+                        )}
+                        <p style={{
+                            fontSize: 17, fontWeight: 800,
+                            color: selectable && selected ? '#065f46' : 'var(--c-text)',
+                            flex: 1, minWidth: 0,
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            letterSpacing: '-0.3px', margin: 0
+                        }}>
+                            {ship.name}
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <StatusBadge status={ship.status} completionDate={ship.completionDate} />
+                            {selectable && onEdit && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit();
+                                    }}
+                                    style={{
+                                        border: '1px solid #e2e8f0', background: '#ffffff',
+                                        borderRadius: 6, padding: '3px 8px',
+                                        fontSize: 11, fontWeight: 700, color: '#475569',
+                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3
+                                    }}
+                                    title="Chỉnh sửa thông tin chi tiết chuyến tàu"
+                                >
+                                    <Edit3 size={11} /> Sửa
+                                </button>
+                            )}
+                        </div>
+                        {isSatThep && !selectable && (
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
                                 padding: '4px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
@@ -250,7 +319,7 @@ function ShipCard({ ship, onClick }: { ship: Ship; onClick: () => void }) {
 }
 
 export function StaffShips() {
-    const { ships, loading: _loading, addShip, updateShip: updateShipApi, deleteShip } = useShips();
+    const { ships, loading: _loading, addShip, updateShip: updateShipApi, batchUpdateShips, deleteShip } = useShips();
     const { division } = useAuth();
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Ship | null>(null);
@@ -263,10 +332,19 @@ export function StaffShips() {
     const [pickerYear, setPickerYear] = useState(now.getFullYear());
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
+    // Batch salary payment state
+    const [selectedShipIds, setSelectedShipIds] = useState<Set<string>>(new Set());
+    const [batchSubmitting, setBatchSubmitting] = useState(false);
+    const [showSuccessToast, setShowSuccessToast] = useState<string | null>(null);
+
     // Search & Sort state
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'weight-desc' | 'weight-asc'>('newest');
 
+    // Unpaid ships count
+    const unpaidCount = useMemo(() => {
+        return ships.filter(s => (s.division === 'SAT_THEP' || !s.division) && s.isPaid === false && (s.status === 'completed' || !!s.completionDate)).length;
+    }, [ships]);
 
     const filteredShips = useMemo(() => {
         let result = ships;
@@ -282,7 +360,7 @@ export function StaffShips() {
         } else {
             // 2. Filter by Tab & Month (Only if no search query)
             if (activeTab === 'unpaid') {
-                result = result.filter(s => s.division === 'SAT_THEP' && s.isPaid === false && s.status === 'completed');
+                result = result.filter(s => (s.division === 'SAT_THEP' || !s.division) && s.isPaid === false && (s.status === 'completed' || !!s.completionDate));
             } else if (selectedMonth !== 'all') {
                 result = result.filter(s => {
                     const d = new Date(s.arrivalDate);
@@ -302,6 +380,63 @@ export function StaffShips() {
 
         return result;
     }, [ships, selectedMonth, searchQuery, sortBy, activeTab]);
+
+    // Selected ships calculations
+    const selectedShipsList = useMemo(() => {
+        return filteredShips.filter(s => selectedShipIds.has(s.id));
+    }, [filteredShips, selectedShipIds]);
+
+    const selectedTotalSalary = useMemo(() => {
+        return selectedShipsList.reduce((acc, s) => acc + calcShipSalary(s), 0);
+    }, [selectedShipsList]);
+
+    const handleToggleShip = (id: string) => {
+        setSelectedShipIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const handleSelectAll = () => {
+        setSelectedShipIds(new Set(filteredShips.map(s => s.id)));
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedShipIds(new Set());
+    };
+
+    const handleBatchPay = async () => {
+        if (selectedShipIds.size === 0) {
+            alert('Vui lòng chọn ít nhất một chuyến tàu để thanh toán.');
+            return;
+        }
+
+        const count = selectedShipIds.size;
+        const totalFormatted = selectedTotalSalary.toLocaleString('vi-VN');
+        const confirmMsg = `Xác nhận chuyển ${count} chuyến tàu (Tổng tiền lương: ${totalFormatted} đ) sang trạng thái ĐÃ THANH TOÁN?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            setBatchSubmitting(true);
+            const shipsToUpdate = selectedShipsList.map(s => ({
+                ...s,
+                isPaid: true
+            }));
+
+            await batchUpdateShips(shipsToUpdate);
+
+            setSelectedShipIds(new Set());
+            setShowSuccessToast(`Đã chuyển thành công ${count} chuyến tàu sang Đã thanh toán!`);
+            setTimeout(() => setShowSuccessToast(null), 4000);
+        } catch (err: any) {
+            console.error('Lỗi khi thanh toán hàng loạt:', err);
+            alert('Lỗi cập nhật: ' + (err.message || 'Không thể lưu dữ liệu'));
+        } finally {
+            setBatchSubmitting(false);
+        }
+    };
 
     // Form state
     const [name, setName] = useState('');
@@ -461,6 +596,31 @@ export function StaffShips() {
 
     return (
         <>
+            {showSuccessToast && (
+                <div style={{
+                    position: 'fixed',
+                    top: 24,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 9999,
+                    background: '#065f46',
+                    color: '#ffffff',
+                    padding: '12px 22px',
+                    borderRadius: 99,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    boxShadow: '0 8px 30px rgba(6,95,70,0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    border: '1px solid #34d399',
+                    maxWidth: '90vw',
+                    textAlign: 'center'
+                }}>
+                    <CheckCircle2 size={18} color="#a7f3d0" strokeWidth={2.5} />
+                    <span>{showSuccessToast}</span>
+                </div>
+            )}
             <MobileLayout>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -474,7 +634,10 @@ export function StaffShips() {
                 {division === 'SAT_THEP' && (
                     <div style={{ display: 'flex', background: 'var(--c-bg)', padding: 4, borderRadius: 12, marginBottom: 16 }}>
                         <button
-                            onClick={() => setActiveTab('all')}
+                            onClick={() => {
+                                setActiveTab('all');
+                                setSelectedShipIds(new Set());
+                            }}
                             style={{
                                 flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer',
                                 fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === 'all' ? 700 : 500,
@@ -487,17 +650,31 @@ export function StaffShips() {
                             Tất cả tàu
                         </button>
                         <button
-                            onClick={() => setActiveTab('unpaid')}
+                            onClick={() => {
+                                setActiveTab('unpaid');
+                                setSelectedShipIds(new Set());
+                            }}
                             style={{
                                 flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer',
-                                fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === 'unpaid' ? 700 : 500,
+                                fontFamily: 'inherit', fontSize: 13, fontWeight: activeTab === 'unpaid' ? 700 : 600,
                                 background: activeTab === 'unpaid' ? '#ef4444' : 'transparent',
                                 color: activeTab === 'unpaid' ? '#fff' : '#b91c1c',
                                 boxShadow: activeTab === 'unpaid' ? '0 2px 8px rgba(239, 68, 68, 0.3)' : 'none',
                                 transition: 'all 0.2s ease',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                             }}
                         >
-                            Lương Chưa Thanh Toán
+                            <span>Lương Chưa Thanh Toán</span>
+                            {unpaidCount > 0 && (
+                                <span style={{
+                                    fontSize: 11, fontWeight: 800,
+                                    padding: '1px 6px', borderRadius: 99,
+                                    background: activeTab === 'unpaid' ? '#ffffff' : '#ef4444',
+                                    color: activeTab === 'unpaid' ? '#b91c1c' : '#ffffff'
+                                }}>
+                                    {unpaidCount}
+                                </span>
+                            )}
                         </button>
                     </div>
                 )}
@@ -607,13 +784,163 @@ export function StaffShips() {
                     </div>
                 )}
 
+                {/* Thanh điều khiển chọn thanh toán hàng loạt (Chỉ hiện khi chọn tab Lương Chưa Thanh Toán) */}
+                {activeTab === 'unpaid' && (
+                    <div style={{
+                        background: '#ffffff',
+                        border: '1.5px solid #fed7aa',
+                        borderRadius: 16,
+                        padding: '12px 14px',
+                        marginBottom: 14,
+                        boxShadow: '0 4px 14px rgba(234,88,12,0.06)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{
+                                    width: 32, height: 32, borderRadius: 10, background: '#ffedd5',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <Wallet size={16} color="#c2410c" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <span style={{ fontSize: 13, fontWeight: 800, color: '#9a3412', display: 'block' }}>
+                                        Chọn các tàu cần thanh toán
+                                    </span>
+                                    <span style={{ fontSize: 11, color: '#c2410c' }}>
+                                        Chạm vào tàu để chọn, sau đó xác nhận thanh toán
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button
+                                    onClick={handleSelectAll}
+                                    style={{
+                                        padding: '5px 9px', borderRadius: 8,
+                                        background: '#eff6ff', color: '#1d4ed8',
+                                        border: '1px solid #bfdbfe', fontSize: 11.5, fontWeight: 700,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Chọn tất cả ({filteredShips.length})
+                                </button>
+                                {selectedShipIds.size > 0 && (
+                                    <button
+                                        onClick={handleDeselectAll}
+                                        style={{
+                                            padding: '5px 9px', borderRadius: 8,
+                                            background: '#f1f5f9', color: '#64748b',
+                                            border: '1px solid #e2e8f0', fontSize: 11.5, fontWeight: 700,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Bỏ chọn
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Thanh đếm & tổng tiền đã chọn */}
+                        <div style={{
+                            background: '#fff7ed', borderRadius: 10, padding: '9px 12px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            border: '1px solid #ffedd5'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <CheckCircle2 size={15} color={selectedShipIds.size > 0 ? '#ea580c' : '#94a3b8'} strokeWidth={2.5} />
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#7c2d12' }}>
+                                    Đã chọn: <strong>{selectedShipIds.size}</strong> / {filteredShips.length} tàu
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                                <span style={{ fontSize: 11, color: '#9a3412', fontWeight: 600 }}>Tổng tiền:</span>
+                                <span style={{ fontSize: 15, fontWeight: 900, color: '#c2410c' }}>
+                                    {selectedTotalSalary.toLocaleString('vi-VN')} đ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {filteredShips.length === 0 ? (
                     <EmptyState
-                        title={searchQuery ? 'Không tìm thấy tàu' : 'Không có tàu'}
-                        description={searchQuery ? `Không có kết quả nào cho "${searchQuery}"` : 'Không có tàu nào cập bến trong khoảng thời gian này.'}
+                        title={activeTab === 'unpaid' ? 'Đã quyết toán hết lương!' : (searchQuery ? 'Không tìm thấy tàu' : 'Không có tàu')}
+                        description={activeTab === 'unpaid'
+                            ? 'Tuyệt vời! Hiện tại không còn chuyến tàu nào đang chờ thanh toán lương.'
+                            : (searchQuery ? `Không có kết quả nào cho "${searchQuery}"` : 'Không có tàu nào cập bến trong khoảng thời gian này.')}
                     />
                 ) : (
-                    filteredShips.map(s => <ShipCard key={s.id} ship={s} onClick={() => openEdit(s)} />)
+                    filteredShips.map(s => (
+                        <ShipCard
+                            key={s.id}
+                            ship={s}
+                            selectable={activeTab === 'unpaid'}
+                            selected={selectedShipIds.has(s.id)}
+                            onToggleSelect={() => handleToggleShip(s.id)}
+                            onClick={() => openEdit(s)}
+                            onEdit={() => openEdit(s)}
+                        />
+                    ))
+                )}
+
+                {/* Thanh hành động chuyển trạng thái cố định phía dưới khi có tàu được chọn */}
+                {activeTab === 'unpaid' && selectedShipIds.size > 0 && (
+                    <div style={{
+                        position: 'sticky',
+                        bottom: 74,
+                        zIndex: 40,
+                        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                        borderRadius: 16,
+                        padding: '12px 16px',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.35)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        marginTop: 14,
+                        marginBottom: 10
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                                Đã chọn {selectedShipIds.size} tàu
+                            </span>
+                            <span style={{ fontSize: 17, fontWeight: 900, color: '#38bdf8', letterSpacing: '-0.5px' }}>
+                                {selectedTotalSalary.toLocaleString('vi-VN')} đ
+                            </span>
+                        </div>
+
+                        <button
+                            onClick={handleBatchPay}
+                            disabled={batchSubmitting}
+                            style={{
+                                background: 'linear-gradient(135deg, #10b981, #059669)',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: 12,
+                                padding: '10px 18px',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                boxShadow: '0 4px 14px rgba(16,185,129,0.4)',
+                                cursor: batchSubmitting ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            {batchSubmitting ? (
+                                <>
+                                    <Loader2 size={16} className="spin" />
+                                    <span>Đang lưu...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 size={16} strokeWidth={2.5} />
+                                    <span>Chuyển Đã Thanh Toán</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 )}
             </MobileLayout >
 

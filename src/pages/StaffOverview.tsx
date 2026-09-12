@@ -409,20 +409,33 @@ export function StaffOverview() {
                         </div>
 
                         {/* Chờ thanh toán */}
-                        <div style={{
-                            background: unpaidSalary > 0 ? '#fff7ed' : '#f8fafc',
-                            border: unpaidSalary > 0 ? '1.5px solid #fed7aa' : '1.5px solid #e2e8f0',
-                            borderRadius: 14, padding: '12px 14px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                                <Clock size={15} color={unpaidSalary > 0 ? '#ea580c' : '#94a3b8'} strokeWidth={2.5} />
-                                <span style={{
-                                    fontSize: 11.5, fontWeight: 800,
-                                    color: unpaidSalary > 0 ? '#9a3412' : '#64748b',
-                                    textTransform: 'uppercase'
-                                }}>
-                                    Chờ thanh toán
-                                </span>
+                        <div
+                            onClick={() => unpaidSalary > 0 && navigate('/staff/ships', { state: { defaultTab: 'unpaid' } })}
+                            style={{
+                                background: unpaidSalary > 0 ? '#fff7ed' : '#f8fafc',
+                                border: unpaidSalary > 0 ? '1.5px solid #fed7aa' : '1.5px solid #e2e8f0',
+                                borderRadius: 14, padding: '12px 14px',
+                                cursor: unpaidSalary > 0 ? 'pointer' : 'default',
+                                transition: 'transform 0.15s'
+                            }}
+                            title={unpaidSalary > 0 ? 'Chạm để xem và chọn thanh toán hàng loạt' : undefined}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Clock size={15} color={unpaidSalary > 0 ? '#ea580c' : '#94a3b8'} strokeWidth={2.5} />
+                                    <span style={{
+                                        fontSize: 11.5, fontWeight: 800,
+                                        color: unpaidSalary > 0 ? '#9a3412' : '#64748b',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        Chờ thanh toán
+                                    </span>
+                                </div>
+                                {unpaidSalary > 0 && (
+                                    <span style={{ fontSize: 10.5, color: '#ea580c', fontWeight: 800 }}>
+                                        Thanh toán →
+                                    </span>
+                                )}
                             </div>
                             <p style={{
                                 fontSize: 17, fontWeight: 900,
@@ -494,7 +507,7 @@ export function StaffOverview() {
                                 transition: 'all 0.15s'
                             }}
                         >
-                            Xem chi tiết các tàu chưa thanh toán <ArrowRight size={15} strokeWidth={2.5} />
+                            Chọn & Thanh toán các tàu chưa nhận lương <ArrowRight size={15} strokeWidth={2.5} />
                         </button>
                     </div>
                 )}
