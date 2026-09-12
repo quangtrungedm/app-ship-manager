@@ -4,7 +4,7 @@ import { useShips } from '../lib/useShips';
 import { Ship, ShipStatus } from '../types';
 import { STANDARD_PORTS, STANDARD_CLIENTS } from '../lib/constants';
 import {
-    ArrowLeft, Search, Star, Coffee, ClipboardCheck,
+    ArrowLeft, Search, Star, Coffee, ClipboardList,
     Save, CheckCircle2, Ship as ShipIcon,
     Plus, X, Edit3, RefreshCw,
     Calendar, MapPin, Building2, Weight, MessageSquare
@@ -350,7 +350,7 @@ export function ShipQuickUpdate() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <ClipboardCheck size={20} color="#38bdf8" />
+                                <ClipboardList size={20} color="#38bdf8" />
                             </div>
                             <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.2px' }}>
                                 Cập Nhật Tàu
@@ -721,7 +721,7 @@ export function ShipQuickUpdate() {
                                                     padding: '3px 10px', borderRadius: 8,
                                                     whiteSpace: 'nowrap', flexShrink: 0
                                                 }}>
-                                                    {s.hasCafeFee ? `✅ CÓ: ${formatVNCurrency(s.cafeFee || 0)} đ` : '❌ KHÔNG CÓ CAFE'}
+                                                    {s.hasCafeFee ? `CÓ: ${formatVNCurrency(s.cafeFee || 0)} đ` : 'KHÔNG CÓ CAFE'}
                                                 </span>
                                             </div>
                                             {s.hasCafeFee && s.cafeNote && (
@@ -750,7 +750,7 @@ export function ShipQuickUpdate() {
                                                     display: 'flex', alignItems: 'center', gap: 6,
                                                     minWidth: 0
                                                 }}>
-                                                    <ClipboardCheck size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} style={{ flexShrink: 0 }} /> Tally tàu
+                                                    <ClipboardList size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} style={{ flexShrink: 0 }} /> Tally tàu
                                                 </span>
                                                 <span style={{
                                                     fontSize: 13, fontWeight: 800,
@@ -760,7 +760,7 @@ export function ShipQuickUpdate() {
                                                     padding: '3px 10px', borderRadius: 8,
                                                     whiteSpace: 'nowrap', flexShrink: 0
                                                 }}>
-                                                    {s.hasTally ? `✅ CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)} đ` : '❌ KHÔNG CÓ TALLY'}
+                                                    {s.hasTally ? `CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)} đ` : 'KHÔNG CÓ TALLY'}
                                                 </span>
                                             </div>
                                             {s.hasTally && s.tallyNote && (
@@ -1141,7 +1141,7 @@ export function ShipQuickUpdate() {
                                 <div style={{ background: hasTally ? '#eff6ff' : '#f8fafc', borderRadius: 16, padding: 14, border: hasTally ? '1px solid #93c5fd' : '1px solid #e2e8f0', marginBottom: 14 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <ClipboardCheck size={18} color="#2563eb" />
+                                            <ClipboardList size={18} color="#2563eb" />
                                             <div>
                                                 <span style={{ fontSize: 13, fontWeight: 800, color: '#1e293b', display: 'block' }}>3. Tally Tàu</span>
                                                 <span style={{ fontSize: 11, color: hasTally ? '#1d4ed8' : '#64748b' }}>
