@@ -7,7 +7,7 @@ import {
     ArrowLeft, Search, Star, Coffee, ClipboardList,
     Save, CheckCircle2, Ship as ShipIcon,
     Plus, X, Edit3, RefreshCw,
-    Calendar, MapPin, Building2, Weight
+    Calendar, MapPin, Building2, Weight, MessageSquare
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -703,46 +703,85 @@ export function ShipQuickUpdate() {
                                         </div>
                                     </div>
 
-                                    {/* Dòng 4: Đánh giá & Nhận xét nếu có (1 dòng tinh tế) */}
+                                    {/* Dòng 4: Đánh giá & Toàn bộ nội dung nhận xét (Rộng rãi, hiển thị trọn vẹn) */}
                                     {s.rating || s.ratingComment ? (
-                                        <div style={{
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            gap: 6, paddingTop: 5, borderTop: '1px dashed #e2e8f0'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, flex: 1 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-                                                    {[1, 2, 3, 4, 5].map(num => (
-                                                        <Star
-                                                            key={num}
-                                                            size={11}
-                                                            fill={num <= (s.rating || 0) ? '#f59e0b' : 'none'}
-                                                            color={num <= (s.rating || 0) ? '#d97706' : '#cbd5e1'}
-                                                            strokeWidth={num <= (s.rating || 0) ? 1 : 1.5}
-                                                        />
-                                                    ))}
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
+                                            style={{
+                                                paddingTop: 8,
+                                                borderTop: '1px dashed #e2e8f0',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 6,
+                                                cursor: 'pointer'
+                                            }}
+                                            title="Nhấn để xem hoặc cập nhật đánh giá tàu"
+                                        >
+                                            {/* Hàng sao & Phân loại */}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 6,
+                                                flexWrap: 'wrap'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                                                        {[1, 2, 3, 4, 5].map(num => (
+                                                            <Star
+                                                                key={num}
+                                                                size={13.5}
+                                                                fill={num <= (s.rating || 0) ? '#f59e0b' : 'none'}
+                                                                color={num <= (s.rating || 0) ? '#d97706' : '#cbd5e1'}
+                                                                strokeWidth={num <= (s.rating || 0) ? 1 : 1.5}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    {s.rating ? (
+                                                        <span style={{ fontSize: 12, fontWeight: 800, color: '#0f172a', flexShrink: 0 }}>
+                                                            {s.rating}.0
+                                                        </span>
+                                                    ) : null}
                                                 </div>
-                                                {s.rating ? (
-                                                    <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', flexShrink: 0 }}>
-                                                        {s.rating}.0
-                                                    </span>
-                                                ) : null}
-                                                {s.ratingComment && (
+
+                                                {s.rating && STAR_LABELS[s.rating] && (
                                                     <span style={{
-                                                        fontSize: 11, fontStyle: 'italic', color: '#475569',
-                                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                                        fontSize: 10.5,
+                                                        fontWeight: 700,
+                                                        padding: '2px 8px',
+                                                        borderRadius: 6,
+                                                        background: STAR_LABELS[s.rating].bg,
+                                                        color: STAR_LABELS[s.rating].color,
+                                                        border: `1px solid ${STAR_LABELS[s.rating].color}35`,
+                                                        flexShrink: 0
                                                     }}>
-                                                        "{s.ratingComment}"
+                                                        {STAR_LABELS[s.rating].text}
                                                     </span>
                                                 )}
                                             </div>
-                                            {s.rating && STAR_LABELS[s.rating] && (
-                                                <span style={{
-                                                    fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 4,
-                                                    background: STAR_LABELS[s.rating].bg, color: STAR_LABELS[s.rating].color,
-                                                    flexShrink: 0
+
+                                            {/* Hộp nhận xét hiển thị trọn vẹn 100% nội dung (không bị cắt bớt) */}
+                                            {s.ratingComment && (
+                                                <div style={{
+                                                    background: '#f8fafc',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderLeft: '3.5px solid #f59e0b',
+                                                    borderRadius: 7,
+                                                    padding: '7px 10px',
+                                                    fontSize: 12,
+                                                    lineHeight: 1.5,
+                                                    color: '#334155',
+                                                    wordBreak: 'break-word',
+                                                    whiteSpace: 'pre-wrap',
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: 6
                                                 }}>
-                                                    {STAR_LABELS[s.rating].text}
-                                                </span>
+                                                    <MessageSquare size={13.5} color="#d97706" style={{ flexShrink: 0, marginTop: 2.5 }} />
+                                                    <div style={{ flex: 1, fontStyle: 'italic', fontWeight: 500 }}>
+                                                        "{s.ratingComment}"
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     ) : (
@@ -750,12 +789,12 @@ export function ShipQuickUpdate() {
                                             onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
                                             style={{
                                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                paddingTop: 5, borderTop: '1px dashed #f1f5f9',
-                                                fontSize: 10.5, color: '#94a3b8'
+                                                paddingTop: 6, borderTop: '1px dashed #f1f5f9',
+                                                fontSize: 11, color: '#94a3b8', cursor: 'pointer'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                                <Star size={10} fill="none" color="#cbd5e1" />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <Star size={11} fill="none" color="#cbd5e1" />
                                                 <span>Chưa có đánh giá</span>
                                             </div>
                                             <span style={{ color: '#059669', fontWeight: 700 }}>+ Đánh giá</span>
