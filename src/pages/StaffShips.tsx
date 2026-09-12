@@ -842,23 +842,63 @@ export function StaffShips() {
 
                         {/* Thanh đếm & tổng tiền đã chọn */}
                         <div style={{
-                            background: '#fff7ed', borderRadius: 10, padding: '9px 12px',
+                            background: selectedShipIds.size > 0 ? '#f0fdf4' : '#fff7ed',
+                            borderRadius: 10, padding: '9px 12px',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            border: '1px solid #ffedd5'
+                            border: selectedShipIds.size > 0 ? '1px solid #bbf7d0' : '1px solid #ffedd5',
+                            transition: 'all 0.2s'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <CheckCircle2 size={15} color={selectedShipIds.size > 0 ? '#ea580c' : '#94a3b8'} strokeWidth={2.5} />
-                                <span style={{ fontSize: 12, fontWeight: 700, color: '#7c2d12' }}>
+                                <CheckCircle2 size={15} color={selectedShipIds.size > 0 ? '#15803d' : '#94a3b8'} strokeWidth={2.5} />
+                                <span style={{ fontSize: 12, fontWeight: 700, color: selectedShipIds.size > 0 ? '#166534' : '#7c2d12' }}>
                                     Đã chọn: <strong>{selectedShipIds.size}</strong> / {filteredShips.length} tàu
                                 </span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                                <span style={{ fontSize: 11, color: '#9a3412', fontWeight: 600 }}>Tổng tiền:</span>
-                                <span style={{ fontSize: 15, fontWeight: 900, color: '#c2410c' }}>
+                                <span style={{ fontSize: 11, color: selectedShipIds.size > 0 ? '#166534' : '#9a3412', fontWeight: 600 }}>Tổng tiền:</span>
+                                <span style={{ fontSize: 15, fontWeight: 900, color: selectedShipIds.size > 0 ? '#15803d' : '#c2410c' }}>
                                     {selectedTotalSalary.toLocaleString('vi-VN')} đ
                                 </span>
                             </div>
                         </div>
+
+                        {/* Nút hành động Chuyển Đã Thanh Toán nằm ngay dưới thông tin đã chọn */}
+                        {selectedShipIds.size > 0 && (
+                            <button
+                                onClick={handleBatchPay}
+                                disabled={batchSubmitting}
+                                style={{
+                                    width: '100%',
+                                    marginTop: 10,
+                                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: 12,
+                                    padding: '11px 16px',
+                                    fontSize: 13.5,
+                                    fontWeight: 800,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    boxShadow: '0 3px 12px rgba(16,185,129,0.3)',
+                                    cursor: batchSubmitting ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.15s'
+                                }}
+                            >
+                                {batchSubmitting ? (
+                                    <>
+                                        <Loader2 size={16} className="spin" />
+                                        <span>Đang lưu chuyển trạng thái...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle2 size={17} strokeWidth={2.5} />
+                                        <span>Chuyển Đã Thanh Toán ({selectedShipIds.size} tàu • {selectedTotalSalary.toLocaleString('vi-VN')} đ)</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -881,66 +921,6 @@ export function StaffShips() {
                             onEdit={() => openEdit(s)}
                         />
                     ))
-                )}
-
-                {/* Thanh hành động chuyển trạng thái cố định phía dưới khi có tàu được chọn */}
-                {activeTab === 'unpaid' && selectedShipIds.size > 0 && (
-                    <div style={{
-                        position: 'sticky',
-                        bottom: 74,
-                        zIndex: 40,
-                        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                        borderRadius: 16,
-                        padding: '12px 16px',
-                        boxShadow: '0 8px 30px rgba(0,0,0,0.35)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        marginTop: 14,
-                        marginBottom: 10
-                    }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
-                                Đã chọn {selectedShipIds.size} tàu
-                            </span>
-                            <span style={{ fontSize: 17, fontWeight: 900, color: '#38bdf8', letterSpacing: '-0.5px' }}>
-                                {selectedTotalSalary.toLocaleString('vi-VN')} đ
-                            </span>
-                        </div>
-
-                        <button
-                            onClick={handleBatchPay}
-                            disabled={batchSubmitting}
-                            style={{
-                                background: 'linear-gradient(135deg, #10b981, #059669)',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: 12,
-                                padding: '10px 18px',
-                                fontSize: 13,
-                                fontWeight: 800,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                boxShadow: '0 4px 14px rgba(16,185,129,0.4)',
-                                cursor: batchSubmitting ? 'not-allowed' : 'pointer'
-                            }}
-                        >
-                            {batchSubmitting ? (
-                                <>
-                                    <Loader2 size={16} className="spin" />
-                                    <span>Đang lưu...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <CheckCircle2 size={16} strokeWidth={2.5} />
-                                    <span>Chuyển Đã Thanh Toán</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
                 )}
             </MobileLayout >
 
