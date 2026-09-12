@@ -558,65 +558,26 @@ export function ShipQuickUpdate() {
                                         borderBottom: '1px solid #f1f5f9'
                                     }}>
                                         {/* Dòng 1: Tên tàu (trái) + Trạng thái & Nút Sửa (phải) */}
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                                                 <div style={{
-                                                    width: 40, height: 40, borderRadius: 12,
+                                                    width: 38, height: 38, borderRadius: 12,
                                                     background: hasBoth ? '#f0fdf4' : (hasNeither ? '#fef2f2' : '#fffbeb'),
                                                     border: hasBoth ? '1px solid #bbf7d0' : (hasNeither ? '1px solid #fecaca' : '1px solid #fde68a'),
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     color: hasBoth ? '#15803d' : (hasNeither ? '#dc2626' : '#d97706'),
                                                     flexShrink: 0
                                                 }}>
-                                                    <ShipIcon size={22} />
+                                                    <ShipIcon size={20} />
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
                                                     <h3 style={{
-                                                        fontSize: 17, fontWeight: 800, color: '#0f172a',
+                                                        fontSize: 16, fontWeight: 800, color: '#0f172a',
                                                         margin: 0, lineHeight: 1.3,
                                                         wordBreak: 'break-word'
                                                     }}>
                                                         {s.name}
                                                     </h3>
-
-                                                    {/* Nhãn tóm tắt nổi bật ngay dưới tên tàu */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 5 }}>
-                                                        {s.hasCafeFee ? (
-                                                            <span style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
-                                                                background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b'
-                                                            }}>
-                                                                ☕ CÓ CAFE ({formatVNCurrency(s.cafeFee || 0)}đ)
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
-                                                                background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5'
-                                                            }}>
-                                                                ☕ KHÔNG CÓ CAFE
-                                                            </span>
-                                                        )}
-
-                                                        {s.hasTally ? (
-                                                            <span style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
-                                                                background: '#dbeafe', color: '#1e40af', border: '1px solid #3b82f6'
-                                                            }}>
-                                                                📋 CÓ TALLY ({formatVNCurrency(s.tallyFee || 0)}đ)
-                                                            </span>
-                                                        ) : (
-                                                            <span style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                                padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 800,
-                                                                background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5'
-                                                            }}>
-                                                                📋 KHÔNG CÓ TALLY
-                                                            </span>
-                                                        )}
-                                                    </div>
                                                 </div>
                                             </div>
 
@@ -631,7 +592,7 @@ export function ShipQuickUpdate() {
                                                     onClick={() => handleOpenEdit(s)}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 4,
-                                                        padding: '6px 10px', borderRadius: 8,
+                                                        padding: '5px 9px', borderRadius: 8,
                                                         background: '#ecfdf5', border: '1px solid #a7f3d0',
                                                         color: '#047857', fontSize: 12, fontWeight: 700,
                                                         cursor: 'pointer', whiteSpace: 'nowrap'
@@ -639,6 +600,48 @@ export function ShipQuickUpdate() {
                                                 >
                                                     <Edit3 size={13} /> Sửa
                                                 </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Dòng 2: Dải tóm tắt Cafe & Tally - Chiếm trọn hàng ngang ngay dưới tên tàu (Grid 2 cột), Đảm bảo cùng 1 hàng, KHÔNG BỊ ĐẨY XUỐNG HÀNG */}
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: 8,
+                                            marginBottom: 10
+                                        }}>
+                                            {/* Nhãn Cafe */}
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                                                padding: '5px 8px', borderRadius: 8,
+                                                background: s.hasCafeFee ? '#fef3c7' : '#fee2e2',
+                                                border: s.hasCafeFee ? '1.5px solid #f59e0b' : '1.5px solid #fca5a5',
+                                                color: s.hasCafeFee ? '#92400e' : '#b91c1c',
+                                                fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap',
+                                                overflow: 'hidden', textOverflow: 'ellipsis',
+                                                boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                                            }}>
+                                                <span style={{ flexShrink: 0 }}>☕</span>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {s.hasCafeFee ? `Có Cafe: ${formatVNCurrency(s.cafeFee || 0)}đ` : 'Không có Cafe'}
+                                                </span>
+                                            </div>
+
+                                            {/* Nhãn Tally */}
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                                                padding: '5px 8px', borderRadius: 8,
+                                                background: s.hasTally ? '#dbeafe' : '#fee2e2',
+                                                border: s.hasTally ? '1.5px solid #3b82f6' : '1.5px solid #fca5a5',
+                                                color: s.hasTally ? '#1e40af' : '#b91c1c',
+                                                fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap',
+                                                overflow: 'hidden', textOverflow: 'ellipsis',
+                                                boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                                            }}>
+                                                <span style={{ flexShrink: 0 }}>📋</span>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {s.hasTally ? `Có Tally: ${formatVNCurrency(s.tallyFee || 0)}đ` : 'Không có Tally'}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -715,7 +718,8 @@ export function ShipQuickUpdate() {
                                                     color: s.hasCafeFee ? '#92400e' : '#b91c1c',
                                                     background: s.hasCafeFee ? '#fef3c7' : '#fee2e2',
                                                     border: s.hasCafeFee ? '1.5px solid #d97706' : '1.5px solid #ef4444',
-                                                    padding: '3px 10px', borderRadius: 8
+                                                    padding: '3px 10px', borderRadius: 8,
+                                                    whiteSpace: 'nowrap', flexShrink: 0
                                                 }}>
                                                     {s.hasCafeFee ? `✅ CÓ: ${formatVNCurrency(s.cafeFee || 0)} đ` : '❌ KHÔNG CÓ CAFE'}
                                                 </span>
@@ -738,21 +742,23 @@ export function ShipQuickUpdate() {
                                             borderRadius: 14, padding: '12px 14px',
                                             boxShadow: s.hasTally ? '0 2px 8px rgba(59,130,246,0.1)' : '0 2px 8px rgba(239,68,68,0.06)'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                                                 <span style={{
                                                     fontSize: 12, fontWeight: 800,
                                                     color: s.hasTally ? '#1e40af' : '#991b1b',
                                                     textTransform: 'uppercase', letterSpacing: '0.4px',
-                                                    display: 'flex', alignItems: 'center', gap: 6
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    minWidth: 0
                                                 }}>
-                                                    <ClipboardCheck size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} /> Tally tàu
+                                                    <ClipboardCheck size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} style={{ flexShrink: 0 }} /> Tally tàu
                                                 </span>
                                                 <span style={{
                                                     fontSize: 13, fontWeight: 800,
                                                     color: s.hasTally ? '#1e40af' : '#b91c1c',
                                                     background: s.hasTally ? '#dbeafe' : '#fee2e2',
                                                     border: s.hasTally ? '1.5px solid #2563eb' : '1.5px solid #ef4444',
-                                                    padding: '3px 10px', borderRadius: 8
+                                                    padding: '3px 10px', borderRadius: 8,
+                                                    whiteSpace: 'nowrap', flexShrink: 0
                                                 }}>
                                                     {s.hasTally ? `✅ CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)} đ` : '❌ KHÔNG CÓ TALLY'}
                                                 </span>
