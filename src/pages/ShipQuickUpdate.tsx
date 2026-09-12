@@ -7,7 +7,7 @@ import {
     ArrowLeft, Search, Star, Coffee, ClipboardList,
     Save, CheckCircle2, Ship as ShipIcon,
     Plus, X, Edit3, RefreshCw,
-    Calendar, MapPin, Building2, Weight, MessageSquare
+    Calendar, MapPin, Building2, Weight
 } from 'lucide-react';
 
 const removeAccents = (str: string) => {
@@ -309,128 +309,123 @@ export function ShipQuickUpdate() {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
             <div style={{ maxWidth: 540, margin: '0 auto' }}>
-                {/* ── Top Bar ── */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                    <button
-                        onClick={() => navigate('/login')}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '8px 12px', borderRadius: 12,
-                            background: '#ffffff', border: '1px solid #e2e8f0',
-                            color: '#334155', fontSize: 13, fontWeight: 700,
-                            cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
-                        }}
-                    >
-                        <ArrowLeft size={16} /> Màn hình chính
-                    </button>
-                    <button
-                        onClick={handleOpenNew}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 6,
-                            padding: '9px 15px', borderRadius: 12,
-                            background: 'linear-gradient(135deg, #059669, #10b981)',
-                            border: 'none', color: '#ffffff', fontSize: 13, fontWeight: 800,
-                            cursor: 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)'
-                        }}
-                    >
-                        <Plus size={16} strokeWidth={2.5} /> Nhập tàu mới
-                    </button>
-                </div>
-
-                {/* ── Header Banner ── */}
+                {/* ── 1. Top Navbar tinh giản & đầy đủ tiện ích ── */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                    borderRadius: 20, padding: '18px 20px', color: '#fff',
-                    marginBottom: 16, boxShadow: '0 10px 25px -5px rgba(15,23,42,0.25)',
-                    position: 'relative', overflow: 'hidden'
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                    borderRadius: 14, color: '#ffffff', marginBottom: 10,
+                    boxShadow: '0 4px 14px rgba(15,23,42,0.15)'
                 }}>
-                    <div style={{ position: 'absolute', right: -10, bottom: -15, opacity: 0.08, pointerEvents: 'none' }}>
-                        <ShipIcon size={120} color="#fff" />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <ClipboardList size={20} color="#38bdf8" />
-                            </div>
-                            <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, letterSpacing: '-0.2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                        <button
+                            onClick={() => navigate('/login')}
+                            style={{
+                                width: 32, height: 32, borderRadius: 8, border: 'none',
+                                background: 'rgba(255,255,255,0.12)', color: '#ffffff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer'
+                            }}
+                            title="Màn hình chính"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                        <div>
+                            <h1 style={{ fontSize: 16, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>
                                 Cập Nhật Tàu
                             </h1>
+                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
+                                {filteredShips.length} tàu • Cafe, Tally, Đánh giá
+                            </span>
                         </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <button
                             onClick={() => refresh()}
-                            title="Làm mới"
+                            title="Làm mới dữ liệu"
                             style={{
-                                background: 'rgba(255,255,255,0.12)', border: 'none',
-                                borderRadius: 8, padding: 6, color: '#fff', cursor: 'pointer'
+                                width: 32, height: 32, borderRadius: 8, border: 'none',
+                                background: 'rgba(255,255,255,0.12)', color: '#ffffff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer'
                             }}
                         >
-                            <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                            <RefreshCw size={13} className={loading ? 'spin' : ''} />
+                        </button>
+                        <button
+                            onClick={handleOpenNew}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                padding: '6px 11px', borderRadius: 8,
+                                background: '#10b981', border: 'none', color: '#ffffff',
+                                fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                                boxShadow: '0 2px 8px rgba(16,185,129,0.3)'
+                            }}
+                        >
+                            <Plus size={14} strokeWidth={2.5} /> Nhập tàu
                         </button>
                     </div>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: 0 }}>
-                        Danh sách các tàu đã nhập • Kiểm tra tiền cafe, tally tàu và nhận xét đánh giá
-                    </p>
                 </div>
 
                 {/* ── Toast Success ── */}
                 {toastMsg && (
                     <div style={{
                         background: '#ecfdf5', border: '1.5px solid #10b981',
-                        borderRadius: 14, padding: '12px 14px', marginBottom: 14,
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        color: '#065f46', fontSize: 13, fontWeight: 700,
-                        boxShadow: '0 4px 12px rgba(16,185,129,0.15)'
+                        borderRadius: 12, padding: '10px 12px', marginBottom: 10,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        color: '#065f46', fontSize: 12.5, fontWeight: 700,
+                        boxShadow: '0 2px 8px rgba(16,185,129,0.12)'
                     }}>
-                        <CheckCircle2 size={18} color="#10b981" />
+                        <CheckCircle2 size={16} color="#10b981" />
                         <span>{toastMsg}</span>
                     </div>
                 )}
 
-                {/* ── Search Input ── */}
-                <div style={{ position: 'relative', marginBottom: 12 }}>
+                {/* ── 2. Ô tìm kiếm thanh mảnh ── */}
+                <div style={{ position: 'relative', marginBottom: 8 }}>
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Tìm kiếm theo tên tàu, cảng, khách hàng..."
+                        placeholder="Tìm theo tên tàu, cảng, khách hàng..."
                         style={{
-                            width: '100%', padding: '12px 14px 12px 40px',
-                            borderRadius: 14, border: '1px solid #cbd5e1',
-                            background: '#ffffff', fontSize: 14, outline: 'none',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.03)', boxSizing: 'border-box'
+                            width: '100%', padding: '9px 12px 9px 34px',
+                            borderRadius: 10, border: '1px solid #cbd5e1',
+                            background: '#ffffff', fontSize: 13, outline: 'none',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.02)', boxSizing: 'border-box'
                         }}
                     />
-                    <div style={{ position: 'absolute', left: 14, top: 13, color: '#94a3b8' }}>
-                        <Search size={18} />
+                    <div style={{ position: 'absolute', left: 11, top: 10, color: '#94a3b8' }}>
+                        <Search size={15} />
                     </div>
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
                             style={{
-                                position: 'absolute', right: 12, top: 11,
+                                position: 'absolute', right: 10, top: 8,
                                 border: 'none', background: '#f1f5f9', borderRadius: '50%',
-                                width: 22, height: 22, display: 'flex', alignItems: 'center',
+                                width: 20, height: 20, display: 'flex', alignItems: 'center',
                                 justifyContent: 'center', cursor: 'pointer', color: '#64748b'
                             }}
                         >
-                            <X size={14} />
+                            <X size={12} />
                         </button>
                     )}
                 </div>
 
-                {/* ── Filter Tabs ── */}
+                {/* ── 3. Bộ lọc tab thu nhỏ tiện lợi ── */}
                 <div style={{
-                    display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6,
-                    marginBottom: 16, scrollbarWidth: 'none'
+                    display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 4,
+                    marginBottom: 10, scrollbarWidth: 'none'
                 }}>
                     <button
                         onClick={() => setFilterTab('all')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10, border: 'none',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            padding: '5px 10px', borderRadius: 8, border: 'none',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'all' ? '#0f172a' : '#ffffff',
                             color: filterTab === 'all' ? '#ffffff' : '#64748b',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
                         }}
                     >
                         Tất cả ({counts.all})
@@ -438,12 +433,12 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('has_cafe')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10,
+                            padding: '5px 10px', borderRadius: 8,
                             border: filterTab === 'has_cafe' ? 'none' : '1px solid #fde68a',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'has_cafe' ? '#d97706' : '#fffbeb',
                             color: filterTab === 'has_cafe' ? '#ffffff' : '#b45309',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
@@ -452,12 +447,12 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('no_cafe')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10,
+                            padding: '5px 10px', borderRadius: 8,
                             border: filterTab === 'no_cafe' ? 'none' : '1px solid #fca5a5',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'no_cafe' ? '#dc2626' : '#fef2f2',
                             color: filterTab === 'no_cafe' ? '#ffffff' : '#b91c1c',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
@@ -466,12 +461,12 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('has_tally')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10,
+                            padding: '5px 10px', borderRadius: 8,
                             border: filterTab === 'has_tally' ? 'none' : '1px solid #bfdbfe',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'has_tally' ? '#2563eb' : '#eff6ff',
                             color: filterTab === 'has_tally' ? '#ffffff' : '#1d4ed8',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
@@ -480,12 +475,12 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('no_tally')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10,
+                            padding: '5px 10px', borderRadius: 8,
                             border: filterTab === 'no_tally' ? 'none' : '1px solid #fca5a5',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'no_tally' ? '#dc2626' : '#fef2f2',
                             color: filterTab === 'no_tally' ? '#ffffff' : '#b91c1c',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
@@ -494,12 +489,12 @@ export function ShipQuickUpdate() {
                     <button
                         onClick={() => setFilterTab('has_rating')}
                         style={{
-                            padding: '7px 12px', borderRadius: 10,
+                            padding: '5px 10px', borderRadius: 8,
                             border: filterTab === 'has_rating' ? 'none' : '1px solid #fef08a',
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontSize: 11.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                             background: filterTab === 'has_rating' ? '#ca8a04' : '#ffffff',
                             color: filterTab === 'has_rating' ? '#ffffff' : '#854d0e',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                             display: 'flex', alignItems: 'center', gap: 4
                         }}
                     >
@@ -507,19 +502,19 @@ export function ShipQuickUpdate() {
                     </button>
                 </div>
 
-                {/* ── FULL LIST OF SHIPS WITH EXPLICIT FIELDS ── */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* ── 4. DANH SÁCH THẺ TÀU TINH GIẢN - GỌN GÀNG, ĐẦY ĐỦ THÔNG TIN ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {filteredShips.length === 0 ? (
                         <div style={{
-                            background: '#ffffff', borderRadius: 18, padding: 32,
+                            background: '#ffffff', borderRadius: 16, padding: '28px 16px',
                             textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0'
                         }}>
-                            <ShipIcon size={36} color="#cbd5e1" style={{ margin: '0 auto 8px' }} />
-                            <p style={{ fontWeight: 700, fontSize: 15, margin: '0 0 4px', color: '#1e293b' }}>
+                            <ShipIcon size={32} color="#cbd5e1" style={{ margin: '0 auto 6px' }} />
+                            <p style={{ fontWeight: 700, fontSize: 14, margin: '0 0 2px', color: '#1e293b' }}>
                                 Không tìm thấy chuyến tàu nào
                             </p>
-                            <p style={{ fontSize: 13, margin: 0 }}>
-                                Bấm nút "+ Nhập tàu mới" bên trên để thêm tàu đầu tiên.
+                            <p style={{ fontSize: 12, margin: 0 }}>
+                                Bấm nút "+ Nhập tàu" bên trên để thêm tàu mới.
                             </p>
                         </div>
                     ) : (
@@ -536,355 +531,236 @@ export function ShipQuickUpdate() {
                             return (
                                 <div
                                     key={s.id}
+                                    onClick={() => handleOpenEdit(s)}
                                     style={{
                                         background: '#ffffff',
-                                        borderRadius: 18,
-                                        border: hasNeither ? '1.5px solid #fecaca' : (hasBoth ? '1.5px solid #a7f3d0' : '1.5px solid #fed7aa'),
-                                        boxShadow: hasNeither ? '0 4px 14px rgba(239,68,68,0.06)' : '0 4px 14px rgba(0,0,0,0.03)',
+                                        borderRadius: 14,
+                                        border: hasNeither ? '1.5px solid #fecaca' : (hasBoth ? '1.5px solid #bbf7d0' : '1.5px solid #fed7aa'),
+                                        boxShadow: hasNeither ? '0 2px 8px rgba(239,68,68,0.04)' : '0 2px 8px rgba(0,0,0,0.02)',
                                         overflow: 'hidden',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        padding: '11px 13px 11px 16px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s'
                                     }}
                                 >
-                                    {/* Dải màu mép trái: Xanh = Đủ cả 2, Vàng = Có 1 trong 2, Đỏ = Chưa có cả 2 */}
+                                    {/* Dải màu mép trái nhận diện: Xanh = Đủ cả 2, Vàng = Có 1 trong 2, Đỏ = Chưa có cả 2 */}
                                     <div style={{
-                                        position: 'absolute', left: 0, top: 0, bottom: 0, width: 5,
+                                        position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
                                         background: accentColor
                                     }} />
 
-                                    {/* 1. Header: Tên tàu + Trạng thái & Nút Sửa + Box thông tin chi tiết */}
-                                    <div style={{
-                                        padding: '14px 16px 12px 18px',
-                                        background: '#ffffff',
-                                        borderBottom: '1px solid #f1f5f9'
-                                    }}>
-                                        {/* Dòng 1: Tên tàu (trái) + Trạng thái & Nút Sửa (phải) */}
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                                                <div style={{
-                                                    width: 38, height: 38, borderRadius: 12,
-                                                    background: hasBoth ? '#f0fdf4' : (hasNeither ? '#fef2f2' : '#fffbeb'),
-                                                    border: hasBoth ? '1px solid #bbf7d0' : (hasNeither ? '1px solid #fecaca' : '1px solid #fde68a'),
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: hasBoth ? '#15803d' : (hasNeither ? '#dc2626' : '#d97706'),
-                                                    flexShrink: 0
-                                                }}>
-                                                    <ShipIcon size={20} />
-                                                </div>
-                                                <div style={{ minWidth: 0 }}>
-                                                    <h3 style={{
-                                                        fontSize: 16, fontWeight: 800, color: '#0f172a',
-                                                        margin: 0, lineHeight: 1.3,
-                                                        wordBreak: 'break-word'
-                                                    }}>
-                                                        {s.name}
-                                                    </h3>
-                                                </div>
+                                    {/* Dòng 1: Tên tàu + Trạng thái & Nút Sửa */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 7 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, flex: 1 }}>
+                                            <div style={{
+                                                width: 28, height: 28, borderRadius: 8,
+                                                background: hasBoth ? '#f0fdf4' : (hasNeither ? '#fef2f2' : '#fffbeb'),
+                                                border: hasBoth ? '1px solid #bbf7d0' : (hasNeither ? '1px solid #fecaca' : '1px solid #fde68a'),
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: hasBoth ? '#15803d' : (hasNeither ? '#dc2626' : '#d97706'),
+                                                flexShrink: 0
+                                            }}>
+                                                <ShipIcon size={16} />
                                             </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                            <h3 style={{
+                                                fontSize: 15, fontWeight: 800, color: '#0f172a',
+                                                margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                            }}>
+                                                {s.name}
+                                            </h3>
+                                            {s.hasBarge && (
                                                 <span style={{
-                                                    padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                                                    background: statusCfg.bg, color: statusCfg.color, whiteSpace: 'nowrap'
+                                                    fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 4,
+                                                    background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', flexShrink: 0
                                                 }}>
-                                                    {statusCfg.label}
+                                                    +{s.bargeCount || 1} xà lan
                                                 </span>
-                                                <button
-                                                    onClick={() => handleOpenEdit(s)}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', gap: 4,
-                                                        padding: '5px 9px', borderRadius: 8,
-                                                        background: '#ecfdf5', border: '1px solid #a7f3d0',
-                                                        color: '#047857', fontSize: 12, fontWeight: 700,
-                                                        cursor: 'pointer', whiteSpace: 'nowrap'
-                                                    }}
-                                                >
-                                                    <Edit3 size={13} /> Sửa
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
 
-                                        {/* Dòng 2: Dải tóm tắt Cafe & Tally - Chiếm trọn hàng ngang ngay dưới tên tàu (Grid 2 cột), Đảm bảo cùng 1 hàng, KHÔNG BỊ ĐẨY XUỐNG HÀNG */}
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: '1fr 1fr',
-                                            gap: 8,
-                                            marginBottom: 10
-                                        }}>
-                                            {/* Nhãn Cafe */}
-                                            <div style={{
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                                padding: '5px 8px', borderRadius: 8,
-                                                background: s.hasCafeFee ? '#fef3c7' : '#fee2e2',
-                                                border: s.hasCafeFee ? '1.5px solid #f59e0b' : '1.5px solid #fca5a5',
-                                                color: s.hasCafeFee ? '#92400e' : '#b91c1c',
-                                                fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap',
-                                                overflow: 'hidden', textOverflow: 'ellipsis',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                                            <span style={{
+                                                padding: '2px 7px', borderRadius: 6, fontSize: 10.5, fontWeight: 700,
+                                                background: statusCfg.bg, color: statusCfg.color, whiteSpace: 'nowrap'
                                             }}>
-                                                <span style={{ flexShrink: 0 }}>☕</span>
-                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {s.hasCafeFee ? `Có Cafe: ${formatVNCurrency(s.cafeFee || 0)}đ` : 'Không có Cafe'}
-                                                </span>
-                                            </div>
-
-                                            {/* Nhãn Tally */}
-                                            <div style={{
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                                padding: '5px 8px', borderRadius: 8,
-                                                background: s.hasTally ? '#dbeafe' : '#fee2e2',
-                                                border: s.hasTally ? '1.5px solid #3b82f6' : '1.5px solid #fca5a5',
-                                                color: s.hasTally ? '#1e40af' : '#b91c1c',
-                                                fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap',
-                                                overflow: 'hidden', textOverflow: 'ellipsis',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-                                            }}>
-                                                <span style={{ flexShrink: 0 }}>📋</span>
-                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {s.hasTally ? `Có Tally: ${formatVNCurrency(s.tallyFee || 0)}đ` : 'Không có Tally'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Dòng 2: Khung 4 thông số chi tiết dưới tên tàu - Rõ ràng, không bị ngắt dòng ngang/dọc */}
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: '1fr 1fr',
-                                            gap: '8px 10px',
-                                            padding: '9px 12px',
-                                            background: '#f8fafc',
-                                            borderRadius: 12,
-                                            border: '1px solid #e2e8f0'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                                                <Calendar size={14} color="#64748b" style={{ flexShrink: 0 }} />
-                                                <div style={{ minWidth: 0 }}>
-                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Ngày vào</span>
-                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', lineHeight: 1.3 }}>{arrDate}</span>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                                                <MapPin size={14} color="#0284c7" style={{ flexShrink: 0 }} />
-                                                <div style={{ minWidth: 0 }}>
-                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Cảng dỡ</span>
-                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#0369a1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', lineHeight: 1.3 }}>
-                                                        {s.port || 'Sowatco Long Bình'}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                                                <Building2 size={14} color="#059669" style={{ flexShrink: 0 }} />
-                                                <div style={{ minWidth: 0 }}>
-                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Khách hàng / Hàng</span>
-                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#047857', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', lineHeight: 1.3 }}>
-                                                        {s.client || '—'}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                                                <Weight size={14} color="#d97706" style={{ flexShrink: 0 }} />
-                                                <div style={{ minWidth: 0 }}>
-                                                    <span style={{ fontSize: 10, color: '#94a3b8', display: 'block', fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1 }}>Sản lượng</span>
-                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#b45309', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
-                                                        {s.weight ? `${s.weight.toLocaleString('vi-VN')} tấn` : '0 tấn'}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                                {statusCfg.label}
+                                            </span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 3,
+                                                    padding: '3px 8px', borderRadius: 6,
+                                                    background: '#ecfdf5', border: '1px solid #a7f3d0',
+                                                    color: '#047857', fontSize: 11, fontWeight: 700,
+                                                    cursor: 'pointer', whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                <Edit3 size={11} /> Sửa
+                                            </button>
                                         </div>
                                     </div>
 
-                                    {/* 2. Body Details: 3 MỤC RÕ RÀNG */}
-                                    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {/* ── MỤC 1: TIỀN CAFE TÀU (Nổi bật nếu CÓ, MÀU ĐỎ nếu KHÔNG) ── */}
+                                    {/* Dòng 2: Khung 4 thông số gọn gàng (Ngày vào • Sản lượng • Cảng dỡ • Khách hàng) */}
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '3px 8px',
+                                        padding: '6px 9px',
+                                        background: '#f8fafc',
+                                        borderRadius: 8,
+                                        border: '1px solid #e2e8f0',
+                                        marginBottom: 7,
+                                        fontSize: 11.5
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                            <Calendar size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                                            <span style={{ color: '#64748b' }}>Vào:</span>
+                                            <strong style={{ color: '#1e293b', whiteSpace: 'nowrap' }}>{arrDate}</strong>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                            <Weight size={12} color="#d97706" style={{ flexShrink: 0 }} />
+                                            <span style={{ color: '#64748b' }}>Lượng:</span>
+                                            <strong style={{ color: '#b45309', whiteSpace: 'nowrap' }}>
+                                                {s.weight ? `${s.weight.toLocaleString('vi-VN')} tấn` : '0 tấn'}
+                                            </strong>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                            <MapPin size={12} color="#0284c7" style={{ flexShrink: 0 }} />
+                                            <span style={{ color: '#64748b' }}>Cảng:</span>
+                                            <strong style={{ color: '#0369a1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {s.port || 'Sowatco LB'}
+                                            </strong>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                                            <Building2 size={12} color="#059669" style={{ flexShrink: 0 }} />
+                                            <span style={{ color: '#64748b' }}>Khách:</span>
+                                            <strong style={{ color: '#047857', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {s.client || '—'}
+                                            </strong>
+                                        </div>
+                                    </div>
+
+                                    {/* Dòng 3: Dải Cafe & Tally - 2 Cột Song Song 50/50 (CÓ = Nổi bật vàng/xanh kèm note, KHÔNG = Đỏ rõ ràng) */}
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: 6,
+                                        marginBottom: (s.rating || s.ratingComment) ? 7 : 0
+                                    }}>
+                                        {/* Nhãn Cafe */}
                                         <div style={{
+                                            padding: '5px 8px', borderRadius: 8,
                                             background: s.hasCafeFee ? '#fffbeb' : '#fef2f2',
-                                            border: s.hasCafeFee ? '1.5px solid #f59e0b' : '1.5px solid #f87171',
-                                            borderRadius: 14, padding: '12px 14px',
-                                            boxShadow: s.hasCafeFee ? '0 2px 8px rgba(245,158,11,0.1)' : '0 2px 8px rgba(239,68,68,0.06)'
+                                            border: s.hasCafeFee ? '1px solid #fde68a' : '1px solid #fecaca',
+                                            minWidth: 0
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <span style={{
-                                                    fontSize: 12, fontWeight: 800,
-                                                    color: s.hasCafeFee ? '#92400e' : '#991b1b',
-                                                    textTransform: 'uppercase', letterSpacing: '0.4px',
-                                                    display: 'flex', alignItems: 'center', gap: 6
-                                                }}>
-                                                    <Coffee size={16} color={s.hasCafeFee ? '#d97706' : '#dc2626'} /> Tiền cafe tàu
-                                                </span>
-                                                <span style={{
-                                                    fontSize: 13, fontWeight: 800,
-                                                    color: s.hasCafeFee ? '#92400e' : '#b91c1c',
-                                                    background: s.hasCafeFee ? '#fef3c7' : '#fee2e2',
-                                                    border: s.hasCafeFee ? '1.5px solid #d97706' : '1.5px solid #ef4444',
-                                                    padding: '3px 10px', borderRadius: 8,
-                                                    whiteSpace: 'nowrap', flexShrink: 0
-                                                }}>
-                                                    {s.hasCafeFee ? `CÓ: ${formatVNCurrency(s.cafeFee || 0)} đ` : 'KHÔNG CÓ CAFE'}
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: 4,
+                                                color: s.hasCafeFee ? '#92400e' : '#b91c1c',
+                                                fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap'
+                                            }}>
+                                                <span style={{ flexShrink: 0 }}>☕</span>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {s.hasCafeFee ? `Có: ${formatVNCurrency(s.cafeFee || 0)}đ` : 'Không có cafe'}
                                                 </span>
                                             </div>
                                             {s.hasCafeFee && s.cafeNote && (
                                                 <div style={{
-                                                    fontSize: 12, fontWeight: 600, color: '#78350f',
-                                                    background: 'rgba(245,158,11,0.12)', padding: '6px 10px',
-                                                    borderRadius: 8, marginTop: 8
+                                                    fontSize: 10, color: '#78350f', marginTop: 2,
+                                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                                 }}>
-                                                    📝 Ghi chú: {s.cafeNote}
+                                                    📝 {s.cafeNote}
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* ── MỤC 2: TALLY TÀU (Nổi bật nếu CÓ, MÀU ĐỎ nếu KHÔNG) ── */}
+                                        {/* Nhãn Tally */}
                                         <div style={{
+                                            padding: '5px 8px', borderRadius: 8,
                                             background: s.hasTally ? '#eff6ff' : '#fef2f2',
-                                            border: s.hasTally ? '1.5px solid #3b82f6' : '1.5px solid #f87171',
-                                            borderRadius: 14, padding: '12px 14px',
-                                            boxShadow: s.hasTally ? '0 2px 8px rgba(59,130,246,0.1)' : '0 2px 8px rgba(239,68,68,0.06)'
+                                            border: s.hasTally ? '1px solid #bfdbfe' : '1px solid #fecaca',
+                                            minWidth: 0
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                                                <span style={{
-                                                    fontSize: 12, fontWeight: 800,
-                                                    color: s.hasTally ? '#1e40af' : '#991b1b',
-                                                    textTransform: 'uppercase', letterSpacing: '0.4px',
-                                                    display: 'flex', alignItems: 'center', gap: 6,
-                                                    minWidth: 0
-                                                }}>
-                                                    <ClipboardList size={16} color={s.hasTally ? '#2563eb' : '#dc2626'} style={{ flexShrink: 0 }} /> Tally tàu
-                                                </span>
-                                                <span style={{
-                                                    fontSize: 13, fontWeight: 800,
-                                                    color: s.hasTally ? '#1e40af' : '#b91c1c',
-                                                    background: s.hasTally ? '#dbeafe' : '#fee2e2',
-                                                    border: s.hasTally ? '1.5px solid #2563eb' : '1.5px solid #ef4444',
-                                                    padding: '3px 10px', borderRadius: 8,
-                                                    whiteSpace: 'nowrap', flexShrink: 0
-                                                }}>
-                                                    {s.hasTally ? `CÓ TALLY: ${formatVNCurrency(s.tallyFee || 0)} đ` : 'KHÔNG CÓ TALLY'}
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: 4,
+                                                color: s.hasTally ? '#1e40af' : '#b91c1c',
+                                                fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap'
+                                            }}>
+                                                <span style={{ flexShrink: 0 }}>📋</span>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {s.hasTally ? `Có: ${formatVNCurrency(s.tallyFee || 0)}đ` : 'Không có tally'}
                                                 </span>
                                             </div>
                                             {s.hasTally && s.tallyNote && (
                                                 <div style={{
-                                                    fontSize: 12, fontWeight: 600, color: '#1e3a8a',
-                                                    background: 'rgba(59,130,246,0.1)', padding: '6px 10px',
-                                                    borderRadius: 8, marginTop: 8
+                                                    fontSize: 10, color: '#1e3a8a', marginTop: 2,
+                                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                                 }}>
-                                                    👤 Phụ trách / ghi chú: {s.tallyNote}
+                                                    👤 {s.tallyNote}
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* ── MỤC 3: ĐÁNH GIÁ TÀU (THIẾT KẾ TINH TẾ) ── */}
-                                        {s.rating || s.ratingComment ? (
-                                            <div style={{
-                                                background: 'linear-gradient(180deg, #ffffff 0%, #fffdf5 100%)',
-                                                border: '1px solid #fef08a',
-                                                borderRadius: 14, padding: '11px 13px',
-                                                boxShadow: '0 2px 8px rgba(245,158,11,0.06)'
-                                            }}>
-                                                {/* Dãy sao vàng kim + Điểm số + Nhãn cảm xúc tinh tế */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                            {[1, 2, 3, 4, 5].map(num => {
-                                                                const filled = num <= (s.rating || 0);
-                                                                return (
-                                                                    <Star
-                                                                        key={num}
-                                                                        size={14}
-                                                                        fill={filled ? '#f59e0b' : 'none'}
-                                                                        color={filled ? '#d97706' : '#cbd5e1'}
-                                                                        strokeWidth={filled ? 1 : 1.5}
-                                                                    />
-                                                                );
-                                                            })}
-                                                        </div>
-                                                        {s.rating ? (
-                                                            <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
-                                                                {s.rating}.0
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-
-                                                    {s.rating && STAR_LABELS[s.rating] && (
-                                                        <span style={{
-                                                            fontSize: 11, fontWeight: 700,
-                                                            padding: '2px 8px', borderRadius: 99,
-                                                            background: STAR_LABELS[s.rating].bg,
-                                                            color: STAR_LABELS[s.rating].color,
-                                                            border: `1px solid ${STAR_LABELS[s.rating].color}30`
-                                                        }}>
-                                                            {STAR_LABELS[s.rating].text}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Nhận xét trích dẫn tinh tế với đường kẻ chỉ vàng bên trái */}
-                                                {s.ratingComment ? (
-                                                    <div style={{
-                                                        marginTop: 8,
-                                                        padding: '7px 10px',
-                                                        background: 'rgba(255,255,255,0.9)',
-                                                        borderLeft: '2.5px solid #f59e0b',
-                                                        borderRadius: '0 8px 8px 0',
-                                                        display: 'flex', alignItems: 'flex-start', gap: 6
-                                                    }}>
-                                                        <MessageSquare size={13} color="#d97706" style={{ flexShrink: 0, marginTop: 2 }} />
-                                                        <p style={{
-                                                            margin: 0, fontSize: 12, fontStyle: 'italic',
-                                                            color: '#334155', lineHeight: 1.45, fontWeight: 500
-                                                        }}>
-                                                            "{s.ratingComment}"
-                                                        </p>
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                        ) : (
-                                            /* Khi chưa có đánh giá: Thanh tối giản, thanh lịch, không tốn diện tích */
-                                            <div
-                                                onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                    padding: '8px 12px', background: '#f8fafc',
-                                                    borderRadius: 12, border: '1px solid #f1f5f9',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                        {[1, 2, 3, 4, 5].map(num => (
-                                                            <Star key={num} size={13} fill="none" color="#cbd5e1" strokeWidth={1.5} />
-                                                        ))}
-                                                    </div>
-                                                    <span style={{ fontSize: 11.5, color: '#94a3b8', fontWeight: 600 }}>Chưa có đánh giá</span>
-                                                </div>
-                                                <span style={{ fontSize: 11.5, color: '#059669', fontWeight: 700 }}>
-                                                    + Thêm đánh giá
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Xà lan nếu có */}
-                                        {s.hasBarge && (
-                                            <div style={{ fontSize: 12, color: '#1d4ed8', fontWeight: 700, padding: '6px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start' }}>
-                                                🚢 Kèm {s.bargeCount || 1} xà lan (+{((s.bargeCount || 1) * 200000).toLocaleString('vi-VN')}đ)
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* 3. Footer Bar: Chạm để sửa */}
-                                    <div
-                                        onClick={() => handleOpenEdit(s)}
-                                        style={{
-                                            padding: '8px 16px', background: '#fafafa',
-                                            borderTop: '1px solid #f1f5f9', cursor: 'pointer',
+                                    {/* Dòng 4: Đánh giá & Nhận xét nếu có (1 dòng tinh tế) */}
+                                    {s.rating || s.ratingComment ? (
+                                        <div style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            fontSize: 12, color: '#059669', fontWeight: 700
-                                        }}
-                                    >
-                                        <span>Chạm vào đây để cập nhật thông tin tàu</span>
-                                        <span style={{ color: '#94a3b8' }}>Chỉnh sửa →</span>
-                                    </div>
+                                            gap: 6, paddingTop: 5, borderTop: '1px dashed #e2e8f0'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0, flex: 1 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                                                    {[1, 2, 3, 4, 5].map(num => (
+                                                        <Star
+                                                            key={num}
+                                                            size={11}
+                                                            fill={num <= (s.rating || 0) ? '#f59e0b' : 'none'}
+                                                            color={num <= (s.rating || 0) ? '#d97706' : '#cbd5e1'}
+                                                            strokeWidth={num <= (s.rating || 0) ? 1 : 1.5}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                {s.rating ? (
+                                                    <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', flexShrink: 0 }}>
+                                                        {s.rating}.0
+                                                    </span>
+                                                ) : null}
+                                                {s.ratingComment && (
+                                                    <span style={{
+                                                        fontSize: 11, fontStyle: 'italic', color: '#475569',
+                                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                                    }}>
+                                                        "{s.ratingComment}"
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {s.rating && STAR_LABELS[s.rating] && (
+                                                <span style={{
+                                                    fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 4,
+                                                    background: STAR_LABELS[s.rating].bg, color: STAR_LABELS[s.rating].color,
+                                                    flexShrink: 0
+                                                }}>
+                                                    {STAR_LABELS[s.rating].text}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                paddingTop: 5, borderTop: '1px dashed #f1f5f9',
+                                                fontSize: 10.5, color: '#94a3b8'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                <Star size={10} fill="none" color="#cbd5e1" />
+                                                <span>Chưa có đánh giá</span>
+                                            </div>
+                                            <span style={{ color: '#059669', fontWeight: 700 }}>+ Đánh giá</span>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })
